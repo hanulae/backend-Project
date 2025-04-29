@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     logger.info('서버 시작 중...');
+
     // db 연결
     await connectToDatabase();
 
