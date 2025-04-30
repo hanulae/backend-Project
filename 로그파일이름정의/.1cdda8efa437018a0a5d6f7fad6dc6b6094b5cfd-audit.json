@@ -1,0 +1,15 @@
+{
+  "keep": {
+    "days": true,
+    "amount": 14
+  },
+  "auditLog": "/Users/gimbanseog/Desktop/Code/LoveAE/code/backend-Project/로그파일이름정의/.1cdda8efa437018a0a5d6f7fad6dc6b6094b5cfd-audit.json",
+  "files": [
+    {
+      "date": 1745478707869,
+      "name": "/Users/gimbanseog/Desktop/Code/LoveAE/code/backend-Project/로그파일이름정의/application-2025-04-24.log",
+      "hash": "df4f3cb3011dd236ac0f16db4fe75c48432009e40d3bb5f2cf808a7ff7906453"
+    }
+  ],
+  "hashType": "sha256"
+}

@@ -25,7 +25,7 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
   host: DB_HOST,
   port: DB_PORT,
   dialect: 'postgres',
-  logging: NODE_ENV === 'development' ? logger.info : false,
+  logging: NODE_ENV === 'development' ? (msg) => logger.info(msg) : false,
   pool: {
     max: 5,
     min: 0,
