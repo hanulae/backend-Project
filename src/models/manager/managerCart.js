@@ -21,17 +21,11 @@ class ManagerCart extends Sequelize.Model {
           allowNull: false,
           comment: '장례식장 리스트 고유 ID (FK)',
         },
-        isDeleted: {
-          type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false,
-          comment: '삭제 여부',
-        },
       },
       {
         sequelize,
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         modelName: 'ManagerCart',
         tableName: 'manager_carts',
         underscored: true,
@@ -50,7 +44,12 @@ class ManagerCart extends Sequelize.Model {
       as: 'manager',
       onDelete: 'CASCADE', // 상조팀장 탈퇴 시 장바구니 연관된 데이터 삭제
     });
-    // 장례식장 리스트와의 관계 설정 추후 필요
+    // 장례식장 리스트와의 관계
+    this.belongsTo(models.FuneralList, {
+      foreignKey: 'funeralListId',
+      as: 'funeralList',
+      onDelete: 'CASCADE', // 장례식장 리스트 삭제 시 장바구니 연관된 데이터 삭제
+    });
   }
 }
 export default ManagerCart;
