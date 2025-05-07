@@ -16,7 +16,7 @@ class FuneralList extends Sequelize.Model {
           allowNull: true,
           comment: '장례식장 회원 고유 ID (FK)',
         },
-        businessNumber: {
+        funeralBusinessNumber: {
           type: DataTypes.STRING(12),
           allowNull: false,
           comment: '사업자등록번호',
@@ -36,12 +36,12 @@ class FuneralList extends Sequelize.Model {
           allowNull: true,
           comment: '장례식장 상세주소',
         },
-        latitude: {
+        funeralLatitude: {
           type: DataTypes.DECIMAL(10, 7),
           allowNull: true,
           comment: '위도',
         },
-        longitude: {
+        funeralLongitude: {
           type: DataTypes.DECIMAL(10, 7),
           allowNull: true,
           comment: '경도',
@@ -56,38 +56,38 @@ class FuneralList extends Sequelize.Model {
           allowNull: true,
           comment: '장례식장 팩스번호',
         },
-        totalRooms: {
+        funeralTotalRooms: {
           type: DataTypes.INTEGER,
           allowNull: true,
           comment: '총 호실 수',
         },
-        parkingCapacity: {
+        funeralParkingCapacity: {
           type: DataTypes.INTEGER,
           allowNull: true,
           comment: '주차 가능 대수',
         },
-        isJoin: {
+        funeralIsJoin: {
           type: DataTypes.BOOLEAN,
           allowNull: false,
           defaultValue: false,
           comment: '회원가입 여부',
         },
-        region: {
+        funeralRegion: {
           type: DataTypes.STRING(50),
           allowNull: false,
           comment: '지역 (시/도)',
         },
-        city: {
+        funeralCity: {
           type: DataTypes.STRING(50),
           allowNull: false,
           comment: '도시 (시/군/구)',
         },
-        searchKeywords: {
+        funeralSearchKeywords: {
           type: DataTypes.TEXT,
           allowNull: true,
           comment: '검색 키워드 (쉼표로 구분)',
         },
-        verificationStatus: {
+        funeralVerificationStatus: {
           type: DataTypes.ENUM('unverified', 'verified', 'rejected'),
           allowNull: false,
           defaultValue: 'unverified',
@@ -104,11 +104,11 @@ class FuneralList extends Sequelize.Model {
         comment: '전국 장례식장 기본 정보 관리 테이블',
         indexes: [
           {
-            fields: ['business_number'],
+            fields: ['funeral_business_number'],
             unique: true,
           },
           {
-            fields: ['region', 'city'],
+            fields: ['funeral_region', 'funeral_city'],
           },
           {
             fields: ['funeral_name'],
@@ -118,8 +118,21 @@ class FuneralList extends Sequelize.Model {
     );
   }
 
+  /**
+   * 관계 설정
+   */
   static associate(models) {
-    this.belongsTo(models.Funeral, {});
+    // 장례식장 회원 테이블과의 관계 설정
+    this.belongsTo(models.Funeral, {
+      foreignKey: 'funeralId',
+      as: 'funeral',
+      constraints: false, // 장례식장 회원가입 전까지는 null 값 허용
+    });
+    // 상조팀장 장바구니 테이블과의 관계 설정
+    this.hasMany(models.ManagerCart, {
+      foreignKey: 'funeralListId',
+      as: 'managerCart',
+    });
   }
 }
 export default FuneralList;

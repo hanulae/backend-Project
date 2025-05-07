@@ -109,6 +109,11 @@ class Funeral extends Sequelize.Model {
       foreignKey: 'funeralId',
       as: 'funeralStaffs',
     });
+    // 장례식장 리스트 테이블과의 관계설정
+    this.hasOne(models.FuneralList, {
+      foreignKey: 'funeralId',
+      as: 'funeralList',
+    });
   }
 
   /**
