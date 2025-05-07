@@ -1,15 +1,19 @@
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as managerPointHistoryDao from '../../daos/manager/managerPointHistoryDao.js';
 import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const registerManager = async (params) => {
+  //console.log("🚀 ~ registerManager ~ params:", params)
   // 필수 정보 확인
 
   if (
     !params.managerEmail ||
     !params.managerPassword ||
     !params.managerName ||
-    !params.managerPhone ||
+    !params.managerPhoneNumber ||
     !params.managerBankName ||
     !params.managerBankNumber ||
     !params.file
@@ -25,9 +29,10 @@ export const registerManager = async (params) => {
     managerEmail: params.managerEmail,
     managerPassword: params.managerPassword,
     managerName: params.managerName,
-    managerPhone: params.managerPhone,
+    managerPhoneNumber: params.managerPhoneNumber,
     managerBankName: params.managerBankName,
     managerBankNumber: params.managerBankNumber,
+    managerBankHolder: params.managerName,
     fileUrl: fileUrl,
   };
 

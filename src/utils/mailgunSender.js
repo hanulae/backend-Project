@@ -4,7 +4,15 @@ import path from 'path';
 import Mailgun from 'mailgun.js';
 import FormData from 'form-data';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const NODE_ENV = process.env.NODE_ENV;
+
+dotenv.config({
+  path: path.join(__dirname, `../../.env.${NODE_ENV}`),
+});
 
 const mailgun = new Mailgun(FormData);
 const mg = mailgun.client({

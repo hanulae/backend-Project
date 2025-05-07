@@ -5,19 +5,19 @@ import * as managerUserService from '../../services/manager/managerUserService.j
 const router = express.Router();
 
 router.post('/signup', uploadManagerFile, async (req, res) => {
+  console.log('🚀 ~ router.post ~ req.body.managerEmail:', req.body.managerEmail);
   try {
     const params = {
       managerEmail: req.body.managerEmail,
       managerPassword: req.body.managerPassword,
       managerName: req.body.managerName,
-      managerPhone: req.body.managerPhone,
+      managerPhoneNumber: req.body.managerPhone,
       managerBankName: req.body.managerBankName,
       managerBankNumber: req.body.managerBankNumber,
       file: req.file,
     };
-
+    console.log('🚀 ~ router.post ~ params:', params);
     const result = await managerUserService.registerManager(params);
-
     res.status(201).json({
       message: '상조팀장 회원가입이 완료되었습니다.',
       manager: result,
@@ -27,5 +27,4 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
     res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
   }
 });
-
 export default router;
