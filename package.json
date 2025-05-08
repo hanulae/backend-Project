@@ -29,6 +29,8 @@
     "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
     "compression": "^1.8.0",
+    "coolsms": "^1.0.0",
+    "coolsms-node-sdk": "^2.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
