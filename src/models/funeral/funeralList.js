@@ -16,61 +16,10 @@ class FuneralList extends Sequelize.Model {
           allowNull: true,
           comment: '장례식장 회원 고유 ID (FK)',
         },
-        funeralBusinessNumber: {
-          type: DataTypes.STRING(12),
-          allowNull: false,
-          comment: '사업자등록번호',
-        },
         funeralName: {
           type: DataTypes.STRING(100),
           allowNull: false,
           comment: '장례식장 이름',
-        },
-        funeralAddress: {
-          type: DataTypes.STRING(255),
-          allowNull: false,
-          comment: '장례식장 주소',
-        },
-        funeralAddressDetail: {
-          type: DataTypes.STRING(255),
-          allowNull: true,
-          comment: '장례식장 상세주소',
-        },
-        funeralLatitude: {
-          type: DataTypes.DECIMAL(10, 7),
-          allowNull: true,
-          comment: '위도',
-        },
-        funeralLongitude: {
-          type: DataTypes.DECIMAL(10, 7),
-          allowNull: true,
-          comment: '경도',
-        },
-        funeralRepNumber: {
-          type: DataTypes.STRING(20),
-          allowNull: true,
-          comment: '장례식장 대표 전화번호',
-        },
-        funeralFaxNumber: {
-          type: DataTypes.STRING(20),
-          allowNull: true,
-          comment: '장례식장 팩스번호',
-        },
-        funeralTotalRooms: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-          comment: '총 호실 수',
-        },
-        funeralParkingCapacity: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-          comment: '주차 가능 대수',
-        },
-        funeralIsJoin: {
-          type: DataTypes.BOOLEAN,
-          allowNull: false,
-          defaultValue: false,
-          comment: '회원가입 여부',
         },
         funeralRegion: {
           type: DataTypes.STRING(50),
@@ -82,16 +31,61 @@ class FuneralList extends Sequelize.Model {
           allowNull: false,
           comment: '도시 (시/군/구)',
         },
+        funeralAddress: {
+          type: DataTypes.STRING(255),
+          allowNull: false,
+          comment: '장례식장 주소',
+        },
+        funeralScale: {
+          type: DataTypes.STRING(50),
+          allowNull: false,
+          comment: '장례식장 규모 (소형/ 중형/ 대형)',
+        },
+        funeralTotalRooms: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          comment: '총 빈소 수',
+        },
+        funeralOperationType: {
+          type: DataTypes.STRING(50),
+          allowNull: false,
+          comment: '운영 형태 (사설, 공설)',
+        },
+        funeralStyle: {
+          type: DataTypes.STRING(50),
+          allowNull: false,
+          comment: '장례식장 형태 (병원, 전문)',
+        },
+        funeralParkingLot: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          comment: '주차장 유/무',
+        },
+        funeralStore: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          comment: '매점 유/무',
+        },
+        funeralFamilyWaitingRoom: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          comment: '유족 대기실 유/무',
+        },
+        funeralDisabledFacility: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          comment: '장애인 시설 유/무',
+        },
+        funeralIsJoin: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+          comment: '회원가입 여부',
+        },
         funeralSearchKeywords: {
           type: DataTypes.TEXT,
           allowNull: true,
           comment: '검색 키워드 (쉼표로 구분)',
-        },
-        funeralVerificationStatus: {
-          type: DataTypes.ENUM('unverified', 'verified', 'rejected'),
-          allowNull: false,
-          defaultValue: 'unverified',
-          comment: '정보 검증 상태',
         },
       },
       {
@@ -104,14 +98,13 @@ class FuneralList extends Sequelize.Model {
         comment: '전국 장례식장 기본 정보 관리 테이블',
         indexes: [
           {
-            fields: ['funeral_business_number'],
-            unique: true,
-          },
-          {
             fields: ['funeral_region', 'funeral_city'],
           },
           {
             fields: ['funeral_name'],
+          },
+          {
+            fields: ['funeral_id'],
           },
         ],
       },
@@ -132,6 +125,16 @@ class FuneralList extends Sequelize.Model {
     this.hasMany(models.ManagerCart, {
       foreignKey: 'funeralListId',
       as: 'managerCart',
+    });
+    // 입찰 테이블과의 관계 설정
+    this.hasMany(models.ManagerFormBid, {
+      foreignKey: 'funeralListId',
+      as: 'managerFormBid',
+    });
+    // 호실 정보 테이블과의 관계 설정
+    this.hasMany(models.FuneralHallInfo, {
+      foreignKey: 'funeralListId',
+      as: 'funeralHallInfo',
     });
   }
 }

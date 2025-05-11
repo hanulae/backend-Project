@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "parsing-funeral-list": "node parsingFuneralList.js",
+    "parsing-funeral-list:update": "node parsingFuneralList.js update",
+    "parsing-funeral-list:truncate": "node parsingFuneralList.js truncate"
   },
   "type": "module",
   "keywords": [],
@@ -41,8 +44,10 @@
     "multer-s3": "^3.0.1",
     "pg": "^8.14.1",
     "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
