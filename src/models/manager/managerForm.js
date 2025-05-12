@@ -8,6 +8,7 @@ class ManagerForm extends Sequelize.Model {
           type: DataTypes.UUID,
           defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
+          allowNull: false,
           comment: '상조팀장 견적 신청서 고유 ID',
         },
         managerId: {
@@ -50,7 +51,7 @@ class ManagerForm extends Sequelize.Model {
             'request', // 견적 요청 단계
             'bid_received', // 최소 1개 이상의 입찰을 받은 상태
             'bid_selected', // 입찰 선택 및 출동 요청 단계
-            'in_progress', // 고안 안치 완료, 장례 진행중 상태
+            'in_progress', // 고인 안치 완료, 장례 진행중 상태
             'completed', // 장례 완료 및 정산 완료 상태
             'cancelled', // 취소됨
           ),
@@ -65,7 +66,7 @@ class ManagerForm extends Sequelize.Model {
         tableName: 'manager_forms',
         underscored: true,
         timestamps: true,
-        paranoid: true,
+        // paranoid: true,
         comment: '상조팀장 견적 신청서 관리 테이블',
       },
     );

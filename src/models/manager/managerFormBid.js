@@ -20,6 +20,11 @@ class ManagerFormBid extends Sequelize.Model {
           allowNull: false,
           comment: '장례식장 리스트 고유 ID (FK)',
         },
+        funeralId: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          comment: '회원가입 한 장례식장 회원 고유 ID (FK)',
+        },
         funeralHallId: {
           type: DataTypes.UUID,
           allowNull: true,
@@ -123,10 +128,21 @@ class ManagerFormBid extends Sequelize.Model {
       foreignKey: 'managerFormBidId',
       as: 'funeralCashHistories',
     });
-
-    // 장례식장 ID - 추후 기입 예정
-
-    // 호실 정보 ID - 추후 기입 예정
+    // 장례식장 리스트 테이블과의 관계 설정
+    this.belongsTo(models.FuneralList, {
+      foreignKey: 'funeralListId',
+      as: 'funeralList',
+    });
+    // 호실 정보 테이블과의 관계 설정
+    this.belongsTo(models.FuneralHallInfo, {
+      foreignKey: 'funeralHallId',
+      as: 'funeralHallInfo',
+    });
+    // 장례식장 테이블과의 관계 설정
+    this.belongsTo(models.Funeral, {
+      foreignKey: 'funeralId',
+      as: 'funeral',
+    });
   }
 }
 export default ManagerFormBid;
