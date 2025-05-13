@@ -25,6 +25,26 @@ const managerFormDao = {
 
     return result;
   },
+
+  /**
+   * 장례식장 managerFormId를 기반으로 견적서 상세 내용 조회
+   */
+  async getManagerFormDetail(managerFormId) {
+    const result = await ManagerForm.findOne({
+      where: { managerFormId: managerFormId },
+      attributes: [
+        'chiefMournerName',
+        'deceasedName',
+        'numberOfMourners',
+        'roomSize',
+        'checkInDate',
+        'checkOutDate',
+        'formStatus',
+      ],
+    });
+
+    return result;
+  },
 };
 
 export default managerFormDao;

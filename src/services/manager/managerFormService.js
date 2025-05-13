@@ -2,6 +2,7 @@ import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
+import funeralListDao from '../../dao/funeral/funeralListDao.js';
 
 const managerFormService = {
   /**
@@ -9,21 +10,26 @@ const managerFormService = {
    * @param {Object} managerFormData
    * @returns {Promise<ManagerForm>}
    */
-  async createManagerForm(managerFormData, funeralList) {
+  async createManagerForm(managerFormData, funeralListIds) {
     const transaction = await sequelize.transaction();
     try {
       // 1. 견적 신청서 생성
       const managerForm = await managerFormDao.createManagerForm(managerFormData, { transaction });
 
-      // 2. 선택한 장례식장들에게 견적신청서 전송 (입찰 리스트 테이블에 데이터 생성)
-      const bidDataArr = funeralList.map((funeralList) => ({
+      // 2. funeralListIds에 해당하는 funeralId 조회
+      const funeralData = await funeralListDao.getFuneralIdByFuneralListId(funeralListIds, {
+        transaction,
+      });
+
+      // 3. 선택한 장례식장들에게 견적신청서 전송 (입찰 리스트 테이블에 데이터 생성)
+      const bidDataArr = funeralData.map((funeralData) => ({
         managerFormId: managerForm.managerFormId,
-        funeralListId: funeralList,
+        funeralListId: funeralData.funeralListId,
+        funeralId: funeralData.funeralId, // 회원가입 하지 않은 장례식장의 경우 null 값 배치
         managerFormCreatedAt: managerForm.createdAt,
       }));
 
       await managerFormBidDao.createManagerFormBid(bidDataArr, { transaction });
-
       await transaction.commit();
 
       return {
