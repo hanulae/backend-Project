@@ -1,9 +1,10 @@
 import express from 'express';
+import managerFormByFuneral from './managerFormByFuneral.js';
+import funeralInfo from './funeralInfo.js';
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.send('안녕하세요');
-});
+router.use('/form', managerFormByFuneral);
+router.use('/room', funeralInfo);
 
 export default router;
