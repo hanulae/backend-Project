@@ -1,6 +1,6 @@
 import express from 'express';
 import logger from '../../config/logger.js';
-import managerFormByFuneralService from '../../services/funeral/managerFormByFuneral.js';
+import managerFormByFuneralService from '../../services/funeral/managerFormByFuneralService.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
 
 const router = express.Router();
