@@ -1,5 +1,6 @@
 import ManagerFormBid from '../../models/manager/managerFormBid.js';
 import funeralList from '../../models/funeral/funeralList.js';
+import funeralHallInfo from '../../models/funeral/funeralHallInfo.js';
 import { Op, fn, col } from 'sequelize';
 
 const managerFormBidDao = {
@@ -36,12 +37,12 @@ const managerFormBidDao = {
    * 견적신청서 ID를 기반으로 생성된 입찰 리스트 조회
    * 한명의 상주님의 입찰 리스트 조회
    */
-  async getManagerFormDetail(managerFormId) {
+  async getManagerFormBidStatusList(managerFormId) {
     const result = await ManagerFormBid.findAll({
       where: {
         managerFormId: managerFormId,
       },
-      attributes: ['bid_status'],
+      attributes: ['managerFormBidId', 'bid_status'],
       include: [
         {
           model: funeralList,
@@ -49,6 +50,7 @@ const managerFormBidDao = {
           attributes: ['funeral_name', 'funeral_address'],
         },
       ],
+      order: [['updatedAt', 'DESC']],
     });
 
     return result;
@@ -85,15 +87,42 @@ const managerFormBidDao = {
   /**
    * managerFormBidId를 기반으로 입찰 신청서 조회
    */
-  async getManagerFormBidById(managerFormBidId) {
-    const bid = await ManagerFormBid.findByPk(managerFormBidId);
-    return bid;
+  async getManagerFormBidById(managerFormBidId, type = 'funeral', options = {}) {
+    if (type === 'funeral') {
+      const bid = await ManagerFormBid.findByPk(managerFormBidId, options);
+      return bid;
+    } else if (type === 'manager') {
+      const bid = await ManagerFormBid.findOne({
+        where: {
+          managerFormBidId: managerFormBidId,
+        },
+        include: [
+          {
+            model: funeralList,
+            as: 'funeralList',
+            attributes: ['funeral_name'],
+          },
+          {
+            model: funeralHallInfo,
+            as: 'funeralHallInfo',
+            attributes: [
+              'funeralHallName',
+              'funeralHallSize',
+              'funeralHallNumberOfMourners',
+              'funeralHallPrice',
+              'funeralHallDetailPrice',
+            ],
+          },
+        ],
+      });
+      return bid;
+    }
   },
 
   /**
    * 장례식장 입찰 신청
    */
-  async updateManagerFormBid(params) {
+  async updateManagerFormBid(params, options = {}) {
     const result = await ManagerFormBid.update(
       {
         ...params,
@@ -104,6 +133,7 @@ const managerFormBidDao = {
         where: {
           managerFormBidId: params.managerFormBidId,
         },
+        ...options,
       },
     );
 

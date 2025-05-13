@@ -85,7 +85,7 @@ router.put(
 
       return res.status(200).json({
         success: true,
-        message: '입찰 신청 완료',
+        message: '입찰 신청이 완료되었습니다.',
       });
     } catch (error) {
       logger.error(error.message);

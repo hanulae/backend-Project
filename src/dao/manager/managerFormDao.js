@@ -45,6 +45,23 @@ const managerFormDao = {
 
     return result;
   },
+
+  /**
+   * 장례식장에서 견적서에 대해 입찰 시 managerForm의 status를 업데이트
+   */
+  async updateManagerFormStatus(managerFormId, options = {}) {
+    const result = await ManagerForm.update(
+      {
+        formStatus: 'bid_received',
+      },
+      {
+        where: { managerFormId: managerFormId },
+        ...options,
+      },
+    );
+
+    return result;
+  },
 };
 
 export default managerFormDao;

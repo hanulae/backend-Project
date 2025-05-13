@@ -74,17 +74,18 @@ const managerFormService = {
   },
 
   /**
-   * 한명의 상주님 견적 내역 리스트 상세 조회
+   * 한명의 상주님 견적 리스트 조회
    */
-  async getManagerFormDetail(managerFormId) {
+  async getManagerFormBidList(managerFormId) {
     try {
       // 1. 견적 신청서 ID를 기반으로 생성된 입찰 리스트 조회
-      const managerFormDetail = await managerFormBidDao.getManagerFormDetail(managerFormId);
+      const managerFormDetail = await managerFormBidDao.getManagerFormBidStatusList(managerFormId);
 
       // 2. 데이터 포멧팅
       const formattedDetail = managerFormDetail.map((item) => {
         const plain = item.get({ plain: true });
         return {
+          managerFormBidId: plain.managerFormBidId,
           bid_status: plain.bid_status,
           funeral_name: plain.funeralList.funeral_name,
           funeral_address: plain.funeralList.funeral_address,
@@ -98,9 +99,44 @@ const managerFormService = {
         },
       };
     } catch (error) {
-      logger.error('견적 신청서 상세 조회 실패', error);
-      throw new Error('견적 신청서 상세 조회 실패_Service Error', error);
+      logger.error('단일 상주님 견적서 리스트 조회 실패', error);
+      throw new Error('단일 상주님 견적서 리스트 조회 실패_Service Error', error);
     }
+  },
+
+  /**
+   * 단일 견적서 관련 입찰 상세 내용 조회
+   */
+  async getManagerFormBidDetail(managerFormBidId) {
+    // 1. managerFormBid 조회
+    const managerFormBid = await managerFormBidDao.getManagerFormBidById(
+      managerFormBidId,
+      'manager',
+    );
+
+    if (!managerFormBid) {
+      throw new Error('입찰 정보를 찾지 못함');
+    }
+
+    if (!managerFormBid.bidSubmittedAt || managerFormBid.bidStatus === 'pending') {
+      throw new Error('입찰이 진행되지 않은 견적 신청서');
+    }
+
+    // 2. managerFormBid 데이터 포멧팅
+    const formattedBid = {
+      managerFormBidId: managerFormBid.managerFormBidId,
+      funeralName: managerFormBid.funeralList.funeral_name,
+      funeralHallName: managerFormBid.funeralHallInfo.funeralHallName,
+      funeralHallSize: managerFormBid.funeralHallInfo.funeralHallSize,
+      funeralHallNumberOfMourners: managerFormBid.funeralHallInfo.funeralHallNumberOfMourners,
+      funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
+      funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      bidStatus: managerFormBid.bidStatus,
+      bidSubmittedAt: managerFormBid.bidSubmittedAt,
+      bidAcceptedAt: managerFormBid.bidAcceptedAt,
+    };
+
+    return formattedBid;
   },
 };
 
