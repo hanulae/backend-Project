@@ -10,8 +10,8 @@ export const loginManager = async ({ managerEmail, managerPassword }) => {
     throw new Error('관리자의 승인이 필요합니다.');
   }
 
-  const isMatch = await bcrypt.compare(managerPassword, manager.managerPassword);
-  if (!isMatch) {
+  // 평문 비밀번호 직접 비교
+  if (manager.managerPassword !== managerPassword) {
     throw new Error('비밀번호가 일치하지 않습니다.');
   }
 
