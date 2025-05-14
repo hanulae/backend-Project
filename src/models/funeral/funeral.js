@@ -85,6 +85,18 @@ class Funeral extends Sequelize.Model {
         timestamps: true,
         paranoid: true,
         comment: '장례식장 관련 회원 정보 테이블',
+        hooks: {
+          beforeCreate: async (funeral) => {
+            if (funeral.funeralPassword) {
+              funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
+            }
+          },
+        },
+        beforeUpdate: async (funeral) => {
+          if (funeral.changed('funeralPassword')) {
+            funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
+          }
+        },
       },
     );
   }
@@ -125,22 +137,6 @@ class Funeral extends Sequelize.Model {
       as: 'managerFormBids',
     });
   }
-
-  /**
-   * 비밀번호 해시를 위한 훅
-   */
-  static hooks = {
-    beforeCreate: async (funeral) => {
-      if (funeral.funeralPassword) {
-        funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
-      }
-    },
-    beforeUpdate: async (funeral) => {
-      if (funeral.changed('funeralPassword')) {
-        funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
-      }
-    },
-  };
 
   /**
    * 비밀번호 검증 인스턴스 메서드
