@@ -11,8 +11,9 @@ export const login = async ({ funeralEmail, funeralPassword }) => {
     throw new Error('관리자 승인 전 계정입니다.');
   }
 
+  console.log('🚀 ~ login ~ funeral.managerPassword:', funeral.funeralPassword);
   // 평문 비밀번호 직접 비교
-  if (funeral.managerPassword !== funeralPassword) {
+  if (funeral.funeralPassword !== funeralPassword) {
     throw new Error('비밀번호가 일치하지 않습니다.');
   }
 

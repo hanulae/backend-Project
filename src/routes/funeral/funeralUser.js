@@ -1,11 +1,11 @@
 import express from 'express';
 import * as funeralUserService from '../../services/funeral/funeralUserService.js';
-import uploadManagerFile from '../../middlewares/uploadManagerFile.js';
+import uploadFuneralFile from '../../middlewares/uploadFuneralFile.js';
 
 const router = express.Router();
 
 // 장례식장 회원가입
-router.post('/signup', uploadManagerFile, async (req, res) => {
+router.post('/signup', uploadFuneralFile, async (req, res) => {
   try {
     const params = {
       funeralEmail: req.body.funeralEmail,
