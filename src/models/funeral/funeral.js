@@ -85,6 +85,18 @@ class Funeral extends Sequelize.Model {
         timestamps: true,
         paranoid: true,
         comment: '장례식장 관련 회원 정보 테이블',
+        hooks: {
+          beforeCreate: async (funeral) => {
+            if (funeral.funeralPassword) {
+              funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
+            }
+          },
+        },
+        beforeUpdate: async (funeral) => {
+          if (funeral.changed('funeralPassword')) {
+            funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
+          }
+        },
       },
     );
   }
@@ -109,23 +121,22 @@ class Funeral extends Sequelize.Model {
       foreignKey: 'funeralId',
       as: 'funeralStaffs',
     });
+    // 장례식장 리스트 테이블과의 관계설정
+    this.hasOne(models.FuneralList, {
+      foreignKey: 'funeralId',
+      as: 'funeralList',
+    });
+    // 장례식장 호실 테이블과의 관계설정
+    this.hasMany(models.FuneralHallInfo, {
+      foreignKey: 'funeralId',
+      as: 'funeralHallInfos',
+    });
+    // 입찰 테이블과의 관계설정
+    this.hasMany(models.ManagerFormBid, {
+      foreignKey: 'funeralId',
+      as: 'managerFormBids',
+    });
   }
-
-  /**
-   * 비밀번호 해시를 위한 훅
-   */
-  static hooks = {
-    beforeCreate: async (funeral) => {
-      if (funeral.funeralPassword) {
-        funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
-      }
-    },
-    beforeUpdate: async (funeral) => {
-      if (funeral.changed('funeralPassword')) {
-        funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
-      }
-    },
-  };
 
   /**
    * 비밀번호 검증 인스턴스 메서드

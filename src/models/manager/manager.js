@@ -85,6 +85,18 @@ class Manager extends Sequelize.Model {
         timestamps: true,
         paranoid: true,
         comment: '상조팀장 관련 회원 정보 테이블',
+        hooks: {
+          beforeCreate: async (manager) => {
+            if (manager.managerPassword) {
+              manager.managerPassword = await bcrypt.hash(manager.managerPassword, 10);
+            }
+          },
+          beforeUpdate: async (manager) => {
+            if (manager.changed('managerPassword')) {
+              manager.managerPassword = await bcrypt.hash(manager.managerPassword, 10);
+            }
+          },
+        },
       },
     );
   }
@@ -124,22 +136,6 @@ class Manager extends Sequelize.Model {
       as: 'managerAddDocuments',
     });
   }
-
-  /**
-   * 비밀번호 해시를 위한 훅
-   */
-  static hooks = {
-    beforeCreate: async (manager) => {
-      if (manager.managerPassword) {
-        manager.managerPassword = await bcrypt.hash(manager.managerPassword, 10);
-      }
-    },
-    beforeUpdate: async (manager) => {
-      if (manager.changed('managerPassword')) {
-        manager.managerPassword = await bcrypt.hash(manager.managerPassword, 10);
-      }
-    },
-  };
 
   /**
    * 비밀번호 검증 인스턴스 메서드

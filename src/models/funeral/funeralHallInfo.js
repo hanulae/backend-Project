@@ -11,10 +11,10 @@ class FuneralHallInfo extends Sequelize.Model {
           primaryKey: true,
           comment: '장례식장 호실 고유 ID',
         },
-        funeralListId: {
+        funeralId: {
           type: DataTypes.UUID,
           allowNull: false,
-          comment: '장례식장 리스트 고유 ID (FK)',
+          comment: '장례식장 회원 고유 ID (FK)',
         },
         funeralHallName: {
           type: DataTypes.STRING(50),
@@ -73,7 +73,16 @@ class FuneralHallInfo extends Sequelize.Model {
       foreignKey: 'funeralHallId',
       as: 'funeralHallInfoImages',
     });
-    // 장례식장 리스트 테이블과의 관계 생성 - 추후 필요
+    // 장례식장 리스트 테이블과의 관계 설정
+    this.belongsTo(models.Funeral, {
+      foreignKey: 'funeralId',
+      as: 'funeral',
+    });
+    // 입찰 테이블과의 관계 설정
+    this.hasMany(models.ManagerFormBid, {
+      foreignKey: 'funeralHallId',
+      as: 'managerFormBid',
+    });
   }
 }
 export default FuneralHallInfo;

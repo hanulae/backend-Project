@@ -20,6 +20,11 @@ class ManagerFormBid extends Sequelize.Model {
           allowNull: false,
           comment: '장례식장 리스트 고유 ID (FK)',
         },
+        funeralId: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          comment: '회원가입 한 장례식장 회원 고유 ID (FK)',
+        },
         funeralHallId: {
           type: DataTypes.UUID,
           allowNull: true,
@@ -45,7 +50,8 @@ class ManagerFormBid extends Sequelize.Model {
           type: DataTypes.ENUM(
             'pending', // 상조팀장이 견적 신청, 장례식장 응답 대기 중
             'bid_submitted', // 장례식장이 입찰 제출
-            'bid_selected', // 상조팀장이 입찰 선택
+            'bid_selected', // 상조팀장이 입찰 선택 및 출동 신청
+            'bid_progress', // 장례식장 + 상조팀장 출동요청 및 출동 승인 후 거래 진행중 상태
             'deceased_arrived', // 고인 안치 완료 (추후 생각 필요)
             'transaction_completed', // 거래 완료
             'rejected', // 거절/취소
@@ -123,10 +129,21 @@ class ManagerFormBid extends Sequelize.Model {
       foreignKey: 'managerFormBidId',
       as: 'funeralCashHistories',
     });
-
-    // 장례식장 ID - 추후 기입 예정
-
-    // 호실 정보 ID - 추후 기입 예정
+    // 장례식장 리스트 테이블과의 관계 설정
+    this.belongsTo(models.FuneralList, {
+      foreignKey: 'funeralListId',
+      as: 'funeralList',
+    });
+    // 호실 정보 테이블과의 관계 설정
+    this.belongsTo(models.FuneralHallInfo, {
+      foreignKey: 'funeralHallId',
+      as: 'funeralHallInfo',
+    });
+    // 장례식장 테이블과의 관계 설정
+    this.belongsTo(models.Funeral, {
+      foreignKey: 'funeralId',
+      as: 'funeral',
+    });
   }
 }
 export default ManagerFormBid;
