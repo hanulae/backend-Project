@@ -5,9 +5,6 @@ const router = express.Router();
 
 router.post('/verify', async (req, res) => {
   const { bankCode, bankNumber, name } = req.body;
-  console.log('bankCode:', bankCode);
-  console.log('bankNumber:', bankNumber);
-  console.log('name:', name);
 
   if (!bankCode || !bankNumber || !name) {
     return res.status(400).json({ message: '필수 항목이 누락되었습니다.' });
