@@ -13,6 +13,21 @@ router.get('/requests', async (req, res) => {
   }
 });
 
+router.get('/requests/file/:funeralId/file', async (req, res) => {
+  try {
+    const { funeralId } = req.params;
+    const file = await funeralApprovalService.getFuneralDocument(funeralId);
+
+    if (!file) {
+      return res.status(404).json({ message: '등록된 파일이 없습니다.' });
+    }
+
+    res.status(200).json({ message: '장례식장 추가파일 조회 성공', data: file });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // ✅ 장례식장 가입 승인/거절
 router.patch('/requests/approve/:funeralId', async (req, res) => {
   try {

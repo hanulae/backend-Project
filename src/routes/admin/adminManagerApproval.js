@@ -13,6 +13,21 @@ router.get('/requests', async (req, res) => {
   }
 });
 
+router.get('/reguest/file/:managerId/file', async (req, res) => {
+  try {
+    const { managerId } = req.params;
+    const file = await managerApprovalService.getManagerDocument(managerId);
+
+    if (!file) {
+      return res.status(404).json({ message: '등록된 파일이 없습니다.' });
+    }
+
+    res.status(200).json({ message: '상조팀장 추가파일 조회 성공', data: file });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // 가입 승인 또는 거절
 router.patch('/requests/approve/:managerId', async (req, res) => {
   try {

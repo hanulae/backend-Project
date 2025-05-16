@@ -40,6 +40,17 @@ export const updateApproval = async (funeralId, isApproved) => {
   }
 };
 
+export const findByFuneralId = async (funeralId) => {
+  try {
+    return await db.FuneralAddDocument.findOne({
+      where: { funeralId },
+      attributes: ['fileUrl', 'createdAt'],
+    });
+  } catch (error) {
+    throw new Error('장례식장 파일 조회 오류: ' + error.message);
+  }
+};
+
 export const findByApprovalStatus = async (isApproved = false) => {
   try {
     return await db.Funeral.findAll({
