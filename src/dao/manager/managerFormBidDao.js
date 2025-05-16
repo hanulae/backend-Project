@@ -87,7 +87,7 @@ const managerFormBidDao = {
   /**
    * managerFormBidId를 기반으로 입찰 신청서 조회
    */
-  async getManagerFormBidById(managerFormBidId, type = 'funeral', options = {}) {
+  async getManagerFormBidById(managerFormBidId, type, options = {}) {
     if (type === 'funeral') {
       const bid = await ManagerFormBid.findByPk(managerFormBidId, options);
       return bid;
@@ -120,22 +120,34 @@ const managerFormBidDao = {
   },
 
   /**
-   * 장례식장 입찰 신청
+   * 장례식장 입찰 신청, 상조팀장 출동 신청 시 상태 업데이트
    */
-  async updateManagerFormBid(params, options = {}) {
-    const result = await ManagerFormBid.update(
-      {
+  async updateManagerFormBidStatus(params, status, options = {}) {
+    let updateData = {};
+    if (status === 'bid_submitted') {
+      updateData = {
         ...params,
-        bidStatus: 'bid_submitted',
+        bidStatus: status,
         bidSubmittedAt: new Date(),
+      };
+    } else if (status === 'bid_selected') {
+      updateData = {
+        bidStatus: status,
+        bidSelectedAt: new Date(),
+      };
+    } else if (status === 'cancel') {
+      updateData = {
+        bidStatus: 'bid_submitted',
+        bidSelectedAt: null,
+      };
+    }
+
+    const result = await ManagerFormBid.update(updateData, {
+      where: {
+        managerFormBidId: params.managerFormBidId,
       },
-      {
-        where: {
-          managerFormBidId: params.managerFormBidId,
-        },
-        ...options,
-      },
-    );
+      ...options,
+    });
 
     return result;
   },

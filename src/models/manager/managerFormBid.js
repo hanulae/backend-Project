@@ -50,7 +50,8 @@ class ManagerFormBid extends Sequelize.Model {
           type: DataTypes.ENUM(
             'pending', // 상조팀장이 견적 신청, 장례식장 응답 대기 중
             'bid_submitted', // 장례식장이 입찰 제출
-            'bid_selected', // 상조팀장이 입찰 선택
+            'bid_selected', // 상조팀장이 입찰 선택 및 출동 신청
+            'bid_progress', // 장례식장 + 상조팀장 출동요청 및 출동 승인 후 거래 진행중 상태
             'deceased_arrived', // 고인 안치 완료 (추후 생각 필요)
             'transaction_completed', // 거래 완료
             'rejected', // 거절/취소

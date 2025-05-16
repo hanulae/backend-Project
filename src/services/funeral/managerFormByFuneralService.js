@@ -49,9 +49,13 @@ const managerFormByFuneralService = {
     const transaction = await sequelize.transaction();
     try {
       // 1. 기존 입찰 데이터 조회
-      const existingBid = await managerFormBidDao.getManagerFormBidById(params.managerFormBidId, {
-        transaction,
-      });
+      const existingBid = await managerFormBidDao.getManagerFormBidById(
+        params.managerFormBidId,
+        'funeral',
+        {
+          transaction,
+        },
+      );
 
       if (!existingBid) {
         throw new Error('입찰 정보를 찾지 못함');
@@ -73,10 +77,14 @@ const managerFormByFuneralService = {
       }
 
       // 2. managerFormBid 입찰 신청 처리
-      const result = await managerFormBidDao.updateManagerFormBid(params, { transaction });
+      const result = await managerFormBidDao.updateManagerFormBidStatus(params, 'bid_submitted', {
+        transaction,
+      });
 
       // 3. managerForm status update
-      await managerFormDao.updateManagerFormStatus(existingBid.managerFormId, { transaction });
+      await managerFormDao.updateManagerFormStatus(existingBid.managerFormId, 'bid_received', {
+        transaction,
+      });
 
       await transaction.commit();
       return result;

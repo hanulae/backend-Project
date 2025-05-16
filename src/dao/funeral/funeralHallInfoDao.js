@@ -30,6 +30,10 @@ const funeralHallInfoDao = {
 
     return result;
   },
+
+  // 수정
+
+  // 삭제
 };
 
 export default funeralHallInfoDao;

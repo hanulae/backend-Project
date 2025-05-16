@@ -125,6 +125,8 @@ const managerFormService = {
     // 2. managerFormBid 데이터 포멧팅
     const formattedBid = {
       managerFormBidId: managerFormBid.managerFormBidId,
+      managerFormId: managerFormBid.managerFormId,
+      funeralId: managerFormBid.funeralId,
       funeralName: managerFormBid.funeralList.funeral_name,
       funeralHallName: managerFormBid.funeralHallInfo.funeralHallName,
       funeralHallSize: managerFormBid.funeralHallInfo.funeralHallSize,

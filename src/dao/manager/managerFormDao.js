@@ -47,12 +47,12 @@ const managerFormDao = {
   },
 
   /**
-   * 장례식장에서 견적서에 대해 입찰 시 managerForm의 status를 업데이트
+   * 견적서 상태 업데이트
    */
-  async updateManagerFormStatus(managerFormId, options = {}) {
+  async updateManagerFormStatus(managerFormId, status, options = {}) {
     const result = await ManagerForm.update(
       {
-        formStatus: 'bid_received',
+        formStatus: status,
       },
       {
         where: { managerFormId: managerFormId },
