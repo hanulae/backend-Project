@@ -13,6 +13,10 @@ export const getPendingManagers = async () => {
   return await managerApprovalDao.findAllPending();
 };
 
+export const getManagerDocument = async (managerId) => {
+  return await managerApprovalDao.findByManagerId(managerId);
+};
+
 export const setApprovalStatus = async (managerId, isApproved) => {
   return await managerApprovalDao.updateApproval(managerId, isApproved);
 };

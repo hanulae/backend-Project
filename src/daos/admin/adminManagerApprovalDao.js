@@ -34,6 +34,17 @@ export const updateApproval = async (managerId, isApproved) => {
   }
 };
 
+export const findByManagerId = async (managerId) => {
+  try {
+    return await db.ManagerAddDocument.findOne({
+      where: { managerId },
+      attributes: ['fileUrl', 'createdAt'],
+    });
+  } catch (error) {
+    throw new Error('상조팀장 파일 조회 오류: ' + error.message);
+  }
+};
+
 export const findByApprovalStatus = async (isApproved = false) => {
   try {
     return await db.Manager.findAll({

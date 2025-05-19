@@ -1,5 +1,5 @@
 import express from 'express';
-import * as pointService from '../../services/manager/pointService.js';
+import * as pointService from '../../services/manager/managerPointService.js';
 
 const router = express.Router();
 

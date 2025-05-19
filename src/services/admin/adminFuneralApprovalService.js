@@ -10,6 +10,10 @@ export const getPendingFunerals = async () => {
   return await funeralApprovalDao.findAllPending();
 };
 
+export const getFuneralDocument = async (funeralId) => {
+  return await funeralApprovalDao.findByFuneralId(funeralId);
+};
+
 export const setApprovalStatus = async (funeralId, isApproved) => {
   return await funeralApprovalDao.updateApproval(funeralId, isApproved);
 };

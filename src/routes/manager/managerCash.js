@@ -1,25 +1,58 @@
 import express from 'express';
-import * as cashService from '../../services/manager/cashService.js';
+import * as managerCashService from '../../services/manager/managerCashService.js';
+import { getPortOneToken, verifyPortOnePayment } from '../../utils/portone.js';
 
 const router = express.Router();
 
-// 캐시 환급 요청
-router.post('/request-withdraw', async (req, res) => {
+// 캐시 충전 - PortOne 결제 검증 포함
+router.post('/topup', async (req, res) => {
   try {
-    const { managerId, amount } = req.body;
-    const result = await cashService.requestCashWithdraw(managerId, amount);
-    res.status(200).json({ message: '캐시 환급 요청 성공', data: result });
+    const { imp_uid, amount, managerId } = req.body;
+
+    if (!imp_uid || !amount || !managerId) {
+      return res.status(400).json({ message: '필수 정보 누락: imp_uid, amount, managerId' });
+    }
+
+    // 1. PortOne 토큰 발급
+    const accessToken = await getPortOneToken();
+
+    // 2. PortOne 결제 정보 조회
+    const paymentData = await verifyPortOnePayment(accessToken, imp_uid);
+
+    // 3. 결제 금액 일치 확인
+    if (paymentData.amount !== amount) {
+      return res.status(400).json({ message: '결제 금액 불일치' });
+    }
+
+    // 4. DB에 캐시 충전 기록 반영
+    const result = await managerCashService.topupCash({
+      managerId,
+      amount,
+      bankTransactionId: imp_uid,
+    });
+
+    res.status(201).json({ message: '캐시 충전 성공', data: result });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// 캐시 사용/적립 내역
-router.get('/history', async (req, res) => {
+// 캐시 환급
+router.post('/withdraw', async (req, res) => {
   try {
-    const { managerId, page = 1, limit = 10 } = req.query;
-    const result = await cashService.getCashHistory(managerId, page, limit);
-    res.status(200).json({ message: '캐시 내역 조회 성공', ...result });
+    const result = await managerCashService.withdrawCash(req.body);
+    res.status(200).json({ message: '캐시 환급 완료', data: result });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// 캐시 사용/적립 내역 조회
+router.get('/history/:managerId', async (req, res) => {
+  try {
+    const { managerId } = req.params;
+    const history = await managerCashService.getCashHistory(managerId);
+    res.status(200).json({ message: '캐시 히스토리 조회 성공', data: history });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

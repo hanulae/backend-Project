@@ -1,5 +1,5 @@
 import express from 'express';
-import { sendVerificationSMS, verifyCode } from '../../services/manager/smsService.js';
+import { sendVerificationSMS, verifyCode } from '../../services/manager/managerSmsService.js';
 
 const router = express.Router();
 
