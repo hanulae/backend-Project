@@ -71,6 +71,7 @@ const dispatchRequestDao = {
   /**
    * 출동 신청서 상태(isApproved) 변경
    * @param {Object} dispatchRequestId
+   * @param {String} status
    * @param {Object} options
    * @returns {Promise<DispatchRequest>}
    */

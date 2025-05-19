@@ -74,14 +74,14 @@ router.get(
  * 출동 신청 내역 리스트 조회
  */
 router.get(
-  '/list/:userId',
-  validateRequiredFields(['userId'], 'params'),
-  validateUUID(['userId'], 'params'),
+  '/list/:managerId',
+  validateRequiredFields(['managerId'], 'params'),
+  validateUUID(['managerId'], 'params'),
   async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const managerId = req.params.managerId;
 
-      const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(userId);
+      const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(managerId);
 
       res.status(200).json({
         success: true,
