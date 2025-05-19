@@ -76,6 +76,11 @@ class ManagerFormBid extends Sequelize.Model {
           allowNull: true,
           comment: '상조팀장이 입찰을 선택한 시간(출동 신청)',
         },
+        bidApprovedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          comment: '장례식장이 출동신청을 승인한 시간',
+        },
         deceasedArrivedAt: {
           type: DataTypes.DATE,
           allowNull: true,
