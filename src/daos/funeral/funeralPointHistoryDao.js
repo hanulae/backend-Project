@@ -1,16 +1,11 @@
 import db from '../../models/index.js';
 
-export const createInitialPoint = async (funeralId) => {
+export const create = async (pointData, options = {}) => {
   try {
-    return await db.FuneralPointHistory.create({
-      funeralId,
-      transactionType: 'service_point',
-      funeralPointAmount: 0,
-      funeralPointBalanceAfter: 0,
-      status: 'completed',
-    });
+    const result = await db.FuneralPointHistory.create(pointData, options);
+    return result;
   } catch (error) {
-    console.error('포인트 초기화 오류:', error.message);
+    console.error('⚠️ 포인트 히스토리 생성 오류:', error.message);
     throw error;
   }
 };

@@ -14,7 +14,7 @@ export const getPendingManagers = async () => {
 };
 
 export const getManagerDocument = async (managerId) => {
-  return await managerApprovalDao.findByManagerId(managerId);
+  return await managerApprovalDao.findManagerFile(managerId);
 };
 
 export const setApprovalStatus = async (managerId, isApproved) => {

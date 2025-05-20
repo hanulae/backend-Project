@@ -6,7 +6,6 @@ import { deleteS3Object } from '../../config/s3.js'; // AWS S3 연결 모듈
 const router = express.Router();
 
 router.post('/signup', uploadManagerFile, async (req, res) => {
-  console.log('🚀 ~ router.post ~ req.body.managerEmail:', req.body.managerEmail);
   try {
     const params = {
       managerEmail: req.body.managerEmail,

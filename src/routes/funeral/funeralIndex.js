@@ -7,6 +7,7 @@ import funeralSMS from './funeralSMS.js';
 import funeralAccount from './funeralAccount.js';
 import funeralUser from './funeralUser.js';
 import funeralStaff from './funeralStaff.js';
+import funeralCash from './funeralCash.js';
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use('/user', funeralUser);
 router.use('/staff', funeralStaff);
 router.use('/form', managerFormByFuneral);
 router.use('/room', funeralInfo);
+router.use('/cash', funeralCash);
 
 export default router;

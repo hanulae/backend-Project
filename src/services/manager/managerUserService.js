@@ -1,4 +1,6 @@
+import db from '../../models/index.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
+import * as managerAddDocumentDao from '../../daos/admin/managerAddDocumentDao.js';
 import * as managerPointHistoryDao from '../../daos/manager/managerPointHistoryDao.js';
 import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
 import dotenv from 'dotenv';
@@ -6,9 +8,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const registerManager = async (params) => {
-  //console.log("🚀 ~ registerManager ~ params:", params)
-  // 필수 정보 확인
-
   if (
     !params.managerEmail ||
     !params.managerPassword ||
@@ -21,40 +20,72 @@ export const registerManager = async (params) => {
     throw new Error('필수 정보가 누락되었습니다.');
   }
 
-  //const hashedPassword = await bcrypt.hash(params.managerPassword, SALT_ROUNDS);
+  const fileUrl = params.file.location;
+  const fileName = params.file.originalname;
 
-  const fileUrl = params.file.location; // S3에서 반환된 URL
+  const transaction = await db.sequelize.transaction();
 
-  const managerData = {
-    managerEmail: params.managerEmail,
-    managerPassword: params.managerPassword,
-    managerName: params.managerName,
-    managerPhoneNumber: params.managerPhoneNumber,
-    managerBankName: params.managerBankName,
-    managerBankNumber: params.managerBankNumber,
-    managerBankHolder: params.managerName,
-    fileUrl: fileUrl,
-  };
+  try {
+    // 1. 상조팀장 생성
+    const managerData = {
+      managerEmail: params.managerEmail,
+      managerPassword: params.managerPassword,
+      managerName: params.managerName,
+      managerPhoneNumber: params.managerPhoneNumber,
+      managerBankName: params.managerBankName,
+      managerBankNumber: params.managerBankNumber,
+      managerBankHolder: params.managerName,
+    };
 
-  const result = await managerUserDao.insert(managerData);
+    const result = await managerUserDao.insert(managerData, { transaction });
 
-  // 2. 포인트 히스토리 초기값 생성
-  await managerPointHistoryDao.create({
-    managerId: result.managerId,
-    transactionType: 'service_point',
-    managerPointAmount: 0,
-    managerPointBalanceAfter: 0,
-    status: 'completed',
-  });
+    // 2. 문서 정보 저장
+    await managerAddDocumentDao.create(
+      {
+        managerId: result.managerId,
+        managerDocName: fileName,
+        managerDocPath: fileUrl,
+      },
+      { transaction },
+    );
 
-  // 3. 캐시 히스토리 초기값 생성
-  await managerCashHistoryDao.create({
-    managerId: result.managerId,
-    transactionType: 'service_cash',
-    managerCashAmount: 0,
-    managerCashBalanceAfter: 0,
-    status: 'completed',
-  });
+    // 3. 포인트 히스토리 초기화
+    await managerPointHistoryDao.create(
+      {
+        managerId: result.managerId,
+        transactionType: 'service_point',
+        managerPointAmount: 0,
+        managerPointBalanceAfter: 0,
+        status: 'completed',
+      },
+      { transaction },
+    );
 
-  return result;
+    // 4. 캐시 히스토리 초기화
+    await managerCashHistoryDao.create(
+      {
+        managerId: result.managerId,
+        transactionType: 'service_cash',
+        managerCashAmount: 0,
+        managerCashBalanceAfter: 0,
+        status: 'completed',
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+    return {
+      manager: result,
+      fileUrl, // ✅ 추가된 리턴 값
+    };
+  } catch (error) {
+    await transaction.rollback();
+
+    // ✅ 실패 시 생성된 상조팀장 계정 삭제 (manual fallback)
+    if (params.managerEmail) {
+      await managerUserDao.deleteByEmail(params.managerEmail);
+    }
+
+    throw error;
+  }
 };
