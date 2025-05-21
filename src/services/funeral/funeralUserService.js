@@ -81,3 +81,17 @@ export const registerFuneral = async (params) => {
     throw new Error('회원가입 중 오류 발생: ' + error.message);
   }
 };
+
+export const getMyProfile = async (funeralId) => {
+  try {
+    const funeral = await funeralUserDao.findById(funeralId);
+
+    if (!funeral) {
+      throw new Error('상조팀장 정보를 찾을 수 없습니다.');
+    }
+
+    return funeral.toSafeObject(); // 비밀번호 제외한 안전한 데이터만 전달
+  } catch (error) {
+    throw new Error('프로필 조회 실패: ' + error.message);
+  }
+};

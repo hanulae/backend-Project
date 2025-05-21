@@ -89,3 +89,17 @@ export const registerManager = async (params) => {
     throw error;
   }
 };
+
+export const getMyProfile = async (managerId) => {
+  try {
+    const manager = await managerUserDao.findById(managerId);
+
+    if (!manager) {
+      throw new Error('상조팀장 정보를 찾을 수 없습니다.');
+    }
+
+    return manager.toSafeObject(); // 비밀번호 제외한 안전한 데이터만 전달
+  } catch (error) {
+    throw new Error('프로필 조회 실패: ' + error.message);
+  }
+};
