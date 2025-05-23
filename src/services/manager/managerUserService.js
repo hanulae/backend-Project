@@ -2,7 +2,7 @@ import db from '../../models/index.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as managerAddDocumentDao from '../../daos/admin/managerAddDocumentDao.js';
 import * as managerPointHistoryDao from '../../daos/manager/managerPointHistoryDao.js';
-import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
+//import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -54,23 +54,32 @@ export const registerManager = async (params) => {
       {
         managerId: result.managerId,
         transactionType: 'service_point',
-        managerPointAmount: 0,
-        managerPointBalanceAfter: 0,
+        managerPointAmount: 50000,
+        managerPointBalanceAfter: 50000,
         status: 'completed',
       },
       { transaction },
     );
 
     // 4. 캐시 히스토리 초기화
-    await managerCashHistoryDao.create(
+    // await managerCashHistoryDao.create(
+    //   {
+    //     managerId: result.managerId,
+    //     transactionType: 'service_cash',
+    //     managerCashAmount: 0,
+    //     managerCashBalanceAfter: 0,
+    //     status: 'completed',
+    //   },
+    //   { transaction },
+    // );
+
+    // 🔁 실제 Funeral 테이블 업데이트
+    await db.Manager.update(
       {
-        managerId: result.managerId,
-        transactionType: 'service_cash',
-        managerCashAmount: 0,
-        managerCashBalanceAfter: 0,
-        status: 'completed',
+        managerPoint: 50000,
+        managerCash: 0,
       },
-      { transaction },
+      { where: { managerId: result.managerId }, transaction },
     );
 
     await transaction.commit();

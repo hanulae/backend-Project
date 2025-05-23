@@ -2,7 +2,7 @@ import db from '../../models/index.js';
 import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js';
 import * as funeralAddDocumentDao from '../../daos/admin/funeralAddDocumentDao.js';
 import * as funeralPointHistoryDao from '../../daos/funeral/funeralPointHistoryDao.js';
-import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
+//import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
 
 export const registerFuneral = async (params) => {
   if (
@@ -52,22 +52,31 @@ export const registerFuneral = async (params) => {
       {
         funeralId: result.funeralId,
         transactionType: 'service_point',
-        funeralPointAmount: 0,
-        funeralPointBalanceAfter: 0,
+        funeralPointAmount: 50000, // ✅ 지급 포인트
+        funeralPointBalanceAfter: 50000, // ✅ 초기 잔액 반영
         status: 'completed',
       },
       { transaction },
     );
 
-    await funeralCashHistoryDao.create(
+    // await funeralCashHistoryDao.create(
+    //   {
+    //     funeralId: result.funeralId,
+    //     transactionType: 'service_cash',
+    //     funeralCashAmount: 0,
+    //     funeralCashBalanceAfter: 0,
+    //     status: 'completed',
+    //   },
+    //   { transaction },
+    // );
+
+    // 🔁 실제 Funeral 테이블 업데이트
+    await db.Funeral.update(
       {
-        funeralId: result.funeralId,
-        transactionType: 'service_cash',
-        funeralCashAmount: 0,
-        funeralCashBalanceAfter: 0,
-        status: 'completed',
+        funeralPoint: 50000,
+        funeralCash: 0,
       },
-      { transaction },
+      { where: { funeralId: result.funeralId }, transaction },
     );
 
     // 4. 커밋
