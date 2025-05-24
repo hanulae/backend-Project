@@ -124,8 +124,45 @@ router.delete(
   },
 
   /**
-   * 거래완료
+   * 장례식장 전화번호 불러오기
    */
+  router.get(
+    '/funeral-phone-number/:funeralId',
+    validateRequiredFields(['funeralId'], 'params'),
+    validateUUID(['funeralId'], 'params'),
+    async (req, res) => {
+      const funeralId = req.params.funeralId;
+
+      const funeralPhoneNumber = await dispatchRequestService.getFuneralPhoneNumber(funeralId);
+
+      res.status(200).json({
+        success: true,
+        funeralPhoneNumber,
+      });
+    },
+  ),
+
+  /**
+   * 상조 팀장 거래 확정 처리
+   */
+  router.post(
+    '/complete/:dispatchRequestId',
+    validateRequiredFields(['dispatchRequestId'], 'params'),
+    validateUUID(['dispatchRequestId'], 'params'),
+    async (req, res) => {
+      const dispatchRequestId = req.params.dispatchRequestId;
+
+      const result = await dispatchRequestService.completeDispatchRequest(
+        dispatchRequestId,
+        'manager',
+      );
+
+      res.status(200).json({
+        success: result.success,
+        message: result.message,
+      });
+    },
+  ),
 );
 
 export default router;

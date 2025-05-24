@@ -14,3 +14,23 @@ export const createInitialPoint = async (funeralId) => {
     throw error;
   }
 };
+
+export const createFuneralPointHistory = async (
+  pointHistoryData,
+  transactionType,
+  options = {},
+) => {
+  try {
+    return await db.FuneralPointHistory.create(
+      {
+        ...pointHistoryData,
+        transactionType,
+        status: pointHistoryData.status || 'pending',
+      },
+      { ...options },
+    );
+  } catch (error) {
+    console.error('포인트 히스토리 생성 오류:', error.message);
+    throw error;
+  }
+};

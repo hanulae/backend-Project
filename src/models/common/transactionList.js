@@ -49,6 +49,21 @@ class TransactionList extends Sequelize.Model {
           defaultValue: 'pending',
           comment: '거래 상태',
         },
+        managerTransactionCompletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          comment: '상조팀장 거래 완료 일자',
+        },
+        funeralTransactionCompletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          comment: '장례식장 거래 완료 일자',
+        },
+        transactionCompletedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+          comment: '최종 거래 완료 일자',
+        },
       },
       {
         sequelize,

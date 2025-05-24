@@ -14,3 +14,19 @@ export const createInitialCash = async (funeralId) => {
     throw error;
   }
 };
+
+export const createFuneralCashHistory = async (cashHistoryData, transactionType, options = {}) => {
+  try {
+    return await db.FuneralCashHistory.create(
+      {
+        ...cashHistoryData,
+        transactionType,
+        status: cashHistoryData.status || 'pending',
+      },
+      { ...options },
+    );
+  } catch (error) {
+    console.error('캐시 히스토리 생성 오류:', error.message);
+    throw error;
+  }
+};
