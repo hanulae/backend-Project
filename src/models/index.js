@@ -14,6 +14,7 @@ import FuneralHallInfo from './funeral/funeralHallInfo.js';
 import FuneralHallInfoImage from './funeral/funeralHallInfoImage.js';
 import FuneralPointHistory from './funeral/funeralPointHistory.js';
 import FuneralStaff from './funeral/funeralStaff.js';
+import FuneralStaffPermission from './funeral/funeralStaffPermission.js';
 import FuneralList from './funeral/funeralList.js';
 
 import DispatchRequest from './common/dispatchRequest.js';
@@ -39,6 +40,7 @@ db.FuneralHallInfo = FuneralHallInfo;
 db.FuneralHallInfoImage = FuneralHallInfoImage;
 db.FuneralPointHistory = FuneralPointHistory;
 db.FuneralStaff = FuneralStaff;
+db.FuneralStaffPermission = FuneralStaffPermission;
 db.FuneralList = FuneralList;
 
 db.DispatchRequest = DispatchRequest;

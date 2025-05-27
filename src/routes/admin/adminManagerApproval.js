@@ -3,7 +3,7 @@ import * as managerApprovalService from '../../services/admin/adminManagerApprov
 
 const router = express.Router();
 
-// [GET] 가입 요청 목록
+// [GET] 가입 요청 목록 (승인/요청 구분)
 router.get('/requests', async (req, res) => {
   try {
     const result = await managerApprovalService.getGroupedManagerList();
@@ -13,7 +13,8 @@ router.get('/requests', async (req, res) => {
   }
 });
 
-router.get('/reguest/file/:managerId/file', async (req, res) => {
+// [GET] 상조팀장 등록 파일 조회
+router.get('/requests/file/:managerId', async (req, res) => {
   try {
     const { managerId } = req.params;
     const file = await managerApprovalService.getManagerDocument(managerId);
@@ -28,7 +29,7 @@ router.get('/reguest/file/:managerId/file', async (req, res) => {
   }
 });
 
-// 가입 승인 또는 거절
+// [PATCH] 가입 승인/거절 처리
 router.patch('/requests/approve/:managerId', async (req, res) => {
   try {
     const { managerId } = req.params;

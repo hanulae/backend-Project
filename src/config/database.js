@@ -55,11 +55,12 @@ export async function connectToDatabase() {
     logger.info('데이터베이스 연결 성공');
 
     await import('../models/index.js');
-    
+
     // 개발 환경에서는 모델 동기화
     if (NODE_ENV === 'development') {
       // force: true는 모든 테이블을 지우고 재생성합니다 유의해주세요 (데이터 손실됨)
       // alter: true는 테이블 구조만 변경합니다.
+      //await sequelize.sync({ alter: true });
       logger.info('데이터베이스 모델 동기화 완료');
     }
 

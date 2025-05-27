@@ -1,6 +1,7 @@
 import express from 'express';
 import * as funeralUserService from '../../services/funeral/funeralUserService.js';
 import uploadFuneralFile from '../../middlewares/uploadFuneralFile.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -30,4 +31,19 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
   }
 });
 
+// 내 프로필 조회
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const funeralId = req.user.funeralId;
+    const profile = await funeralUserService.getMyProfile(funeralId);
+
+    if (!profile) {
+      return res.status(404).json({ message: '프로필 정보를 찾을 수 없습니다.' });
+    }
+
+    res.status(200).json({ message: '프로필 조회 성공', data: profile });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 export default router;

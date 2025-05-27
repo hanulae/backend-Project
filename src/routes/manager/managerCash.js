@@ -1,5 +1,6 @@
 import express from 'express';
 import * as managerCashService from '../../services/manager/managerCashService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 import { getPortOneToken, verifyPortOnePayment } from '../../utils/portone.js';
 
 const router = express.Router();
@@ -38,12 +39,17 @@ router.post('/topup', async (req, res) => {
 });
 
 // 캐시 환급
-router.post('/withdraw', async (req, res) => {
+router.post('/refund', authMiddleware, async (req, res) => {
   try {
-    const result = await managerCashService.withdrawCash(req.body);
-    res.status(200).json({ message: '캐시 환급 완료', data: result });
+    const { amountCash } = req.body;
+    const managerId = req.user.managerId;
+
+    const params = { managerId, amountCash };
+    const result = await managerCashService.requestCashRefund(params);
+
+    res.status(200).json({ message: '환급 요청 성공', data: result });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
