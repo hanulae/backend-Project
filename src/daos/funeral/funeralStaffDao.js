@@ -1,23 +1,26 @@
 import db from '../../models/index.js';
 
-export const create = async (data) => {
+export const create = async (data, options = {}) => {
   try {
-    return await db.FuneralStaff.create(data);
+    return await db.FuneralStaff.create(data, options);
   } catch (error) {
-    throw new Error('직원 생성 오류:' + error);
+    throw new Error('직원 생성 오류: ' + error.message);
   }
 };
 
-export const update = async (staffId, data) => {
+export const update = async (funeralStaffId, data) => {
   try {
-    const [updatedCount, updatedRows] = await db.FuneralStaff.update(data, {
-      where: { funeralStaffId: staffId },
-      returning: true,
+    const [updatedCount] = await db.FuneralStaff.update(data, {
+      where: { funeralStaffId },
     });
-    if (updatedCount === 0) throw new Error('해당 직원이 존재하지 않습니다.');
-    return updatedRows[0];
+
+    if (updatedCount === 0) {
+      throw new Error('해당 직원이 존재하지 않습니다.');
+    }
+
+    return await db.FuneralStaff.findByPk(funeralStaffId);
   } catch (error) {
-    throw new Error('직원 수정 오류:' + error);
+    throw new Error('직원 수정 오류: ' + error.message);
   }
 };
 

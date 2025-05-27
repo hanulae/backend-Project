@@ -20,6 +20,24 @@ export const registerManager = async (params) => {
     throw new Error('필수 정보가 누락되었습니다.');
   }
 
+  // ✅ 이메일 형식 검증
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(params.managerEmail)) {
+    throw new Error('유효한 이메일 형식이 아닙니다.');
+  }
+
+  // ✅ 핸드폰 번호 형식 검증 (대한민국 기준)
+  const phoneRegex = /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/;
+  if (!phoneRegex.test(params.managerPhoneNumber)) {
+    throw new Error('유효한 휴대폰 번호 형식이 아닙니다.');
+  }
+
+  // ✅ 계좌번호 형식 검증 (숫자만, 10~14자리 정도 허용)
+  const accountRegex = /^\d{10,14}$/;
+  if (!accountRegex.test(params.managerBankNumber)) {
+    throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
+  }
+
   const fileUrl = params.file.location;
   const fileName = params.file.originalname;
 
@@ -73,7 +91,7 @@ export const registerManager = async (params) => {
     //   { transaction },
     // );
 
-    // 🔁 실제 Funeral 테이블 업데이트
+    // 🔁 실제 Manager 테이블 업데이트
     await db.Manager.update(
       {
         managerPoint: 50000,
@@ -89,7 +107,6 @@ export const registerManager = async (params) => {
     };
   } catch (error) {
     await transaction.rollback();
-
     // ✅ 실패 시 생성된 상조팀장 계정 삭제 (manual fallback)
     if (params.managerEmail) {
       await managerUserDao.deleteByEmail(params.managerEmail);

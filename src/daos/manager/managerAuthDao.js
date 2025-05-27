@@ -40,6 +40,7 @@ export const findById = async (managerId) => {
 };
 
 export const updatePassword = async (managerId, newPassword) => {
+  console.log('🚀 ~ updatePassword ~ newPassword:', newPassword);
   try {
     return await db.Manager.update({ managerPassword: newPassword }, { where: { managerId } });
   } catch (error) {

@@ -24,9 +24,11 @@ export const login = async ({ funeralEmail, funeralPassword }) => {
   if (!funeral.isApproved) {
     throw new Error('관리자 승인 전 계정입니다.');
   }
-  // 평문 비밀번호 직접 비교
-  if (funeral.funeralPassword !== funeralPassword) {
-    throw new Error('비밀번호가 일치하지 않습니다.');
+
+  // 비밀번호 비교
+  const isPasswordValid = await funeral.verifyPassword(funeralPassword);
+  if (!isPasswordValid) {
+    throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
   }
 
   const accessToken = generateToken({ funeralId: funeral.funeralId });
@@ -44,10 +46,21 @@ export const updatePassword = async (params) => {
   try {
     const { funeralId, currentPassword, newPassword } = params;
 
+    // 필수 정보 확인
+    if (!funeralId || !currentPassword || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+    // 비밀번호 형식 확인
+    if (currentPassword === newPassword) {
+      throw new Error('새로운 비밀번호가 기존 비밀번호와 동일합니다.');
+    }
+    // 장례식장 정보 조회
     const funeral = await funeralAuthDao.findById(funeralId);
     if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
 
-    if (funeral.funeralPassword !== currentPassword) {
+    // 비밀번호가 현재 비밀번호와 동일한지 확인
+    const isPasswordValid = await funeral.verifyPassword(currentPassword);
+    if (!isPasswordValid) {
       throw new Error('기존 비밀번호가 일치하지 않습니다.');
     }
 

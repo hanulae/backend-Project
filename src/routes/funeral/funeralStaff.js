@@ -5,10 +5,10 @@ import authMiddleware from '../../middlewares/authMiddleware.js'; // 토큰 인�
 const router = express.Router();
 
 // 직원 생성 - JWT에서 funeralId 추출
+// 직원 생성 + 권한 등록
 router.post('/create', authMiddleware, async (req, res) => {
   try {
     const funeralId = req.user?.funeralId;
-    console.log('🚀 ~ router.post ~ funeralId:', funeralId);
 
     if (!funeralId) {
       return res.status(401).json({ message: '유효하지 않은 사용자 정보입니다.' });
@@ -19,6 +19,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       funeralStaffPhoneNumber: req.body.funeralStaffPhoneNumber,
       funeralStaffName: req.body.funeralStaffName,
       funeralStaffRole: req.body.funeralStaffRole,
+      permissions: req.body.permissions, // 프론트에서 전달되는 권한
     };
 
     const staff = await funeralStaffService.createStaff(params);
@@ -28,17 +29,27 @@ router.post('/create', authMiddleware, async (req, res) => {
   }
 });
 
-// 직원 수정
-router.patch('/update/:funeralStaffId', async (req, res) => {
+// 직원 수정 + 권한 수정
+router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
   try {
+    const { funeralStaffId } = req.params;
+    const funeralId = req.user?.funeralId;
+
+    if (!funeralId) {
+      return res.status(401).json({ message: '유효하지 않은 사용자 정보입니다.' });
+    }
+
     const params = {
-      funeralStaffId: req.params.funeralStaffId,
+      funeralStaffId,
+      funeralId,
       funeralStaffPhoneNumber: req.body.funeralStaffPhoneNumber,
       funeralStaffName: req.body.funeralStaffName,
       funeralStaffRole: req.body.funeralStaffRole,
+      permissions: req.body.permissions, // 권한 정보
     };
-    const staff = await funeralStaffService.updateStaff(params);
-    res.status(200).json({ message: '직원 수정 완료', data: staff });
+
+    const updatedStaff = await funeralStaffService.updateStaff(params);
+    res.status(200).json({ message: '직원 수정 완료', data: updatedStaff });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -23,8 +23,10 @@ export const loginManager = async ({ managerEmail, managerPassword }) => {
     if (!manager) throw new Error('존재하지 않는 이메일입니다.');
     if (!manager.isApproved) throw new Error('관리자의 승인이 필요합니다.');
 
-    if (manager.managerPassword !== managerPassword) {
-      throw new Error('비밀번호가 일치하지 않습니다.');
+    // 비밀번호 비교
+    const isPasswordValid = await manager.verifyPassword(managerPassword);
+    if (!isPasswordValid) {
+      throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
     }
 
     const accessToken = generateToken({ managerId: manager.managerId });
@@ -55,10 +57,20 @@ export const updatePassword = async (params) => {
   try {
     const { managerId, currentPassword, newPassword } = params;
 
+    // 필수정보 확인
+    if (!managerId || !currentPassword || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+    // 비밀번호가 현재 비밀번호와 동일한지 확인
+    if (currentPassword === newPassword) {
+      throw new Error('새로운 비밀번호가 기존 비밀번호와 동일합니다.');
+    }
+    // 상조팀장 정보 조회
     const manager = await managerAuthDao.findById(managerId);
     if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
 
-    if (manager.managerPassword !== currentPassword) {
+    const isPasswordValid = await manager.verifyPassword(currentPassword);
+    if (!isPasswordValid) {
       throw new Error('기존 비밀번호가 일치하지 않습니다.');
     }
 
