@@ -40,9 +40,16 @@ export const findById = async (managerId) => {
 };
 
 export const updatePassword = async (managerId, newPassword) => {
-  console.log('🚀 ~ updatePassword ~ newPassword:', newPassword);
   try {
-    return await db.Manager.update({ managerPassword: newPassword }, { where: { managerId } });
+    const manager = await db.Manager.findByPk(managerId);
+    if (!manager) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    manager.managerPassword = newPassword;
+    await manager.save();
+
+    return manager;
   } catch (error) {
     throw new Error('🔴 updatePassword 오류:' + error.message);
   }
