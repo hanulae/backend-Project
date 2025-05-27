@@ -4,7 +4,7 @@ import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 
 class DispatchRequestService {
-  // 출동 신청
+  // 상조 팀장 출동 신청 생성
   static async createDispatchRequest(params) {
     const transaction = await sequelize.transaction();
     try {
@@ -77,7 +77,7 @@ class DispatchRequestService {
     }
   }
 
-  // 출동 신청 내역 리스트 조회
+  // (공통) manager, funeral 출동 신청 내역 리스트 조회
   static async getDispatchRequestList(userId) {
     const dispatchRequestList = await dispatchRequestDao.getDispatchRequestList(userId);
 
@@ -94,7 +94,7 @@ class DispatchRequestService {
     });
   }
 
-  // 출동 신청 내역 상세 조회
+  // (공통) manager, funeral 출동 신청 내역 상세 조회
   static async getDispatchRequestDetail(dispatchRequestId) {
     const dispatchRequestDetail =
       await dispatchRequestDao.getDispatchRequestDetail(dispatchRequestId);
@@ -102,7 +102,7 @@ class DispatchRequestService {
     return dispatchRequestDetail;
   }
 
-  // 출동 신청 취소
+  // 상조 팀장 출동 신청 취소
   static async cancelDispatchRequest(dispatchRequestId) {
     const transaction = await sequelize.transaction();
     try {
@@ -166,6 +166,70 @@ class DispatchRequestService {
 
       if (updateManagerFormBidStatus[0] === 0) {
         throw new Error('실패: 출동 신청 취소 중 처리하려는 입찰 내역이 DB에서 찾을 수 없습니다.');
+      }
+
+      await transaction.commit();
+      return true;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  // 장례식장 출동 신청 승인
+  static async approveDispatchRequest(dispatchRequestId) {
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. 출동 신청서 상태 확인
+      const getDispatchRequest = await dispatchRequestDao.getDispatchRequestDetail(
+        dispatchRequestId,
+        { transaction },
+      );
+
+      if (!getDispatchRequest) {
+        throw new Error('실패: 존재하지 않는 출동 신청 내역');
+      }
+
+      if (getDispatchRequest.isApproved === 'approved') {
+        throw new Error('실패: 이미 승인된 출동 신청 내역');
+      } else if (getDispatchRequest.isApproved !== 'pending') {
+        throw new Error('실패: 승인 가능한 상태가 아님');
+      }
+
+      // 2. 출동 신청서 상태를 approve로 변경
+      const updateDispatchRequestStatus = await dispatchRequestDao.updateDispatchRequestStatus(
+        dispatchRequestId,
+        'approved',
+        { transaction },
+      );
+
+      if (updateDispatchRequestStatus[0] === 0) {
+        throw new Error('실패: 출동 신청서 상태 변경 중 오류 발생');
+      }
+
+      // 3. 견적서의 상태를 bid_progress로 변경
+      console.log('getDispatchRequest.managerFormId', getDispatchRequest.managerFormId);
+      const updateManagerFormStatus = await managerFormDao.updateManagerFormStatus(
+        getDispatchRequest.managerFormId,
+        'bid_progress',
+        { transaction },
+      );
+
+      if (updateManagerFormStatus[0] === 0) {
+        throw new Error('실패: 견적서 상태 변경 중 오류 발생');
+      }
+
+      // 4. 입찰서의 상태를 bid_progress로 변경
+      const updateManagerFormBidStatus = await managerFormBidDao.updateManagerFormBidStatus(
+        {
+          managerFormBidId: getDispatchRequest.managerFormBidId,
+        },
+        'bid_progress',
+        { transaction },
+      );
+
+      if (updateManagerFormBidStatus[0] === 0) {
+        throw new Error('실패: 입찰서 상태 변경 중 오류 발생');
       }
 
       await transaction.commit();

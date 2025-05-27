@@ -140,6 +140,11 @@ const managerFormBidDao = {
         bidStatus: 'bid_submitted',
         bidSelectedAt: null,
       };
+    } else if (status === 'bid_progress') {
+      updateData = {
+        bidStatus: status,
+        bidApprovedAt: new Date(),
+      };
     }
 
     const result = await ManagerFormBid.update(updateData, {
