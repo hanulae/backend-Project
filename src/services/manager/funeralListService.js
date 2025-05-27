@@ -40,6 +40,27 @@ const funeralListService = {
       },
     };
   },
+
+  /**
+   * 시/도 목록 조회
+   * @returns
+   */
+  async getRegions() {
+    const regions = await managerFuneralListDao.getRegions();
+
+    return regions;
+  },
+
+  /**
+   * 시/군/구 목록 조회
+   * @param {*} region
+   * @returns
+   */
+  async getCities(region) {
+    const cities = await managerFuneralListDao.getCities(region);
+
+    return cities;
+  },
 };
 
 export default funeralListService;
