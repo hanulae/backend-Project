@@ -12,7 +12,9 @@
     "prepare": "husky",
     "parsing-funeral-list": "node parsingFuneralList.js",
     "parsing-funeral-list:update": "node parsingFuneralList.js update",
-    "parsing-funeral-list:truncate": "node parsingFuneralList.js truncate"
+    "parsing-funeral-list:truncate": "node parsingFuneralList.js truncate",
+    "migrate": "NODE_ENV=development npx sequelize-cli db:migrate",
+    "migrate:undo": "NODE_ENV=development npx sequelize-cli db:migrate:undo"
   },
   "type": "module",
   "keywords": [],

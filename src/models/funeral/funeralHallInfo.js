@@ -51,6 +51,12 @@ class FuneralHallInfo extends Sequelize.Model {
           defaultValue: 'available',
           comment: '호실 상태 (추후 확장성 고려)',
         },
+        version: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          defaultValue: 0,
+          comment: '낙관적 잠금을 위한 버전 번호',
+        },
       },
       {
         sequelize,
