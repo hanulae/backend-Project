@@ -1,5 +1,6 @@
 import express from 'express';
 import * as funeralAuthService from '../../services/funeral/funeralAuthService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -24,46 +25,95 @@ router.post('/logout', (req, res) => {
 });
 
 // 비밀번호 변경
-router.patch('/password', async (req, res) => {
+router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
-    const { funeralId, newPassword } = req.body;
-    const result = await funeralAuthService.updatePassword(funeralId, newPassword);
-    res.status(200).json({ message: '비밀번호가 변경되었습니다.', data: result });
+    const { currentPassword, newPassword } = req.body;
+    const funeralId = req.user.funeralId;
+
+    const params = { funeralId, currentPassword, newPassword };
+
+    await funeralAuthService.updatePassword(params);
+
+    res.json({ message: '비밀번호 변경 완료' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 });
 
-// 전화번호 변경
-router.patch('/phone', async (req, res) => {
+// 휴대폰 번호 변경
+router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
-    const { funeralId, newPhone } = req.body;
-    const result = await funeralAuthService.updatePhone(funeralId, newPhone);
-    res.status(200).json({ message: '전화번호가 변경되었습니다.', data: result });
+    const { currentPhone, newPhone } = req.body;
+    const funeralId = req.user.funeralId;
+
+    const params = { funeralId, currentPhone, newPhone };
+
+    const updatedFuneral = await funeralAuthService.updatePhoneNumber(params);
+
+    res.status(200).json({
+      message: '휴대폰 번호 변경 완료',
+      manager: updatedFuneral.toSafeObject ? updatedFuneral.toSafeObject() : updatedFuneral,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 });
 
-// 계좌번호 변경
-router.patch('/account', async (req, res) => {
+// 계좌 정보 변경
+router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   try {
-    const { funeralId, bankName, bankNumber } = req.body;
-    const result = await funeralAuthService.updateAccount(funeralId, bankName, bankNumber);
-    res.status(200).json({ message: '계좌번호가 변경되었습니다.', data: result });
+    const funeralId = req.user.funeralId;
+    const { funeralBankName, funeralBankNumber, funeralBacnkHolder } = req.body;
+
+    // 유효성 검사: 숫자 형식 체크
+    if (!/^\d+$/.test(funeralBankNumber)) {
+      return res.status(400).json({ message: '계좌번호는 숫자만 입력 가능합니다.' });
+    }
+
+    const params = { funeralId, funeralBankName, funeralBankNumber, funeralBacnkHolder };
+    const updatedManager = await funeralAuthService.updateBankAccount(params);
+
+    res.status(200).json({
+      message: '계좌 정보 변경 완료',
+      data: updatedManager,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 });
 
-// 이메일 찾기
-router.post('/find-email', async (req, res) => {
+// SMS 인증코드 전송
+router.post('/find/email/send-sms', async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
-    const email = await funeralAuthService.findEmailByPhone(phoneNumber);
-    res.status(200).json({ message: '이메일 조회 성공', email });
+    const { funeralPhoneNumber } = req.body;
+    if (!funeralPhoneNumber) {
+      return res.status(400).json({ message: '전화번호를 입력해주세요.' });
+    }
+
+    await funeralAuthService.sendVerificationSMS(funeralPhoneNumber);
+    res.status(200).json({ message: '인증 코드가 전송되었습니다.' });
   } catch (error) {
-    res.status(404).json({ message: error.message });
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// 인증코드 검증 후 이메일 찾기
+router.post('/find/email', async (req, res) => {
+  try {
+    const { funeralPhoneNumber, code } = req.body;
+    if (!funeralPhoneNumber || !code) {
+      return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
+    }
+
+    const isVerified = await funeralAuthService.verifyCode(funeralPhoneNumber, code);
+
+    if (isVerified) {
+      res.status(200).json({ message: '인증 성공', verified: true, email: isVerified });
+    } else {
+      res.status(400).json({ message: '인증 실패', verified: false });
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 

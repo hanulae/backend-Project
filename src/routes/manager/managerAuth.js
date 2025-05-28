@@ -8,6 +8,7 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { managerEmail, managerPassword } = req.body;
+    console.log('🚀 ~ router.post ~ managerPassword:', managerPassword);
     const result = await managerAuthService.loginManager({ managerEmail, managerPassword });
     res.status(200).json({ message: '로그인 성공', ...result });
   } catch (error) {
@@ -23,11 +24,15 @@ router.post('/logout', authMiddleware, (req, res) => {
 });
 
 // 비밀번호 변경
-router.patch('/password', authMiddleware, async (req, res) => {
+router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const managerId = req.user.id;
-    await managerAuthService.updatePassword(managerId, currentPassword, newPassword);
+    const managerId = req.user.managerId;
+
+    const params = { managerId, currentPassword, newPassword };
+
+    await managerAuthService.updatePassword(params);
+
     res.json({ message: '비밀번호 변경 완료' });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -35,52 +40,78 @@ router.patch('/password', authMiddleware, async (req, res) => {
 });
 
 // 휴대폰 번호 변경
-router.patch('/phone-number', authMiddleware, async (req, res) => {
+router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
-    const { phone } = req.body;
-    const managerId = req.user.id;
-    await managerAuthService.updatePhoneNumber(managerId, phone);
-    res.json({ message: '휴대폰 번호 변경 완료' });
+    const { currentPhone, newPhone } = req.body;
+    const managerId = req.user.managerId;
+
+    const params = { managerId, currentPhone, newPhone };
+    const updatedManager = await managerAuthService.updatePhoneNumber(params);
+
+    res.status(200).json({
+      message: '휴대폰 번호 변경 완료',
+      manager: updatedManager.toSafeObject ? updatedManager.toSafeObject() : updatedManager,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// 계좌번호 변경
-router.patch('/bank-account', authMiddleware, async (req, res) => {
+// 계좌 정보 변경
+router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   try {
-    const { bankName, bankNumber } = req.body;
-    const managerId = req.user.id;
-    await managerAuthService.updateBankAccount(managerId, bankName, bankNumber);
-    res.json({ message: '계좌정보 변경 완료' });
+    const managerId = req.user.managerId;
+    const { managerBankName, managerBankNumber, managerBankHolder } = req.body;
+
+    // 유효성 검사: 숫자 형식 체크
+    if (!/^\d+$/.test(managerBankNumber)) {
+      return res.status(400).json({ message: '계좌번호는 숫자만 입력 가능합니다.' });
+    }
+
+    const params = { managerId, managerBankName, managerBankNumber, managerBankHolder };
+    const updatedManager = await managerAuthService.updateBankAccount(params);
+
+    res.status(200).json({
+      message: '계좌 정보 변경 완료',
+      data: updatedManager,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// 이메일 찾기
-router.post('/find-email', async (req, res) => {
+// SMS 인증코드 전송
+router.post('/find/email/send-sms', async (req, res) => {
   try {
-    const { name, phone } = req.body;
-    const result = await managerAuthService.findEmailByNameAndPhone(name, phone);
-    if (result) {
-      res.json({ email: result.managerEmail });
+    const { managerPhoneNumber } = req.body;
+    if (!managerPhoneNumber) {
+      return res.status(400).json({ message: '전화번호를 입력해주세요.' });
+    }
+
+    await managerAuthService.sendVerificationSMS(managerPhoneNumber);
+    res.status(200).json({ message: '인증 코드가 전송되었습니다.' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// 인증코드 검증 후 이메일 찾기
+router.post('/find/email', async (req, res) => {
+  try {
+    const { managerPhone, code } = req.body;
+    if (!managerPhone || !code) {
+      return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
+    }
+
+    const isVerified = await managerAuthService.verifyCode(managerPhone, code);
+
+    if (isVerified) {
+      res.status(200).json({ message: '인증 성공', verified: true, email: isVerified });
     } else {
-      res.status(404).json({ message: '일치하는 정보가 없습니다.' });
+      res.status(400).json({ message: '인증 실패', verified: false });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// 관리자 승인 API
-router.patch('/approve/:managerId', async (req, res) => {
-  try {
-    const { managerId } = req.params;
-    const result = await managerAuthService.approveManager(managerId);
-    res.status(200).json({ message: '회원가입 승인 완료', result });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 });
 

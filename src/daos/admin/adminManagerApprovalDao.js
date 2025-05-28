@@ -57,3 +57,16 @@ export const findByApprovalStatus = async (isApproved = false) => {
     throw error;
   }
 };
+
+export const findManagerFile = async (managerId) => {
+  try {
+    return await db.ManagerAddDocument.findAll({
+      where: { managerId },
+      attributes: ['managerDocPath', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
+  } catch (error) {
+    logger.error('🔴 findManagerFile 오류:', error);
+    throw error;
+  }
+};

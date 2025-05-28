@@ -1,13 +1,16 @@
 import express from 'express';
 import * as pointService from '../../services/manager/managerPointService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js'; // JWT 인증 미들웨어
 
 const router = express.Router();
 
 // 포인트 환급 요청
-router.post('/request-cash', async (req, res) => {
+router.post('/refund', authMiddleware, async (req, res) => {
   try {
-    const { managerId, amount } = req.body;
-    const result = await pointService.requestPointToCash(managerId, amount);
+    const { amountPoint } = req.body;
+    const managerId = req.user.managerId; // ✅ JWT 토큰에서 추출
+
+    const result = await pointService.requestPointToCash(managerId, amountPoint);
     res.status(200).json({ message: '포인트 환급 요청 성공', data: result });
   } catch (error) {
     res.status(500).json({ message: error.message });

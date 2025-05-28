@@ -1,24 +1,34 @@
 import db from '../../models/index.js';
-import logger from '../../config/logger.js'; // 로거가 없다면 console.error로 대체 가능
 
 export const findByEmail = async (email) => {
   try {
     return await db.Funeral.findOne({ where: { funeralEmail: email } });
   } catch (error) {
-    logger.error('🔴 findByEmail 오류:', error);
-    throw error;
+    throw new Error('🔴 findByEmail 오류:' + error);
+  }
+};
+
+export const findById = async (funeralId) => {
+  try {
+    return await db.Funeral.findByPk(funeralId);
+  } catch (error) {
+    throw new Error('🔴 findById 오류:' + error.message);
   }
 };
 
 export const updatePassword = async (funeralId, newPassword) => {
   try {
-    return await db.Funeral.update(
-      { funeralPassword: newPassword }, // 해싱 없이 평문 저장
-      { where: { funeralId }, returning: true },
-    );
+    const funeral = await db.Funeral.findByPk(funeralId);
+    if (!funeral) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    funeral.funeralPassword = newPassword;
+    await funeral.save();
+
+    return funeral;
   } catch (error) {
-    logger.error(error);
-    throw error;
+    throw new Error(error);
   }
 };
 
@@ -29,8 +39,18 @@ export const updatePhone = async (funeralId, newPhone) => {
       { where: { funeralId }, returning: true },
     );
   } catch (error) {
-    logger.error(error);
-    throw error;
+    throw new Error(error);
+  }
+};
+
+export const updatePhoneNumber = async (funeralId, newPhoneNumber) => {
+  try {
+    return await db.Funeral.update(
+      { funeralPhoneNumber: newPhoneNumber },
+      { where: { funeralId } },
+    );
+  } catch (error) {
+    throw new Error('🔴 updatePhoneNumber 오류:' + error.message);
   }
 };
 
@@ -41,20 +61,38 @@ export const updateAccount = async (funeralId, bankName, bankNumber) => {
       { where: { funeralId }, returning: true },
     );
   } catch (error) {
-    logger.error(error);
-    throw error;
+    throw new Error(error);
   }
 };
 
-export const findByPhone = async (phoneNumber) => {
+export const updateBankInfo = async (
+  funeralId,
+  funeralBankName,
+  funeralBankNumber,
+  funeralBacnkHolder,
+) => {
+  try {
+    return await db.Manager.update(
+      {
+        funeralBankName,
+        funeralBankNumber,
+        funeralBacnkHolder,
+      },
+      { where: { funeralId } },
+    );
+  } catch (error) {
+    throw new Error('🔴 계좌 정보 업데이트 오류:' + error.message);
+  }
+};
+
+export const findByPhone = async (funeralPhoneNumber) => {
   try {
     return await db.Funeral.findOne({
-      where: { funeralPhoneNumber: phoneNumber },
+      where: { funeralPhoneNumber: funeralPhoneNumber },
       attributes: ['funeralEmail'],
     });
   } catch (error) {
-    logger.error(error);
-    throw error;
+    throw new Error(error);
   }
 };
 

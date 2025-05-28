@@ -4,8 +4,7 @@ export const findManagerById = async (managerId) => {
   try {
     return await db.Manager.findByPk(managerId);
   } catch (error) {
-    console.error('매니저 조회 오류:', error.message);
-    throw error;
+    throw new Error('매니저 조회 오류:' + error.message);
   }
 };
 
@@ -22,8 +21,7 @@ export const updateManagerCash = async (managerId, newBalance, options = {}) => 
       { where: { managerId }, ...options },
     );
   } catch (error) {
-    console.error('캐시 업데이트 오류:', error.message);
-    throw error;
+    throw new Error('캐시 업데이트 오류:' + error.message);
   }
 };
 
@@ -50,8 +48,7 @@ export const createCashHistory = async ({
       status,
     });
   } catch (error) {
-    console.error('캐시 내역 생성 오류:', error.message);
-    throw error;
+    throw new Error('캐시 내역 생성 오류:' + error.message);
   }
 };
 
@@ -62,7 +59,14 @@ export const findCashHistoryByManagerId = async (managerId) => {
       order: [['createdAt', 'DESC']],
     });
   } catch (error) {
-    console.error('캐시 내역 조회 오류:', error.message);
-    throw error;
+    throw new Error('캐시 내역 조회 오류:' + error.message);
+  }
+};
+
+export const create = async (data) => {
+  try {
+    return await db.ManagerCashHistory.create(data);
+  } catch (error) {
+    throw new Error('🔴 환급 요청 DAO 오류:' + error.message);
   }
 };

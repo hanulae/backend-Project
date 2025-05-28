@@ -1,17 +1,11 @@
 import db from '../../models/index.js';
 
-export const createInitialCash = async (funeralId) => {
+export const create = async (cashData, options = {}) => {
   try {
-    return await db.FuneralCashHistory.create({
-      funeralId,
-      transactionType: 'service_cash',
-      funeralCashAmount: 0,
-      funeralCashBalanceAfter: 0,
-      status: 'completed',
-    });
+    const result = await db.FuneralCashHistory.create(cashData, options);
+    return result;
   } catch (error) {
-    console.error('캐시 초기화 오류:', error.message);
-    throw error;
+    throw new Error('⚠️ 캐시 히스토리 생성 오류:' + error.message);
   }
 };
 
