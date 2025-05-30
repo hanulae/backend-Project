@@ -1,7 +1,11 @@
 import express from 'express';
 import * as grantService from '../../services/admin/grantService.js';
+import adminAuthMiddleware from '../../middlewares/adminAuthMiddleware.js';
 
 const router = express.Router();
+
+// 관리자 인증 미들웨어 적용
+router.use(adminAuthMiddleware);
 
 // 포인트/캐시 지급
 router.post('/charge', async (req, res) => {

@@ -2,6 +2,7 @@ import app from './app.js';
 import { connectToDatabase } from './config/database.js';
 import dotenv from 'dotenv';
 import logger from './config/logger.js';
+//import { createDefaultAdmin } from './Init/initAdmin.js';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ async function startServer() {
 
     // db 연결
     await connectToDatabase();
+    //await createDefaultAdmin(); // 관리자 계정 생성
 
     // 서버 시작
     const server = app.listen(PORT, () => {

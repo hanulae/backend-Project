@@ -1,7 +1,11 @@
 import express from 'express';
 import * as adminNoticeService from '../../services/admin/adminNoticeService.js';
+import adminAuthMiddleware from '../../middlewares/adminAuthMiddleware.js';
 
 const router = express.Router();
+
+// 관리자 인증 미들웨어 적용
+router.use(adminAuthMiddleware);
 
 // [POST] 공지사항 등록
 router.post('/create', async (req, res) => {

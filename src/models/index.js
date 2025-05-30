@@ -6,6 +6,7 @@ import ManagerAddDocument from './manager/managerAddDocument.js';
 import ManagerCart from './manager/managerCart.js';
 import ManagerCashHistory from './manager/managerCashHistory.js';
 import ManagerPointHistory from './manager/managerPointHistory.js';
+import ManagerCashRefundRequest from './manager/ManagerCashRefundRequest.js';
 
 import Funeral from './funeral/funeral.js';
 import FuneralAddDocument from './funeral/funeralAddDocument.js';
@@ -16,9 +17,13 @@ import FuneralPointHistory from './funeral/funeralPointHistory.js';
 import FuneralStaff from './funeral/funeralStaff.js';
 import FuneralStaffPermission from './funeral/funeralStaffPermission.js';
 import FuneralList from './funeral/funeralList.js';
+import FuneralCashRefundRequest from './funeral/funeralCashRefundRequest.js';
 
 import DispatchRequest from './common/dispatchRequest.js';
 import TransactionList from './common/transactionList.js';
+
+import Admin from './admin/admin.js';
+import AdminStaff from './admin/adminStaff.js';
 
 const db = {};
 
@@ -32,6 +37,7 @@ db.ManagerAddDocument = ManagerAddDocument;
 db.ManagerCart = ManagerCart;
 db.ManagerCashHistory = ManagerCashHistory;
 db.ManagerPointHistory = ManagerPointHistory;
+db.ManagerCashRefundRequest = ManagerCashRefundRequest;
 
 db.Funeral = Funeral;
 db.FuneralAddDocument = FuneralAddDocument;
@@ -42,9 +48,13 @@ db.FuneralPointHistory = FuneralPointHistory;
 db.FuneralStaff = FuneralStaff;
 db.FuneralStaffPermission = FuneralStaffPermission;
 db.FuneralList = FuneralList;
+db.FuneralCashRefundRequest = FuneralCashRefundRequest;
 
 db.DispatchRequest = DispatchRequest;
 db.TransactionList = TransactionList;
+
+db.Admin = Admin;
+db.AdminStaff = AdminStaff;
 
 // 모델 초기화
 Object.values(db).forEach((model) => {
