@@ -46,7 +46,7 @@ class ManagerFormBid extends Sequelize.Model {
           allowNull: true,
           comment: '입찰 유효 기간',
         },
-        status: {
+        bidStatus: {
           type: DataTypes.ENUM(
             'pending', // 상조팀장이 견적 신청, 장례식장 응답 대기 중
             'bid_submitted', // 장례식장이 입찰 제출

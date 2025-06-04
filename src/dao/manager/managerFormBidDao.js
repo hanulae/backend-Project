@@ -8,7 +8,9 @@ const managerFormBidDao = {
    * 입찰 신청서 생성
    */
   async createManagerFormBid(managerFormBidData, options = {}) {
-    const result = await ManagerFormBid.bulkCreate(managerFormBidData, options);
+    const result = await ManagerFormBid.bulkCreate(managerFormBidData, {
+      ...options,
+    });
     return result;
   },
 

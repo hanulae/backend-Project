@@ -7,14 +7,23 @@ const router = express.Router();
 
 /**
  * 상조팀장 견적 신청서 생성
+ * @body {
+ * managerId: string(JWT),
+ * chiefMournerName: string, // 상주 이름
+ * deceasedName: string, // 고인 이름 (선택)
+ * numberOfMourners: number, // 예상 조문객 수
+ * roomSize: number, // 평수 (선택)
+ * checkInDate: string, // 입실일자
+ * checkOutDate: string, // 퇴실일자
+ * funeralList: string[], // 장례식장 리스트
+ * }
  */
 router.post(
   '/create',
   validateRequiredFields(['funeralList', 'chiefMournerName', 'checkInDate', 'checkOutDate']),
-  validateUUID(['funeralList']),
+  validateUUID(['funeralList'], 'body'),
   async (req, res) => {
     try {
-      // 필수 데이터 추가 검증 로직 필요
       const { funeralList, ...managerFormData } = req.body;
 
       // funeralList가 배열이 아닐 경우 예외 처리
@@ -46,6 +55,7 @@ router.post(
 /**
  * 모든 견적 신청 내역 리스트 조회
  * 피그마 상의 헤더 견적내역 부분
+ * @Token managerId: string(JWT)
  */
 router.get('/list', async (req, res) => {
   try {
@@ -66,6 +76,7 @@ router.get('/list', async (req, res) => {
 /**
  * 한명의 상주님 견적 신청 내역 리스트 조회
  * 피그마 헤더 홍길동 상주님 견적 페이지 부분
+ * @query managerFormId: string,
  */
 router.get(
   '/bid/list',
@@ -91,6 +102,7 @@ router.get(
 /**
  * 견적서에 대한 입찰 상세 내용 조회
  * 피그마의 입찰 상세 부분
+ * @query managerFormBidId: string,
  */
 router.get(
   '/bid/detail',
