@@ -65,7 +65,7 @@ const managerFuneralListDao = {
       offset,
       limit,
       attributes: ['funeralListId', 'funeralId', 'funeralName', 'funeralAddress'],
-      order: [['createdAt', 'DESC']],
+      order: [['funeralId', 'ASC']],
     });
   },
 
