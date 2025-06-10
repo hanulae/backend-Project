@@ -29,9 +29,10 @@ const managerFormDao = {
   /**
    * 장례식장 managerFormId를 기반으로 견적서 상세 내용 조회
    */
-  async getManagerFormDetail(managerFormId) {
+  async getManagerFormDetail(managerFormId, options = {}) {
     const result = await ManagerForm.findOne({
       where: { managerFormId: managerFormId },
+      ...options,
       attributes: [
         'chiefMournerName',
         'deceasedName',

@@ -136,6 +136,10 @@ class Funeral extends Sequelize.Model {
       foreignKey: 'funeralId',
       as: 'managerFormBids',
     });
+    this.hasMany(models.ManagerCashHistory, {
+      foreignKey: 'funeralId',
+      as: 'managerCashHistories',
+    });
   }
 
   /**

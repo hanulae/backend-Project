@@ -81,4 +81,39 @@ router.post(
   },
 );
 
+/**
+ * 장례식장 거래완료
+ * @Header {string} funeralId(JWT) - 토큰 값 (추가예정)
+ * @Body {
+ *  dispatchRequestId: string, // 출동 신청 Id
+ * }
+ */
+router.post(
+  '/complete/:dispatchRequestId',
+  validateRequiredFields(['dispatchRequestId'], 'params'),
+  validateUUID(['dispatchRequestId'], 'params'),
+  async (req, res) => {
+    try {
+      const dispatchRequestId = req.params.dispatchRequestId;
+
+      const result = await dispatchRequestService.completeDispatchRequest(
+        dispatchRequestId,
+        'funeral',
+      );
+
+      return res.status(200).json({
+        success: result.success,
+        message: result.message,
+        status: result.status,
+      });
+    } catch (error) {
+      logger.error('장례식장 거래완료 요청중 오류 발생', error.message);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  },
+);
+
 export default router;

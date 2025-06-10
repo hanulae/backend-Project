@@ -14,6 +14,12 @@ import apiRoutes from './routes/index.js';
 const app = express();
 
 // 기본 미들웨어 설정
+app.use(
+  cors({
+    origin: 'http://10.0.2.2:8081',
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(compression());
 app.use(cors());

@@ -37,7 +37,7 @@ class DispatchRequest extends Sequelize.Model {
           comment: '비상 연락망',
         },
         isApproved: {
-          type: DataTypes.ENUM('pending', 'approved', 'rejected', 'canceled'),
+          type: DataTypes.ENUM('pending', 'approved', 'completed', 'rejected', 'canceled'),
           allowNull: false,
           defaultValue: 'pending',
           comment: '승인 상태',

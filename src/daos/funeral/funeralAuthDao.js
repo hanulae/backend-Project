@@ -95,3 +95,43 @@ export const findByPhone = async (funeralPhoneNumber) => {
     throw new Error(error);
   }
 };
+
+export const getFuneralPhoneNumber = async (funeralId) => {
+  return await db.Funeral.findOne({
+    where: { funeralId },
+    attributes: ['funeralPhoneNumber'],
+  });
+};
+
+/**
+ * 장례식장 포인트 및 캐쉬 조회
+ * @param {*} funeralId
+ * @param {*} transaction
+ * @returns
+ */
+export const getFuneralPointAndCash = async (funeralId, options = {}) => {
+  return await db.Funeral.findOne({
+    where: { funeralId: funeralId },
+    attributes: ['funeralPoint', 'funeralCash'],
+    ...options,
+  });
+};
+
+/**
+ * 장례식장 포인트 및 캐쉬 업데이트
+ * @param {*} funeralId
+ * @param {*} point
+ * @param {*} cash
+ * @param {*} transaction
+ */
+export const updateFuneralPointAndCash = async (
+  funeralId,
+  updatePoint,
+  updateCash,
+  options = {},
+) => {
+  return await db.Funeral.update(
+    { funeralPoint: updatePoint, funeralCash: updateCash },
+    { where: { funeralId: funeralId }, ...options },
+  );
+};

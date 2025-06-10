@@ -7,7 +7,7 @@ import funeralListDao from '../../dao/funeral/funeralListDao.js';
 const managerFormService = {
   /**
    * 견적 신청서 생성
-   * @param {Object} managerFormData
+   * @param {Object} managerFormData {Array} uniqueFuneralListIds
    * @returns {Promise<ManagerForm>}
    */
   async createManagerForm(managerFormData, funeralListIds) {
@@ -30,6 +30,9 @@ const managerFormService = {
       }));
 
       await managerFormBidDao.createManagerFormBid(bidDataArr, { transaction });
+
+      // 4. 각각의 장례식장에 알림 전송 (추후 추가)
+
       await transaction.commit();
 
       return {
@@ -133,6 +136,8 @@ const managerFormService = {
       funeralHallNumberOfMourners: managerFormBid.funeralHallInfo.funeralHallNumberOfMourners,
       funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
       funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      funeralProponentMoney: managerFormBid.proponentMoney,
+      funeralDiscount: managerFormBid.discount,
       bidStatus: managerFormBid.bidStatus,
       bidSubmittedAt: managerFormBid.bidSubmittedAt,
       bidAcceptedAt: managerFormBid.bidAcceptedAt,
