@@ -44,7 +44,13 @@ class TransactionList extends Sequelize.Model {
           comment: '상조팀장 고유 ID (FK)',
         },
         status: {
-          type: DataTypes.ENUM('pending', 'completed', 'failed', 'canceled'),
+          type: DataTypes.ENUM(
+            'pending', // 거래중
+            'reserved', // 장례식장 거래완료
+            'completed', // 장례식장 + 상조팀장 거래완료 (최종완료)
+            'failed', // 거래 실패
+            'canceled', // 거래 취소
+          ),
           allowNull: false,
           defaultValue: 'pending',
           comment: '거래 상태',

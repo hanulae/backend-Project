@@ -18,7 +18,7 @@ export const updateManagerCash = async (managerId, newBalance, options = {}) => 
   try {
     return await db.Manager.update(
       { managerCash: newBalance },
-      { where: { managerId }, ...options },
+      { where: { managerId: managerId }, ...options },
     );
   } catch (error) {
     throw new Error('캐시 업데이트 오류:' + error.message);

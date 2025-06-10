@@ -132,6 +132,6 @@ export const updateFuneralPointAndCash = async (
 ) => {
   return await db.Funeral.update(
     { funeralPoint: updatePoint, funeralCash: updateCash },
-    { where: { funeralId }, ...options },
+    { where: { funeralId: funeralId }, ...options },
   );
 };

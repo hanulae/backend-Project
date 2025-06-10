@@ -24,3 +24,22 @@ export const createFuneralCashHistory = async (cashHistoryData, transactionType,
     throw error;
   }
 };
+
+/**
+ * 캐시 히스토리 상태 업데이트
+ * @param {*} whereCondition
+ * @param {*} status
+ * @param {*} options
+ * @returns
+ */
+export const updateFuneralCashHistoryStatus = async (whereCondition, status, options = {}) => {
+  const result = await db.FuneralCashHistory.update(
+    { status },
+    {
+      where: whereCondition,
+      ...options,
+    },
+  );
+
+  return result;
+};

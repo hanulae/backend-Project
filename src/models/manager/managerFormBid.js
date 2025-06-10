@@ -53,7 +53,7 @@ class ManagerFormBid extends Sequelize.Model {
             'bid_selected', // 상조팀장이 입찰 선택 및 출동 신청
             'bid_progress', // 장례식장 + 상조팀장 출동요청 및 출동 승인 후 거래 진행중 상태
             'deceased_arrived', // 고인 안치 완료 (추후 생각 필요)
-            'completed', // 거래 완료
+            'transaction_completed', // 거래 완료
             'rejected', // 거절/취소
             'expired', // 만료
           ),

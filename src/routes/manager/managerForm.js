@@ -6,7 +6,7 @@ import managerFormService from '../../services/manager/managerFormService.js';
 const router = express.Router();
 
 /**
- * 상조팀장 견적 신청서 생성
+ * 상조팀장 견적 신청
  * @body {
  * managerId: string(JWT),
  * chiefMournerName: string, // 상주 이름
@@ -43,10 +43,10 @@ router.post(
 
       res.status(201).json(result);
     } catch (error) {
-      logger.error('견적 신청서 생성 실패', error);
+      logger.error('견적 신청 실패', error);
       res.status(500).json({
         success: false,
-        message: '견적 신청서 작성 실패_Server Error',
+        message: '견적 신청 실패_Server Error',
       });
     }
   },

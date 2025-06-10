@@ -7,6 +7,17 @@ const router = express.Router();
 
 /**
  * 출동 신청
+ * @Header {string} managerId(JWT) - 토큰 값
+ * @Body {
+ *  address: string, // 주소
+ *  addressDetail: string, // 상세 주소
+ *  famPhoneNumber: string, // 가족 연락처
+ *  managerPhoneNumber: string, // 상조 팀장 연락처
+ *  emergencyPhoneNumber: string, // 비상 연락처
+ *  funeralId: string, // 장례식장 Id
+ *  managerFormId: string, // 견적서 Id
+ *  managerFormBidId: string, // 입찰서 Id
+ * }
  */
 router.post(
   '/create',
@@ -143,24 +154,33 @@ router.delete(
   ),
 
   /**
-   * 상조 팀장 거래 확정 처리
+   * 상조 팀장 거래 완료
+   * @Header {string} managerId(JWT) - 토큰 값 (추가예정)
+   * @Body {
+   *  dispatchRequestId: string, // 출동 신청 Id
+   * }
    */
   router.post(
     '/complete/:dispatchRequestId',
     validateRequiredFields(['dispatchRequestId'], 'params'),
     validateUUID(['dispatchRequestId'], 'params'),
     async (req, res) => {
-      const dispatchRequestId = req.params.dispatchRequestId;
+      try {
+        const dispatchRequestId = req.params.dispatchRequestId;
 
-      const result = await dispatchRequestService.completeDispatchRequest(
-        dispatchRequestId,
-        'manager',
-      );
+        const result = await dispatchRequestService.completeDispatchRequest(
+          dispatchRequestId,
+          'manager',
+        );
 
-      res.status(200).json({
-        success: result.success,
-        message: result.message,
-      });
+        res.status(200).json(result);
+      } catch (error) {
+        logger.error('상조 팀장 거래 완료 요청중 오류 발생', error.message);
+        res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+      }
     },
   ),
 );

@@ -28,3 +28,22 @@ export const createFuneralPointHistory = async (
     throw error;
   }
 };
+
+/**
+ * 포인트 히스토리 상태 업데이트
+ * @param {*} whereCondition
+ * @param {*} status
+ * @param {*} options
+ * @returns
+ */
+export const updateFuneralPointHistoryStatus = async (whereCondition, status, options = {}) => {
+  const result = await db.FuneralPointHistory.update(
+    { status },
+    {
+      where: whereCondition,
+      ...options,
+    },
+  );
+
+  return result;
+};

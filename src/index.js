@@ -2,6 +2,7 @@ import app from './app.js';
 import { connectToDatabase } from './config/database.js';
 import dotenv from 'dotenv';
 import logger from './config/logger.js';
+import EnvValidator from './middleware/envValidator.js';
 
 dotenv.config();
 
@@ -10,6 +11,9 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     logger.info('서버 시작 중...');
+
+    // 환경변수 검증
+    EnvValidator.validateTransactionEnvs();
 
     // db 연결
     await connectToDatabase();

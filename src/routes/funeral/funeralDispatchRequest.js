@@ -81,7 +81,13 @@ router.post(
   },
 );
 
-// 장례식장 거래완료 요청
+/**
+ * 장례식장 거래완료
+ * @Header {string} funeralId(JWT) - 토큰 값 (추가예정)
+ * @Body {
+ *  dispatchRequestId: string, // 출동 신청 Id
+ * }
+ */
 router.post(
   '/complete/:dispatchRequestId',
   validateRequiredFields(['dispatchRequestId'], 'params'),

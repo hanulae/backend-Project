@@ -136,6 +136,8 @@ const managerFormService = {
       funeralHallNumberOfMourners: managerFormBid.funeralHallInfo.funeralHallNumberOfMourners,
       funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
       funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      funeralProponentMoney: managerFormBid.proponentMoney,
+      funeralDiscount: managerFormBid.discount,
       bidStatus: managerFormBid.bidStatus,
       bidSubmittedAt: managerFormBid.bidSubmittedAt,
       bidAcceptedAt: managerFormBid.bidAcceptedAt,
