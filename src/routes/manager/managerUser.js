@@ -17,6 +17,7 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
       managerBankNumber: req.body.managerBankNumber,
       file: req.file,
     };
+    console.log(params);
 
     const result = await managerUserService.registerManager(params);
     res.status(201).json({

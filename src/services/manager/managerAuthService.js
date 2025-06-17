@@ -18,8 +18,10 @@ const ATTEMPT_EXPIRY = 3600; // 1시간
 
 // 로그인
 export const loginManager = async ({ managerEmail, managerPassword }) => {
+  console.log('🚀 ~ loginManager ~ managerEmail, managerPassword:', managerEmail, managerPassword);
   try {
     const manager = await managerAuthDao.findByEmail(managerEmail);
+    console.log('🚀 ~ loginManager ~ manager:', manager);
     if (!manager) throw new Error('존재하지 않는 이메일입니다.');
     if (!manager.isApproved) throw new Error('관리자의 승인이 필요합니다.');
 

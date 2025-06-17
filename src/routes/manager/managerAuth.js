@@ -9,9 +9,11 @@ router.post('/login', async (req, res) => {
   try {
     const { managerEmail, managerPassword } = req.body;
     console.log('🚀 ~ router.post ~ managerPassword:', managerPassword);
+    console.log('🚀 ~ router.post ~ managerEmail:', managerEmail);
     const result = await managerAuthService.loginManager({ managerEmail, managerPassword });
     res.status(200).json({ message: '로그인 성공', ...result });
   } catch (error) {
+    console.log('로그인 오류:', error.message);
     res.status(401).json({ message: error.message });
   }
 });
