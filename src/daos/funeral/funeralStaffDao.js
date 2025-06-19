@@ -24,9 +24,11 @@ export const update = async (funeralStaffId, data) => {
   }
 };
 
-export const remove = async (staffId) => {
+export const remove = async (funeralStaffId) => {
   try {
-    const deleted = await db.FuneralStaff.destroy({ where: { funeralStaffId: staffId } });
+    const deleted = await db.FuneralStaff.destroy({
+      where: { funeralStaffId },
+    });
     if (!deleted) throw new Error('삭제할 직원이 존재하지 않습니다.');
     return deleted;
   } catch (error) {

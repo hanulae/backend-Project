@@ -58,8 +58,8 @@ router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
 // 직원 삭제
 router.delete('/:funeralStaffId', async (req, res) => {
   try {
-    const params = { funeralStaffId: req.params.funeralStaffId };
-    await funeralStaffService.deleteStaff(params);
+    const funeralStaffId = req.params.funeralStaffId;
+    await funeralStaffService.deleteStaff(funeralStaffId);
     res.status(200).json({ message: '직원 삭제 완료' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -70,7 +70,6 @@ router.delete('/:funeralStaffId', async (req, res) => {
 router.get('/list', authMiddleware, async (req, res) => {
   try {
     const funeralId = req.user?.funeralId;
-    console.log('🚀 ~ router.post ~ funeralId:', funeralId);
     const staffList = await funeralStaffService.getStaffListByFuneral(funeralId);
     res.status(200).json({ message: '직원 목록 조회 성공', data: staffList });
   } catch (error) {
