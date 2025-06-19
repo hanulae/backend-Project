@@ -12,7 +12,8 @@
     "prepare": "husky",
     "parsing-funeral-list": "node parsingFuneralList.js",
     "parsing-funeral-list:update": "node parsingFuneralList.js update",
-    "parsing-funeral-list:truncate": "node parsingFuneralList.js truncate"
+    "parsing-funeral-list:truncate": "node parsingFuneralList.js truncate",
+    "migrate": "node --experimental-specifier-resolution=node ./node_modules/.bin/sequelize-cli db:migrate"
   },
   "type": "module",
   "keywords": [],
@@ -47,7 +48,6 @@
     "multer-s3": "^3.0.1",
     "pg": "^8.14.1",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.3",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "xlsx": "^0.18.5"
@@ -59,6 +59,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
     "nodemon": "^3.1.9",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "sequelize-cli": "^6.6.3"
   }
 }

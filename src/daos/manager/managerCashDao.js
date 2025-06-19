@@ -8,9 +8,18 @@ export const findManagerById = async (managerId) => {
   }
 };
 
-export const updateManagerCash = async (managerId, newBalance) => {
+/**
+ * 상조팀장의 캐시 업데이트
+ * @param {*} managerId
+ * @param {*} newBalance
+ * @param {*} options
+ */
+export const updateManagerCash = async (managerId, newBalance, options = {}) => {
   try {
-    return await db.Manager.update({ managerCash: newBalance }, { where: { managerId } });
+    return await db.Manager.update(
+      { managerCash: newBalance },
+      { where: { managerId: managerId }, ...options },
+    );
   } catch (error) {
     throw new Error('캐시 업데이트 오류:' + error.message);
   }

@@ -18,10 +18,15 @@ export const findById = async (funeralId) => {
 
 export const updatePassword = async (funeralId, newPassword) => {
   try {
-    return await db.Funeral.update(
-      { funeralPassword: newPassword }, // 해싱 없이 평문 저장
-      { where: { funeralId }, returning: true },
-    );
+    const funeral = await db.Funeral.findByPk(funeralId);
+    if (!funeral) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+
+    funeral.funeralPassword = newPassword;
+    await funeral.save();
+
+    return funeral;
   } catch (error) {
     throw new Error(error);
   }
@@ -89,4 +94,44 @@ export const findByPhone = async (funeralPhoneNumber) => {
   } catch (error) {
     throw new Error(error);
   }
+};
+
+export const getFuneralPhoneNumber = async (funeralId) => {
+  return await db.Funeral.findOne({
+    where: { funeralId },
+    attributes: ['funeralPhoneNumber'],
+  });
+};
+
+/**
+ * 장례식장 포인트 및 캐쉬 조회
+ * @param {*} funeralId
+ * @param {*} transaction
+ * @returns
+ */
+export const getFuneralPointAndCash = async (funeralId, options = {}) => {
+  return await db.Funeral.findOne({
+    where: { funeralId: funeralId },
+    attributes: ['funeralPoint', 'funeralCash'],
+    ...options,
+  });
+};
+
+/**
+ * 장례식장 포인트 및 캐쉬 업데이트
+ * @param {*} funeralId
+ * @param {*} point
+ * @param {*} cash
+ * @param {*} transaction
+ */
+export const updateFuneralPointAndCash = async (
+  funeralId,
+  updatePoint,
+  updateCash,
+  options = {},
+) => {
+  return await db.Funeral.update(
+    { funeralPoint: updatePoint, funeralCash: updateCash },
+    { where: { funeralId: funeralId }, ...options },
+  );
 };

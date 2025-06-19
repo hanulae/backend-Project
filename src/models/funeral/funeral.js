@@ -91,11 +91,11 @@ class Funeral extends Sequelize.Model {
               funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
             }
           },
-        },
-        beforeUpdate: async (funeral) => {
-          if (funeral.changed('funeralPassword')) {
-            funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
-          }
+          beforeUpdate: async (funeral) => {
+            if (funeral.changed('funeralPassword')) {
+              funeral.funeralPassword = await bcrypt.hash(funeral.funeralPassword, 10);
+            }
+          },
         },
       },
     );
@@ -135,6 +135,10 @@ class Funeral extends Sequelize.Model {
     this.hasMany(models.ManagerFormBid, {
       foreignKey: 'funeralId',
       as: 'managerFormBids',
+    });
+    this.hasMany(models.ManagerCashHistory, {
+      foreignKey: 'funeralId',
+      as: 'managerCashHistories',
     });
   }
 

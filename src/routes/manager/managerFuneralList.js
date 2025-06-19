@@ -83,46 +83,46 @@ router.get(
       });
     }
   },
-
-  // 시/도 목록 조회
-  router.get('/regions', async (req, res) => {
-    try {
-      const result = await funeralListService.getRegions();
-
-      return res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      logger.error(error.message);
-      return res.status(500).json({
-        success: false,
-        message: '시/도 목록 조회 실패',
-        error: error.message,
-      });
-    }
-  }),
-
-  // 시/군/구 목록 조회
-  router.get('/cities', validateRequiredFields(['region'], 'query'), async (req, res) => {
-    try {
-      const { region } = req.query;
-
-      const result = await funeralListService.getCities(region);
-
-      return res.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      logger.error(error.message);
-      return res.status(500).json({
-        success: false,
-        message: '시/군/구 목록 조회 실패',
-        error: error.message,
-      });
-    }
-  }),
 );
+
+// 시/도 목록 조회
+router.get('/regions', async (req, res) => {
+  try {
+    const result = await funeralListService.getRegions();
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(500).json({
+      success: false,
+      message: '시/도 목록 조회 실패',
+      error: error.message,
+    });
+  }
+});
+
+// 시/군/구 목록 조회
+router.get('/cities', validateRequiredFields(['region'], 'query'), async (req, res) => {
+  try {
+    const { region } = req.query;
+
+    const result = await funeralListService.getCities(region);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error(error.message);
+    return res.status(500).json({
+      success: false,
+      message: '시/군/구 목록 조회 실패',
+      error: error.message,
+    });
+  }
+});
 
 export default router;

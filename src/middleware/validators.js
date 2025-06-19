@@ -17,11 +17,28 @@ export const validateUUID = (paramNames, source = 'body') => {
       // 값이 없다면 다음 파라미터로 넘김
       if (!value) continue;
 
-      if (!uuidPattern.test(value)) {
-        return res.status(400).json({
-          success: false,
-          message: `${param}은 유효한 UUID 형식이 아님`,
-        });
+      // 배열인 경우 각 요소를 개별적으로 검증
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (!uuidPattern.test(item)) {
+            console.log('배열 내 잘못된 UUID:', item);
+            return res.status(400).json({
+              success: false,
+              message: `${param} 배열 내 "${item}"은 유효한 UUID 형식이 아님`,
+              value: item,
+            });
+          }
+        }
+      } else {
+        // 단일 값인 경우 기존 로직
+        if (!uuidPattern.test(value)) {
+          console.log('잘못된 UUID:', value);
+          return res.status(400).json({
+            success: false,
+            message: `${param}은 유효한 UUID 형식이 아님`,
+            value,
+          });
+        }
       }
     }
     next();

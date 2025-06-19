@@ -1,6 +1,6 @@
 import express from 'express';
 import managerFormByFuneral from './managerFormByFuneral.js';
-import funeralInfo from './funeralInfo.js';
+import funeralHallInfo from './funeralHallInfo.js';
 import funeralAuth from './funeralAuth.js';
 import funeralEmail from './funeralEmail.js';
 import funeralSMS from './funeralSMS.js';
@@ -18,7 +18,7 @@ router.use('/account', funeralAccount);
 router.use('/user', funeralUser);
 router.use('/staff', funeralStaff);
 router.use('/form', managerFormByFuneral);
-router.use('/room', funeralInfo);
+router.use('/hall', funeralHallInfo);
 router.use('/cash', funeralCash);
 router.use('/request', funeralDispatchRequest);
 

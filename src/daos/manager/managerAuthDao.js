@@ -42,6 +42,7 @@ export const findById = async (managerId) => {
 
 export const updatePassword = async (managerId, newPassword) => {
   try {
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     return await db.Manager.update({ managerPassword: hashedPassword }, { where: { managerId } });
   } catch (error) {

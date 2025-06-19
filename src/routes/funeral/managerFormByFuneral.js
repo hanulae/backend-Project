@@ -55,6 +55,8 @@ router.put(
   validateUUID(['managerFormBidId', 'funeralHallId']),
   async (req, res) => {
     try {
+      // 신청자의 Id 값을 토큰으로 받아서 유효한 유저인지 확인 및 검증 로직 필요 (2025.06.05)
+
       // 1. 제안가 유효성 검사
       if (isNaN(Number(req.body.proponentMoney)) || Number(req.body.proponentMoney) <= 0) {
         return res.status(400).json({

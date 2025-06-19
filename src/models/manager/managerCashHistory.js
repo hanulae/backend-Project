@@ -18,7 +18,8 @@ class ManagerCashHistory extends Sequelize.Model {
         },
         transactionType: {
           type: DataTypes.ENUM(
-            'earn_cash', // 캐시 충전
+            'charge_cash', // 캐시 충전
+            'earn_cash', // 캐시 수익
             'withdraw_cash', // 캐시 출금
             'service_cash', // 서비스 캐시 적립
           ),
@@ -35,7 +36,7 @@ class ManagerCashHistory extends Sequelize.Model {
           allowNull: false,
           comment: '작업 후 잔액 캐쉬',
         },
-        funeralListId: {
+        funeralId: {
           type: DataTypes.UUID,
           allowNull: true,
           comment: '거래한 장례식장의 고유 ID (FK)',
@@ -94,7 +95,11 @@ class ManagerCashHistory extends Sequelize.Model {
       foreignKey: 'managerFormBidId',
       as: 'managerFormBid',
     });
-    // funeralListId 테이블과의 관계설정 필요
+    // funeralId 테이블과의 관계설정 필요
+    this.belongsTo(models.Funeral, {
+      foreignKey: 'funeralId',
+      as: 'funeral',
+    });
   }
 }
 export default ManagerCashHistory;

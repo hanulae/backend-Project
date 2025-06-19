@@ -73,15 +73,16 @@ const managerFormByFuneralService = {
       // 현재 상태가 유효하지 않은 경우 해당 오류 메시지 반환
       const errorMessage = INVALID_BID_STATUSES[existingBid.bidStatus];
       if (errorMessage) {
+        await transaction.rollback();
         throw new Error(errorMessage);
       }
 
-      // 2. managerFormBid 입찰 신청 처리
+      // 2. managerFormBid 입찰 신청 처리 및 상태 업데이트
       const result = await managerFormBidDao.updateManagerFormBidStatus(params, 'bid_submitted', {
         transaction,
       });
 
-      // 3. managerForm status update
+      // 3. managerForm 상태 업데이트
       await managerFormDao.updateManagerFormStatus(existingBid.managerFormId, 'bid_received', {
         transaction,
       });
