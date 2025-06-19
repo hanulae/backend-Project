@@ -5,7 +5,7 @@ import s3 from '../config/s3.js'; // AWS S3 연결 모듈
 import path from 'path';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
-
+console.log(process.env.AWS_S3_BUCKET_NAME);
 const upload = multer({
   storage: multerS3({
     s3,

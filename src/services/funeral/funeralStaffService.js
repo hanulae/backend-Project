@@ -71,9 +71,9 @@ export const updateStaff = async (params) => {
   }
 };
 
-export const deleteStaff = async (staffId) => {
+export const deleteStaff = async (funeralStaffId) => {
   try {
-    return await funeralStaffDao.remove(staffId);
+    return await funeralStaffDao.remove(funeralStaffId);
   } catch (error) {
     throw new Error('직원 삭제 실패: ' + error.message);
   }

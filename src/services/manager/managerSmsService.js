@@ -3,6 +3,7 @@ import redis from '../../config/redis.js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { generateVerificationCode } from '../../utils/codeGenerator.js';
+import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
 
@@ -63,4 +64,17 @@ export const verifyCode = async (phoneNumber, inputCode) => {
   ]);
 
   return true;
+};
+
+export const getUserPhone = async (managerId) => {
+  try {
+    const manager = await managerUserDao.findById(managerId);
+    if (!manager) {
+      throw new Error('해당 ID의 상조팀장 정보를 찾을 수 없습니다.');
+    }
+    return manager;
+  } catch (error) {
+    console.error('🔴 getUserPhone 에러:', error.message);
+    throw new Error('전화번호 조회 실패: ' + error.message);
+  }
 };

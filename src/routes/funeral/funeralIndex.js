@@ -11,7 +11,6 @@ import funeralCash from './funeralCash.js';
 import funeralDispatchRequest from './funeralDispatchRequest.js';
 
 const router = express.Router();
-
 router.use('/auth', funeralAuth);
 router.use('/email', funeralEmail);
 router.use('/sms', funeralSMS);

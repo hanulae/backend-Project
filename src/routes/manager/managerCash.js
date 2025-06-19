@@ -41,13 +41,13 @@ router.post('/topup', async (req, res) => {
 // 캐시 환급
 router.post('/refund', authMiddleware, async (req, res) => {
   try {
-    const { amountCash } = req.body;
     const managerId = req.user.managerId;
+    const { amountCash } = req.body;
 
     const params = { managerId, amountCash };
-    const result = await managerCashService.requestCashRefund(params);
 
-    res.status(200).json({ message: '환급 요청 성공', data: result });
+    const result = await managerCashService.requestCashRefund(params);
+    res.status(200).json({ message: '캐쉬 환급 요청 성공', data: result });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

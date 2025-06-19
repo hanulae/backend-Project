@@ -1,4 +1,5 @@
 import db from '../../models/index.js';
+import bcrypt from 'bcrypt';
 
 export const findByEmail = async (email) => {
   try {
@@ -41,17 +42,11 @@ export const findById = async (managerId) => {
 
 export const updatePassword = async (managerId, newPassword) => {
   try {
-    const manager = await db.Manager.findByPk(managerId);
-    if (!manager) {
-      throw new Error('사용자를 찾을 수 없습니다.');
-    }
 
-    manager.managerPassword = newPassword;
-    await manager.save();
-
-    return manager;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await db.Manager.update({ managerPassword: hashedPassword }, { where: { managerId } });
   } catch (error) {
-    throw new Error('🔴 updatePassword 오류:' + error.message);
+    throw new Error('비밀번호 업데이트 실패: ' + error.message);
   }
 };
 

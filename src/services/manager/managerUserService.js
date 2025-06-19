@@ -8,16 +8,18 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const registerManager = async (params) => {
-  if (
-    !params.managerEmail ||
-    !params.managerPassword ||
-    !params.managerName ||
-    !params.managerPhoneNumber ||
-    !params.managerBankName ||
-    !params.managerBankNumber ||
-    !params.file
-  ) {
-    throw new Error('필수 정보가 누락되었습니다.');
+  const missingFields = [];
+
+  if (!params.managerEmail) missingFields.push('managerEmail');
+  if (!params.managerPassword) missingFields.push('managerPassword');
+  if (!params.managerName) missingFields.push('managerName');
+  if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
+  if (!params.managerBankName) missingFields.push('managerBankName');
+  if (!params.managerBankNumber) missingFields.push('managerBankNumber');
+  if (!params.file) missingFields.push('file');
+
+  if (missingFields.length > 0) {
+    throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
   }
 
   // ✅ 이메일 형식 검증
