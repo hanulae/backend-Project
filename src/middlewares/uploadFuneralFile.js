@@ -25,4 +25,4 @@ const uploadFuneralFile = multer({
   },
 });
 
-export default uploadFuneralFile.single('funeralAddFile');
+export default uploadFuneralFile.array('funeralAddFile', 10); // 최대 5개 허용

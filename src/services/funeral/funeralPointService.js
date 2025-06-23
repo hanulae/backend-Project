@@ -33,3 +33,7 @@ export const convertPointToCash = async ({ funeralId, amount }) => {
     throw new Error('🔴 포인트 환급 오류:', error.message);
   }
 };
+
+export const getCurrentPoint = async (funeralId) => {
+  return await funeralPointDao.getCurrentPoint(funeralId);
+};

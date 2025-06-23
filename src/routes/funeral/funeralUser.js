@@ -2,6 +2,7 @@ import express from 'express';
 import * as funeralUserService from '../../services/funeral/funeralUserService.js';
 import uploadFuneralFile from '../../middlewares/uploadFuneralFile.js';
 import authMiddleware from '../../middlewares/authMiddleware.js';
+import { deleteS3Object } from '../../config/s3.js'; // AWS S3 연결 모듈
 
 const router = express.Router();
 
@@ -16,9 +17,8 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
       funeralBankName: req.body.funeralBankName,
       funeralBankNumber: req.body.funeralBankNumber,
       funeralBankHolder: req.body.funeralBankHolder,
-      file: req.file,
+      files: req.files, // ✅ 수정됨
     };
-    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await funeralUserService.registerFuneral(params);
 
@@ -28,6 +28,9 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
     });
   } catch (error) {
     console.error('회원가입 오류:', error.message);
+    if (req.files?.location) {
+      await deleteS3Object(req.files.location);
+    }
     res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
   }
 });
