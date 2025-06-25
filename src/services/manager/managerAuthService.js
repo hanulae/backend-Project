@@ -2,13 +2,14 @@ import * as managerAuthDao from '../../daos/manager/managerAuthDao.js';
 import coolsms from 'coolsms-node-sdk';
 import redis from '../../config/redis.js';
 import dotenv from 'dotenv';
-import path from 'path';
+//import path from 'path';
 import { generateVerificationCode } from '../../utils/codeGenerator.js';
 import { generateToken, generateRefreshToken } from '../../utils/jwt.js';
 import logger from '../../config/logger.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const mysms = coolsms.default;
 const smsClient = new mysms(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);

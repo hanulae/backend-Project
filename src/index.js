@@ -1,17 +1,18 @@
 import app from './app.js';
 import { connectToDatabase } from './config/database.js';
 import dotenv from 'dotenv';
+dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 import EnvValidator from './middleware/envValidator.js';
+import logger from './config/logger.js';
 //import { createDefaultAdmin } from './Init/initAdmin.js';
 
-dotenv.config();
+//dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
     logger.info('서버 시작 중...');
-
     // 환경변수 검증
     EnvValidator.validateTransactionEnvs();
 

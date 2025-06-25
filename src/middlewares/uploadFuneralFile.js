@@ -2,9 +2,10 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import s3 from '../config/s3.js';
-import path from 'path';
+//import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const uploadFuneralFile = multer({
   storage: multerS3({
