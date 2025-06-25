@@ -28,4 +28,15 @@ router.get('/history', async (req, res) => {
   }
 });
 
+// 현재 포인트 조회
+router.get('/current', authMiddleware, async (req, res) => {
+  try {
+    const managerId = req.user.managerId;
+    const currentPoint = await pointService.getCurrentPoint(managerId);
+    res.status(200).json({ message: '현재 포인트 조회 성공', currentPoint });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

@@ -66,3 +66,15 @@ export const create = async (data) => {
     throw new Error('🔴 장례식장 환급 요청 DAO 오류: ' + error.message);
   }
 };
+
+export const getCurrentCash = async (funeralId) => {
+  const funeral = await db.Funeral.findByPk(funeralId, {
+    attributes: ['funeralCash'],
+  });
+
+  if (!funeral) {
+    throw new Error('장례식장을 찾을 수 없습니다.');
+  }
+
+  return funeral.funeralCash;
+};

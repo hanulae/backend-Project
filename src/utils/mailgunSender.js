@@ -13,6 +13,7 @@ const NODE_ENV = process.env.NODE_ENV;
 dotenv.config({
   path: path.join(__dirname, `../../.env.${NODE_ENV}`),
 });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const mailgun = new Mailgun(FormData);
 const mg = mailgun.client({

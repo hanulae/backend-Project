@@ -34,3 +34,15 @@ export const updatePointAndCash = async (funeralId, newPoint, newCash) => {
     { where: { funeralId } },
   );
 };
+
+export const getCurrentPoint = async (funeralId) => {
+  const funeral = await db.Funeral.findByPk(funeralId, {
+    attributes: ['funeralPoint'],
+  });
+
+  if (!funeral) {
+    throw new Error('장례식장을 찾을 수 없습니다.');
+  }
+
+  return funeral.funeralPoint;
+};

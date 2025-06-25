@@ -13,21 +13,19 @@ export const registerFuneral = async (params) => {
     !params.funeralBankName ||
     !params.funeralBankNumber ||
     !params.funeralBankHolder ||
-    !params.file
+    !params.files ||
+    !Array.isArray(params.files) ||
+    params.files.length === 0
   ) {
     throw new Error('필수 정보가 누락되었습니다.');
   }
 
-  const fileUrl = params.file.location;
-  const fileName = params.file.originalname;
-  // 👉 트랜잭션 처리
   const transaction = await db.sequelize.transaction();
 
   try {
-    // 1. 장례식장 회원 생성
     const funeralData = {
       funeralEmail: params.funeralEmail,
-      funeralPassword: params.funeralPassword, // ❗ 평문 저장 (보안주의 필요)
+      funeralPassword: params.funeralPassword,
       funeralName: params.funeralName,
       funeralPhoneNumber: params.funeralPhoneNumber,
       funeralBankName: params.funeralBankName,
@@ -37,40 +35,29 @@ export const registerFuneral = async (params) => {
 
     const result = await funeralUserDao.insert(funeralData, transaction);
 
-    // 2. 문서 정보 저장
-    await funeralAddDocumentDao.create(
-      {
-        funeralId: result.funeralId,
-        funeralDocName: fileName,
-        funeralDocPath: fileUrl,
-      },
-      { transaction },
-    );
+    // ✅ 여러 파일 반복 저장
+    for (const file of params.files) {
+      await funeralAddDocumentDao.create(
+        {
+          funeralId: result.funeralId,
+          funeralDocName: file.originalname,
+          funeralDocPath: file.location,
+        },
+        { transaction },
+      );
+    }
 
-    // 3. 포인트/캐시 초기값 생성
     await funeralPointHistoryDao.create(
       {
         funeralId: result.funeralId,
         transactionType: 'service_point',
-        funeralPointAmount: 50000, // ✅ 지급 포인트
-        funeralPointBalanceAfter: 50000, // ✅ 초기 잔액 반영
+        funeralPointAmount: 50000,
+        funeralPointBalanceAfter: 50000,
         status: 'completed',
       },
       { transaction },
     );
 
-    // await funeralCashHistoryDao.create(
-    //   {
-    //     funeralId: result.funeralId,
-    //     transactionType: 'service_cash',
-    //     funeralCashAmount: 0,
-    //     funeralCashBalanceAfter: 0,
-    //     status: 'completed',
-    //   },
-    //   { transaction },
-    // );
-
-    // 🔁 실제 Funeral 테이블 업데이트
     await db.Funeral.update(
       {
         funeralPoint: 50000,
@@ -79,11 +66,11 @@ export const registerFuneral = async (params) => {
       { where: { funeralId: result.funeralId }, transaction },
     );
 
-    // 4. 커밋
     await transaction.commit();
+
     return {
-      manager: result,
-      fileUrl, // ✅ 추가된 리턴 값
+      funeral: result,
+      fileCount: params.files.length,
     };
   } catch (error) {
     await transaction.rollback();

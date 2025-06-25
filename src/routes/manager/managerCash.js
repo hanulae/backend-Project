@@ -64,4 +64,15 @@ router.get('/history/:managerId', async (req, res) => {
   }
 });
 
+// 현재 캐시 조회
+router.get('/current', authMiddleware, async (req, res) => {
+  try {
+    const managerId = req.user.managerId;
+    const currentCash = await managerCashService.getCurrentCash(managerId);
+    res.status(200).json({ message: '현재 캐쉬 조회 성공', currentCash });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

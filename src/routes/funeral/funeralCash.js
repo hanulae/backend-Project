@@ -41,4 +41,15 @@ router.get('/history', authMiddleware, async (req, res) => {
   }
 });
 
+// 현재 캐시 조회
+router.get('/current', authMiddleware, async (req, res) => {
+  try {
+    const funeralId = req.user.funeralId;
+    const currentCash = await funeralCashService.getCurrentCash(funeralId);
+    res.status(200).json({ message: '현재 캐쉬 조회 성공', currentCash });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

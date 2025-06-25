@@ -73,3 +73,7 @@ export const getCashHistory = async (managerId) => {
     throw error;
   }
 };
+
+export const getCurrentCash = async (managerId) => {
+  return await managerCashDao.getCurrentCash(managerId);
+};
