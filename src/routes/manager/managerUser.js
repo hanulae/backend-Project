@@ -26,8 +26,13 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
   } catch (error) {
     console.error('회원가입 오류:', error.message);
     // ✅ 실패 시 S3에 업로드된 파일 삭제
-    if (req.files?.location) {
-      await deleteS3Object(req.files.location);
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        if (file.location) {
+          await deleteS3Object(file.location);
+          console.log('🗑️ S3 삭제 완료:', file.location);
+        }
+      }
     }
     res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
   }
