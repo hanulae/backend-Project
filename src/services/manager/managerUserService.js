@@ -16,7 +16,7 @@ export const registerManager = async (params) => {
   if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
   if (!params.managerBankName) missingFields.push('managerBankName');
   if (!params.managerBankNumber) missingFields.push('managerBankNumber');
-  if (!params.file) missingFields.push('file');
+  if (!params.files || params.files.length === 0) missingFields.push('file');
 
   if (missingFields.length > 0) {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
