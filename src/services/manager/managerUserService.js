@@ -40,8 +40,8 @@ export const registerManager = async (params) => {
     throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
   }
 
-  const fileUrl = params.file.location;
-  const fileName = params.file.originalname;
+  const fileUrl = params.files?.[0]?.location || null;
+  const fileName = params.files?.[0]?.originalname || null;
 
   const transaction = await db.sequelize.transaction();
 
