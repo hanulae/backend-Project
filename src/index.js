@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 import EnvValidator from './middleware/envValidator.js';
 import logger from './config/logger.js';
-//import { createDefaultAdmin } from './Init/initAdmin.js';
+import { createDefaultAdmin } from './Init/initAdmin.js';
 
 //dotenv.config();
 
@@ -18,7 +18,7 @@ async function startServer() {
 
     // db 연결
     await connectToDatabase();
-    //await createDefaultAdmin(); // 관리자 계정 생성
+    await createDefaultAdmin(); // 관리자 계정 생성
 
     // 서버 시작
     const server = app.listen(PORT, () => {
