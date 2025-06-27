@@ -1,7 +1,8 @@
 import axios from 'axios';
-import path from 'path';
+//import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 export const getIamportToken = async () => {
   const { data } = await axios.post('https://api.iamport.kr/users/getToken', {

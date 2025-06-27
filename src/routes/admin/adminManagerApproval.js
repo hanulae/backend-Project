@@ -1,7 +1,11 @@
 import express from 'express';
 import * as managerApprovalService from '../../services/admin/adminManagerApprovalService.js';
+import adminAuthMiddleware from '../../middlewares/adminAuthMiddleware.js';
 
 const router = express.Router();
+
+// 🔐 모든 요청에 관리자 인증 미들웨어 적용
+router.use(adminAuthMiddleware);
 
 // [GET] 가입 요청 목록 (승인/요청 구분)
 router.get('/requests', async (req, res) => {

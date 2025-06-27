@@ -1,4 +1,4 @@
-import * as pointDao from '../../daos/manager/pointDao.js';
+import * as pointDao from '../../daos/manager/managerPointDao.js';
 
 export const requestPointToCash = async (managerId, amount) => {
   return await pointDao.insertPointToCash(managerId, amount);
@@ -15,4 +15,8 @@ export const getPointHistory = async (managerId, page, limit) => {
       currentPage: Number(page),
     },
   };
+};
+
+export const getCurrentPoint = async (managerId) => {
+  return await pointDao.getCurrentPoint(managerId);
 };

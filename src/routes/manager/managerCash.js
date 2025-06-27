@@ -41,13 +41,13 @@ router.post('/topup', async (req, res) => {
 // 캐시 환급
 router.post('/refund', authMiddleware, async (req, res) => {
   try {
-    const { amountCash } = req.body;
     const managerId = req.user.managerId;
+    const { amountCash } = req.body;
 
     const params = { managerId, amountCash };
-    const result = await managerCashService.requestCashRefund(params);
 
-    res.status(200).json({ message: '환급 요청 성공', data: result });
+    const result = await managerCashService.requestCashRefund(params);
+    res.status(200).json({ message: '캐쉬 환급 요청 성공', data: result });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -59,6 +59,17 @@ router.get('/history/:managerId', async (req, res) => {
     const { managerId } = req.params;
     const history = await managerCashService.getCashHistory(managerId);
     res.status(200).json({ message: '캐시 히스토리 조회 성공', data: history });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 현재 캐시 조회
+router.get('/current', authMiddleware, async (req, res) => {
+  try {
+    const managerId = req.user.managerId;
+    const currentCash = await managerCashService.getCurrentCash(managerId);
+    res.status(200).json({ message: '현재 캐쉬 조회 성공', currentCash });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

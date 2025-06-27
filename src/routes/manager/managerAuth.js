@@ -8,7 +8,6 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { managerEmail, managerPassword } = req.body;
-    console.log('🚀 ~ router.post ~ managerPassword:', managerPassword);
     const result = await managerAuthService.loginManager({ managerEmail, managerPassword });
     res.status(200).json({ message: '로그인 성공', ...result });
   } catch (error) {
@@ -26,15 +25,16 @@ router.post('/logout', authMiddleware, (req, res) => {
 // 비밀번호 변경
 router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
     const managerId = req.user.managerId;
 
-    const params = { managerId, currentPassword, newPassword };
+    const params = { managerId, newPassword };
 
     await managerAuthService.updatePassword(params);
 
     res.json({ message: '비밀번호 변경 완료' });
   } catch (error) {
+    console.error('비밀번호 변경 오류:', error.message);
     res.status(400).json({ message: error.message });
   }
 });

@@ -27,11 +27,12 @@ export const createFuneralCashHistory = async (cashHistoryData, transactionType,
 
 /**
  * 캐시 히스토리 상태 업데이트
- * @param {*} whereCondition
- * @param {*} status
- * @param {*} options
- * @returns
+ * @param {Object} whereCondition - 업데이트할 조건
+ * @param {string} status - 업데이트할 상태값
+ * @param {Object} options - 트랜잭션 등 옵션
+ * @returns {Promise<[number]>} - 수정된 행 수
  */
+
 export const updateFuneralCashHistoryStatus = async (whereCondition, status, options = {}) => {
   const result = await db.FuneralCashHistory.update(
     { status },

@@ -1,9 +1,10 @@
 // src/config/s3.js
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import dotenv from 'dotenv';
-import path from 'path';
+//import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION, // 예: 'ap-northeast-2'

@@ -70,3 +70,15 @@ export const create = async (data) => {
     throw new Error('🔴 환급 요청 DAO 오류:' + error.message);
   }
 };
+
+export const getCurrentCash = async (managerId) => {
+  const manager = await db.Manager.findByPk(managerId, {
+    attributes: ['managerCash'],
+  });
+
+  if (!manager) {
+    throw new Error('상조팀장을 찾을 수 없습니다.');
+  }
+
+  return manager.managerCash;
+};

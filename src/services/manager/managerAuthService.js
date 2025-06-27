@@ -2,12 +2,14 @@ import * as managerAuthDao from '../../daos/manager/managerAuthDao.js';
 import coolsms from 'coolsms-node-sdk';
 import redis from '../../config/redis.js';
 import dotenv from 'dotenv';
-import path from 'path';
+//import path from 'path';
 import { generateVerificationCode } from '../../utils/codeGenerator.js';
 import { generateToken, generateRefreshToken } from '../../utils/jwt.js';
 import logger from '../../config/logger.js';
+import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const mysms = coolsms.default;
 const smsClient = new mysms(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
@@ -55,26 +57,22 @@ export const logoutManager = async () => {
 // 비밀번호 변경
 export const updatePassword = async (params) => {
   try {
-    const { managerId, currentPassword, newPassword } = params;
+    const { managerId, newPassword } = params;
 
     // 필수정보 확인
-    if (!managerId || !currentPassword || !newPassword) {
+    if (!managerId || !newPassword) {
       throw new Error('필수 정보가 누락되었습니다.');
-    }
-    // 비밀번호가 현재 비밀번호와 동일한지 확인
-    if (currentPassword === newPassword) {
-      throw new Error('새로운 비밀번호가 기존 비밀번호와 동일합니다.');
     }
     // 상조팀장 정보 조회
     const manager = await managerAuthDao.findById(managerId);
     if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
 
-    const isPasswordValid = await manager.verifyPassword(currentPassword);
-    if (!isPasswordValid) {
-      throw new Error('기존 비밀번호가 일치하지 않습니다.');
+    const isPasswordValid = await manager.verifyPassword(newPassword);
+    if (isPasswordValid) {
+      throw new Error('기존 비밀번호가 일치 합니다.');
     }
-
-    return await managerAuthDao.updatePassword(managerId, newPassword);
+    const updatedPassword = await managerAuthDao.updatePassword(managerId, newPassword);
+    return updatedPassword;
   } catch (error) {
     throw new Error('🔴 비밀번호 변경 오류:' + error.message);
   }
@@ -83,16 +81,16 @@ export const updatePassword = async (params) => {
 // 휴대폰 번호 변경
 export const updatePhoneNumber = async (params) => {
   try {
-    const { managerId, currentPhone, newPhone } = params;
+    const { managerId, /*currentPhone,*/ newPhone } = params;
 
     const manager = await managerAuthDao.findById(managerId);
     if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
 
-    if (manager.managerPhoneNumber !== currentPhone) {
-      throw new Error('기존 휴대폰 번호가 일치하지 않습니다.');
-    }
+    // if (manager.managerPhoneNumber !== currentPhone) {
+    //   throw new Error('기존 휴대폰 번호가 일치하지 않습니다.');
+    // }
 
-    if (currentPhone === newPhone) {
+    if (manager.managerPhoneNumber === newPhone) {
       throw new Error('새로운 번호가 기존 번호와 동일합니다.');
     }
 
@@ -197,5 +195,18 @@ export const verifyCode = async (managerPhoneNumber, inputCode) => {
     return manager.managerEmail;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
+  }
+};
+
+export const getUserPassword = async (managerId) => {
+  try {
+    const manager = await managerUserDao.findById(managerId);
+    if (!manager) {
+      throw new Error('해당 ID의 상조팀장 정보를 찾을 수 없습니다.');
+    }
+    return manager;
+  } catch (error) {
+    console.error('🔴 getUserPhone 에러:', error.message);
+    throw new Error('전화번호 조회 실패: ' + error.message);
   }
 };

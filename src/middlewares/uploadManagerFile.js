@@ -2,11 +2,12 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 import s3 from '../config/s3.js'; // AWS S3 연결 모듈
-import path from 'path';
+//import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+//dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const upload = multer({
+const uploadManagerFile = multer({
   storage: multerS3({
     s3,
     bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -25,4 +26,4 @@ const upload = multer({
   },
 });
 
-export default upload.single('managerAddFile');
+export default uploadManagerFile.array('managerAddFile', 10); // 최대 5개 허용

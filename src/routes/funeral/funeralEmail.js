@@ -20,6 +20,7 @@ router.post('/send', async (req, res) => {
 router.post('/verify', (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) return res.status(400).json({ message: '이메일과 인증 코드가 필요합니다.' });
+  console.log('🚀 ~ router.post ~ email, code:', email, code);
 
   const isValid = verifyEmailCode(email, code);
   if (isValid) res.status(200).json({ message: '인증 성공' });
