@@ -2,33 +2,29 @@ import express from 'express';
 import logger from '../../config/logger.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
 import dispatchRequestService from '../../services/common/dispatchRequestService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 // 출동 대기 내역 리스트 조회
-router.get(
-  '/list/:funeralId',
-  validateRequiredFields(['funeralId'], 'params'),
-  validateUUID(['funeralId'], 'params'),
-  async (req, res) => {
-    try {
-      const funeralId = req.params.funeralId;
+router.get('/list', authMiddleware, async (req, res) => {
+  try {
+    const { funeralId } = req.user;
 
-      const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(funeralId);
+    const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(funeralId);
 
-      res.status(200).json({
-        success: true,
-        data: dispatchRequestList,
-      });
-    } catch (error) {
-      logger.error('출동 내역 리스트 조회중 오류 발생', error.message);
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  },
-);
+    res.status(200).json({
+      success: true,
+      data: dispatchRequestList,
+    });
+  } catch (error) {
+    logger.error('출동 내역 리스트 조회중 오류 발생', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 // 출동 요청 상세 조회
 router.get(
@@ -56,6 +52,26 @@ router.get(
   },
 );
 
+// 장례식장에서 제안한 호실 정보 조회 by managerFormBidId
+router.get('/hall-info/:managerFormBidId', async (req, res) => {
+  try {
+    const managerFormBidId = req.params.managerFormBidId;
+
+    const hallInfo = await dispatchRequestService.getFuneralHallInfoByBidId(managerFormBidId);
+
+    return res.status(200).json({
+      success: true,
+      data: hallInfo,
+    });
+  } catch (error) {
+    logger.error('장례식장 정보 조회중 오류 발생', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 // 출동 요청 승인
 router.post(
   '/approve/:dispatchRequestId',
@@ -72,7 +88,7 @@ router.post(
         message: '출동 요청 승인 완료',
       });
     } catch (error) {
-      logger.error('출동 요청 승인중 오류 발생', error.message);
+      logger.error('출동 요청 승인중 오류 발생: ', error);
       res.status(500).json({
         success: false,
         message: error.message,
@@ -96,6 +112,8 @@ router.post(
     try {
       const dispatchRequestId = req.params.dispatchRequestId;
 
+      console.log('dispatchRequestId', dispatchRequestId);
+
       const result = await dispatchRequestService.completeDispatchRequest(
         dispatchRequestId,
         'funeral',
@@ -107,7 +125,7 @@ router.post(
         status: result.status,
       });
     } catch (error) {
-      logger.error('장례식장 거래완료 요청중 오류 발생', error.message);
+      logger.error('장례식장 거래완료 요청중 오류 발생', error);
       res.status(500).json({
         success: false,
         message: error.message,

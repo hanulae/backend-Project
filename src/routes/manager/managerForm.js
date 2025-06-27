@@ -2,6 +2,7 @@ import express from 'express';
 import logger from '../../config/logger.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
 import managerFormService from '../../services/manager/managerFormService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -20,11 +21,13 @@ const router = express.Router();
  */
 router.post(
   '/create',
+  authMiddleware,
   validateRequiredFields(['funeralList', 'chiefMournerName', 'checkInDate', 'checkOutDate']),
   validateUUID(['funeralList'], 'body'),
   async (req, res) => {
     try {
-      const { funeralList, ...managerFormData } = req.body;
+      const { funeralList, ...formData } = req.body;
+      const managerId = req.user.managerId;
 
       // funeralList가 배열이 아닐 경우 예외 처리
       if (!Array.isArray(funeralList)) {
@@ -35,6 +38,12 @@ router.post(
 
       // 중복 제거
       const uniqueFuneralListIds = [...new Set(funeralList)];
+
+      // managerId 추가
+      const managerFormData = {
+        ...formData,
+        managerId,
+      };
 
       const result = await managerFormService.createManagerForm(
         managerFormData,
@@ -57,9 +66,9 @@ router.post(
  * 피그마 상의 헤더 견적내역 부분
  * @Token managerId: string(JWT)
  */
-router.get('/list', async (req, res) => {
+router.get('/list', authMiddleware, async (req, res) => {
   try {
-    const { managerId } = req.body; // 추후 토큰으로 처리
+    const managerId = req.user.managerId;
 
     const result = await managerFormService.getManagerFormList(managerId);
 
@@ -79,12 +88,12 @@ router.get('/list', async (req, res) => {
  * @query managerFormId: string,
  */
 router.get(
-  '/bid/list',
-  validateUUID('managerFormId', 'query'),
-  validateRequiredFields('managerFormId', 'query'),
+  '/bid/list/:managerFormId',
+  validateUUID('managerFormId', 'params'),
+  validateRequiredFields('managerFormId', 'params'),
   async (req, res) => {
     try {
-      const { managerFormId } = req.query;
+      const { managerFormId } = req.params;
 
       const result = await managerFormService.getManagerFormBidList(managerFormId);
 
@@ -105,13 +114,12 @@ router.get(
  * @query managerFormBidId: string,
  */
 router.get(
-  '/bid/detail',
-  validateUUID('managerFormBidId', 'query'),
-  validateRequiredFields('managerFormBidId', 'query'),
+  '/bid/detail/:managerFormBidId',
+  validateUUID('managerFormBidId', 'params'),
+  validateRequiredFields('managerFormBidId', 'params'),
   async (req, res) => {
     try {
-      const { managerFormBidId } = req.query;
-
+      const { managerFormBidId } = req.params;
       const result = await managerFormService.getManagerFormBidDetail(managerFormBidId);
 
       return res.status(200).json({

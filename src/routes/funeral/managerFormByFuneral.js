@@ -2,13 +2,14 @@ import express from 'express';
 import logger from '../../config/logger.js';
 import managerFormByFuneralService from '../../services/funeral/managerFormByFuneralService.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 // 견적 내역 리스트 불러오기
-router.get('/list', async (req, res) => {
+router.get('/list', authMiddleware, async (req, res) => {
   try {
-    const { funeralId } = req.query; // 추후 토큰으로 처리
+    const { funeralId } = req.user;
 
     if (!funeralId) {
       return res.status(400).json({
@@ -35,6 +36,7 @@ router.get(
   async (req, res) => {
     try {
       const { managerFormBidId } = req.query;
+      console.log(managerFormBidId);
 
       const result = await managerFormByFuneralService.getManagerFormDetail(managerFormBidId);
 

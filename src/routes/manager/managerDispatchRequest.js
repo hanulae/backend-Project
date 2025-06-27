@@ -2,6 +2,7 @@ import express from 'express';
 import logger from '../../config/logger.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
 import dispatchRequestService from '../../services/common/dispatchRequestService.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ const router = express.Router();
  */
 router.post(
   '/create',
+  authMiddleware,
   validateRequiredFields(
     [
       'address',
@@ -35,13 +37,22 @@ router.post(
   validateUUID(['funeralId', 'managerFormId', 'managerFormBidId'], 'body'),
   async (req, res) => {
     try {
-      const params = req.body;
+      const managerId = req.user.managerId;
+      const params = {
+        ...req.body,
+        managerId,
+      };
 
-      await dispatchRequestService.createDispatchRequest(params);
+      console.log('params', params);
+
+      const dispatchRequest = await dispatchRequestService.createDispatchRequest(params);
 
       res.status(201).json({
         success: true,
         message: '출동 신청 완료',
+        data: {
+          dispatchRequestId: dispatchRequest.dispatchRequestId,
+        },
       });
     } catch (error) {
       logger.error('출동 신청 실패', error.message);
@@ -84,29 +95,24 @@ router.get(
 /**
  * 출동 신청 내역 리스트 조회
  */
-router.get(
-  '/list/:managerId',
-  validateRequiredFields(['managerId'], 'params'),
-  validateUUID(['managerId'], 'params'),
-  async (req, res) => {
-    try {
-      const managerId = req.params.managerId;
+router.get('/list', authMiddleware, async (req, res) => {
+  try {
+    const managerId = req.user.managerId;
 
-      const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(managerId);
+    const dispatchRequestList = await dispatchRequestService.getDispatchRequestList(managerId);
 
-      res.status(200).json({
-        success: true,
-        data: dispatchRequestList,
-      });
-    } catch (error) {
-      logger.error('출동 내역 리스트 조회중 오류 발생', error.message);
-      res.status(500).json({
-        success: false,
-        message: '출동 내역 리스트 조회중 오류 발생 ' + error.message,
-      });
-    }
-  },
-);
+    res.status(200).json({
+      success: true,
+      data: dispatchRequestList,
+    });
+  } catch (error) {
+    logger.error('출동 내역 리스트 조회중 오류 발생', error.message);
+    res.status(500).json({
+      success: false,
+      message: '출동 내역 리스트 조회중 오류 발생 ' + error.message,
+    });
+  }
+});
 
 /**
  * 출동 신청 취소
