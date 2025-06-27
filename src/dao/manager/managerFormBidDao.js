@@ -73,6 +73,34 @@ const managerFormBidDao = {
   },
 
   /**
+   * managerFormBidId를 기반으로 조회
+   * 장례식장 거래 완료 페이지에서 제안한 호실 정보 조회 시 사용을 위한 DAO로 만들어짐
+   */
+  async getManagerFormBidByManagerFormBidId(managerFormBidId) {
+    const result = await ManagerFormBid.findOne({
+      where: {
+        managerFormBidId: managerFormBidId,
+      },
+      attributes: ['proponentMoney', 'discount'],
+      include: [
+        {
+          model: funeralHallInfo,
+          as: 'funeralHallInfo',
+          attributes: [
+            'funeralHallName',
+            'funeralHallSize',
+            'funeralHallNumberOfMourners',
+            'funeralHallPrice',
+            'funeralHallDetailPrice',
+          ],
+        },
+      ],
+    });
+
+    return result;
+  },
+
+  /**
    * 견적신청서 ID를 기반으로 생성된 입찰 리스트 조회
    * 한명의 상주님의 입찰 리스트 조회
    */

@@ -89,9 +89,9 @@ const managerFormService = {
         const plain = item.get({ plain: true });
         return {
           managerFormBidId: plain.managerFormBidId,
-          bid_status: plain.bid_status,
-          funeral_name: plain.funeralList.funeral_name,
-          funeral_address: plain.funeralList.funeral_address,
+          bidStatus: plain.bid_status,
+          funeralName: plain.funeralList.funeral_name,
+          funeralAddress: plain.funeralList.funeral_address,
         };
       });
 

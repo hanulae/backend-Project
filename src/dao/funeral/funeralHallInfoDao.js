@@ -22,7 +22,16 @@ const funeralHallInfoDao = {
       where: {
         funeralId: funeralId,
       },
-      attributes: ['funeralHallId', 'funeralHallName'],
+      attributes: [
+        'funeralHallId',
+        'funeralHallName',
+        'funeralHallSize',
+        'funeralHallNumberOfMourners',
+        'funeralHallPrice',
+        'funeralHallDetailPrice',
+        'funeralHallStatus',
+        'version',
+      ],
       offset,
       limit,
       order: [['createdAt', 'DESC']],

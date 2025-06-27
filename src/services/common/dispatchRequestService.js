@@ -296,6 +296,27 @@ class DispatchRequestService {
     return funeralPhoneNumber.funeralPhoneNumber;
   }
 
+  // 장례식장 호실 정보 조회 by managerFormBidId
+  static async getFuneralHallInfoByBidId(managerFormBidId) {
+    // 1. managerFormBid 조회
+    const managerFormBid =
+      await managerFormBidDao.getManagerFormBidByManagerFormBidId(managerFormBidId);
+
+    if (!managerFormBid) {
+      throw new Error('실패: 존재하지 않는 입찰 내역');
+    }
+
+    const InfoData = {
+      funeralHallName: managerFormBid.funeralHallInfo.funeralHallName,
+      funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
+      funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      proponentMoney: managerFormBid.proponentMoney,
+      discount: managerFormBid.discount,
+    };
+
+    return InfoData;
+  }
+
   // 거래완료 처리 - 메인 메서드
   static async completeDispatchRequest(dispatchRequestId, userType) {
     const transaction = await sequelize.transaction();

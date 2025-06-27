@@ -1,10 +1,11 @@
 import express from 'express';
 import ManagerCartService from '../../services/manager/managerCartService.js';
 import logger from '../../config/logger.js';
+import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/add', async (req, res) => {
+router.post('/add', authMiddleware, async (req, res) => {
   try {
     const { funeralListId } = req.body;
 
@@ -14,7 +15,7 @@ router.post('/add', async (req, res) => {
 
     const addData = {
       funeralListId,
-      managerId: req.body.managerId, // 추후 토큰 처리 방식으로 변경 필요
+      managerId: req.user.managerId,
     };
 
     const result = await ManagerCartService.addManagerCart(addData);
@@ -25,15 +26,16 @@ router.post('/add', async (req, res) => {
   }
 });
 
-router.get('/list', async (req, res) => {
+router.get('/list', authMiddleware, async (req, res) => {
   try {
-    const managerId = req.body.managerId; // 추후 토큰 처리 방식으로 변경
+    const managerId = req.user.managerId;
 
     if (!managerId) {
       return res.status(400).json({ message: '장바구니 조회에 있어 상조팀장 ID는 필수 입니다.' });
     }
 
     const result = await ManagerCartService.getManagerCart(managerId);
+    console.log('result', result.data.cartList.length);
     res.status(200).json(result);
   } catch (error) {
     logger.error('상조팀장 장바구니 조회 실패', error);
@@ -41,10 +43,10 @@ router.get('/list', async (req, res) => {
   }
 });
 
-router.delete('/delete', async (req, res) => {
+router.delete('/delete', authMiddleware, async (req, res) => {
   try {
     const { managerCartId } = req.body;
-    const managerId = req.body.managerId; // 추후 토큰 처리 방식으로 변경
+    const managerId = req.user.managerId;
 
     if (!managerCartId || !Array.isArray(managerCartId) || managerCartId.length === 0) {
       return res.status(400).json({ message: '삭제할 장바구니 ID 배열이 필요합니다.' });

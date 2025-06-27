@@ -43,6 +43,7 @@ router.post(
 // 호실 정보 리스트 조회
 router.get('/list', authMiddleware, async (req, res) => {
   try {
+    // JWT 토큰에서 funeralId 가져오기
     const funeralId = req.user.funeralId;
 
     const page = parseInt(req.query.page) || 1;
