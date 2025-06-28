@@ -16,7 +16,11 @@ const app = express();
 // 기본 미들웨어 설정
 app.use(
   cors({
-    origin: 'http://10.0.2.2:8081',
+    origin: [
+      'http://10.0.2.2:8081', // Android 개발 환경
+      'http://localhost:3000', // 로컬 웹 개발용 (필요 시)
+      'https://wooricenter.co.kr', // 실제 배포 도메인
+    ],
     credentials: true,
   }),
 );
