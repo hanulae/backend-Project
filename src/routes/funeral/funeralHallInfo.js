@@ -111,6 +111,7 @@ router.put(
   ),
   async (req, res) => {
     try {
+      console.log('req.body: ', req.body);
       const newHallInfo = {
         funeralId: req.user.funeralId,
         funeralHallId: req.body.funeralHallId,
@@ -121,6 +122,8 @@ router.put(
         funeralHallDetailPrice: req.body.funeralHallDetailPrice,
         version: req.body.version,
       };
+
+      console.log('호실 정보 수정 요청: ', newHallInfo);
 
       logger.info('호실 정보 수정 요청: ', {
         funeralHallId: newHallInfo.funeralHallId,

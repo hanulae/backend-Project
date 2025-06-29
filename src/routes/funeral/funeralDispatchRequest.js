@@ -132,6 +132,11 @@ router.post(
       });
     }
   },
+
+  /**
+   * 거래완료 리스트 조회
+   * @Header {string} funeralId(JWT) - 토큰 값 (추가예정)
+   */
 );
 
 export default router;

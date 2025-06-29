@@ -36,7 +36,6 @@ router.get(
   async (req, res) => {
     try {
       const { managerFormBidId } = req.query;
-      console.log(managerFormBidId);
 
       const result = await managerFormByFuneralService.getManagerFormDetail(managerFormBidId);
 
@@ -94,6 +93,30 @@ router.put(
     } catch (error) {
       logger.error(error.message);
       return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  },
+);
+
+router.get(
+  '/bid/detail',
+  validateRequiredFields('managerFormBidId', 'query'),
+  validateUUID('managerFormBidId', 'query'),
+  async (req, res) => {
+    try {
+      const { managerFormBidId } = req.query;
+
+      const result = await managerFormByFuneralService.getManagerFormBidDetail(managerFormBidId);
+
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.error(error);
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
