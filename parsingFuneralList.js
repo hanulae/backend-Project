@@ -33,7 +33,7 @@ async function importFuneralList(mode = 'update') {
     console.log('데이터베이스 연결 성공');
 
     // 엑셀 파일 로드
-    const workbook = xlsx.readFile(path.join(__dirname, '장례식장_데이터.xlsx'));
+    const workbook = xlsx.readFile(path.join(__dirname, 'funeral_data.xlsx'));
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(worksheet);
 
