@@ -78,6 +78,16 @@ export const registerFuneral = async (params) => {
   }
 };
 
+export const isUsernameAvailable = async (funeralUsername) => {
+  try {
+    const funeral = await funeralUserDao.findByUsername(funeralUsername);
+    return !funeral; // Return true if no manager is found, meaning the username is available
+  } catch (error) {
+    console.error('아이디 중복 확인 서비스 오류:', error.message);
+    throw error;
+  }
+};
+
 export const getMyProfile = async (funeralId) => {
   try {
     const funeral = await funeralUserDao.findById(funeralId);

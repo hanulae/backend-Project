@@ -35,6 +35,23 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
   }
 });
 
+// 아이디 중복 확인
+router.get('/checkUsername', async (req, res) => {
+  try {
+    const { username } = req.query;
+    console.log('🚀 ~ router.get ~ userName:', username);
+    const isAvailable = await funeralUserService.isUsernameAvailable(username);
+
+    res.status(200).json({
+      message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.',
+      available: isAvailable,
+    });
+  } catch (error) {
+    console.error('아이디 중복 확인 오류:', error.message);
+    res.status(500).json({ message: '아이디 중복 확인 중 오류가 발생했습니다.' });
+  }
+});
+
 // 내 프로필 조회
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
