@@ -7,8 +7,13 @@ const router = express.Router();
 // 로그인
 router.post('/login', async (req, res) => {
   try {
-    const { managerEmail, managerPassword } = req.body;
-    const result = await managerAuthService.loginManager({ managerEmail, managerPassword });
+    const { managerUsername, managerPassword } = req.body;
+    console.log(
+      '🚀 ~ router.post ~ managerUsername, managerPassword:',
+      managerUsername,
+      managerPassword,
+    );
+    const result = await managerAuthService.loginManager({ managerUsername, managerPassword });
     res.status(200).json({ message: '로그인 성공', ...result });
   } catch (error) {
     res.status(401).json({ message: error.message });

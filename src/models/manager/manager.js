@@ -11,17 +11,17 @@ class Manager extends Sequelize.Model {
           primaryKey: true,
           comment: '상조팀장 고유 ID',
         },
-        managerEmail: {
+        managerUsername: {
           type: DataTypes.STRING(50),
           allowNull: false,
           unique: {
-            name: 'manager_email_unique',
-            msg: '이미 사용 중인 이메일입니다',
+            name: 'manager_username_unique',
+            msg: '이미 사용 중인 아이디입니다',
           },
           validate: {
-            isEmail: true,
+            notEmpty: true,
           },
-          comment: '상조팀장 이메일 = 로그인 아이디',
+          comment: '상조팀장 아이디 = 로그인 아이디',
         },
         managerPassword: {
           type: DataTypes.STRING,

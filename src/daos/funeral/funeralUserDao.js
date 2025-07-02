@@ -9,6 +9,15 @@ export const insert = async (funeralData) => {
   }
 };
 
+export const findByUsername = async (funeralUsername) => {
+  try {
+    return await db.Funeral.findOne({ where: { funeralUsername } });
+  } catch (error) {
+    console.error('🔴 아이디 중복 확인 DAO 오류:', error.message);
+    throw error;
+  }
+};
+
 export const findById = async (funeralId) => {
   try {
     return await db.Funeral.findByPk(funeralId);

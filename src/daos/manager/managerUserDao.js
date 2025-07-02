@@ -11,6 +11,15 @@ export const insert = async (managerData, options = {}) => {
   }
 };
 
+export const findByUsername = async (managerUsername) => {
+  try {
+    return await db.Manager.findOne({ where: { managerUsername } });
+  } catch (error) {
+    console.error('🔴 아이디 중복 확인 DAO 오류:', error.message);
+    throw error;
+  }
+};
+
 export const findById = async (managerId) => {
   try {
     return await db.Manager.findByPk(managerId);

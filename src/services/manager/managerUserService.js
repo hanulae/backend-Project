@@ -10,7 +10,7 @@ dotenv.config();
 export const registerManager = async (params) => {
   const missingFields = [];
 
-  if (!params.managerEmail) missingFields.push('managerEmail');
+  if (!params.managerUsername) missingFields.push('managerUsername');
   if (!params.managerPassword) missingFields.push('managerPassword');
   if (!params.managerName) missingFields.push('managerName');
   if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
@@ -22,11 +22,11 @@ export const registerManager = async (params) => {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
   }
 
-  // ✅ 이메일 형식 검증
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(params.managerEmail)) {
-    throw new Error('유효한 이메일 형식이 아닙니다.');
-  }
+  // // ✅ 이메일 형식 검증
+  // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // if (!emailRegex.test(params.managerEmail)) {
+  //   throw new Error('유효한 이메일 형식이 아닙니다.');
+  // }
 
   // ✅ 핸드폰 번호 형식 검증 (대한민국 기준)
   const phoneRegex = /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/;
@@ -48,7 +48,7 @@ export const registerManager = async (params) => {
   try {
     // 1. 상조팀장 생성
     const managerData = {
-      managerEmail: params.managerEmail,
+      managerUsername: params.managerUsername,
       managerPassword: params.managerPassword,
       managerName: params.managerName,
       managerPhoneNumber: params.managerPhoneNumber,
@@ -114,6 +114,16 @@ export const registerManager = async (params) => {
       await managerUserDao.deleteByEmail(params.managerEmail);
     }
 
+    throw error;
+  }
+};
+
+export const isUsernameAvailable = async (managerUsername) => {
+  try {
+    const manager = await managerUserDao.findByUsername(managerUsername);
+    return !manager; // Return true if no manager is found, meaning the username is available
+  } catch (error) {
+    console.error('아이디 중복 확인 서비스 오류:', error.message);
     throw error;
   }
 };
