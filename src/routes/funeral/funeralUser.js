@@ -10,7 +10,7 @@ const router = express.Router();
 router.post('/signup', uploadFuneralFile, async (req, res) => {
   try {
     const params = {
-      funeralEmail: req.body.funeralEmail,
+      funeralUsername: req.body.funeralUsername,
       funeralPassword: req.body.funeralPassword,
       funeralName: req.body.funeralName,
       funeralPhoneNumber: req.body.funeralPhoneNumber,

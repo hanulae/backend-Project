@@ -16,8 +16,10 @@ const CODE_EXPIRY = 300; // 5분
 const ATTEMPT_LIMIT = 5;
 const ATTEMPT_EXPIRY = 3600; // 1시간
 
-export const login = async ({ funeralEmail, funeralPassword }) => {
-  const funeral = await funeralAuthDao.findByEmail(funeralEmail);
+export const login = async ({ funeralUsername, funeralPassword }) => {
+  const funeral = await funeralAuthDao.findManagerByUsername(funeralUsername);
+  if (!funeral) throw new Error('존재하지 않는 이메일입니다.');
+  if (!funeral.isApproved) throw new Error('관리자의 승인이 필요합니다.');
   if (!funeral) {
     throw new Error('등록되지 않은 이메일입니다.');
   }

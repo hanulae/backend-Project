@@ -5,8 +5,9 @@ import * as funeralPointHistoryDao from '../../daos/funeral/funeralPointHistoryD
 //import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
 
 export const registerFuneral = async (params) => {
+  console.log('🚀 ~ registerFuneral ~ params:', params);
   if (
-    !params.funeralEmail ||
+    !params.funeralUsername ||
     !params.funeralPassword ||
     !params.funeralName ||
     !params.funeralPhoneNumber ||
@@ -24,7 +25,7 @@ export const registerFuneral = async (params) => {
 
   try {
     const funeralData = {
-      funeralEmail: params.funeralEmail,
+      funeralUsername: params.funeralUsername,
       funeralPassword: params.funeralPassword,
       funeralName: params.funeralName,
       funeralPhoneNumber: params.funeralPhoneNumber,

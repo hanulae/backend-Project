@@ -8,6 +8,15 @@ export const findByEmail = async (email) => {
   }
 };
 
+export const findManagerByUsername = async (managerUsername) => {
+  try {
+    const manager = await db.Manager.findOne({ where: { managerUsername } });
+    return manager;
+  } catch (error) {
+    throw new Error('데이터베이스 조회 중 오류가 발생했습니다.');
+  }
+};
+
 export const findById = async (funeralId) => {
   try {
     return await db.Funeral.findByPk(funeralId);
