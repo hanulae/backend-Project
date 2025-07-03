@@ -81,7 +81,7 @@ export const updateBankInfo = async (
   funeralBacnkHolder,
 ) => {
   try {
-    return await db.Manager.update(
+    return await db.Funeral.update(
       {
         funeralBankName,
         funeralBankNumber,
