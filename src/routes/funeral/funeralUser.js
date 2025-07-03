@@ -17,9 +17,10 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
       funeralBankName: req.body.funeralBankName,
       funeralBankNumber: req.body.funeralBankNumber,
       funeralBankHolder: req.body.funeralBankHolder,
-      funeralHome: req.body.funeralHome,
+      funeralHome: 'req.body.funeralHome',
       files: req.files,
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await funeralUserService.registerFuneral(params);
 
