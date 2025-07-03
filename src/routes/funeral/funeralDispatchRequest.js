@@ -112,8 +112,6 @@ router.post(
     try {
       const dispatchRequestId = req.params.dispatchRequestId;
 
-      console.log('dispatchRequestId', dispatchRequestId);
-
       const result = await dispatchRequestService.completeDispatchRequest(
         dispatchRequestId,
         'funeral',
@@ -128,7 +126,7 @@ router.post(
       logger.error('장례식장 거래완료 요청중 오류 발생', error);
       res.status(500).json({
         success: false,
-        message: error.message,
+        message: error.message || '거래완료 처리 중 오류가 발생했습니다.',
       });
     }
   },

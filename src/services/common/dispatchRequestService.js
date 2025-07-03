@@ -713,6 +713,18 @@ class DispatchRequestService {
 
     await createManagerCashHistory(managerCashHistoryData, 'earn_cash', options);
   }
+
+  // 거래 흐름 상태 조회
+  static async getTransactionStatus(dispatchRequestId) {
+    const transactionsList =
+      await transactionListDao.getTransactionListByDispatchRequestId(dispatchRequestId);
+
+    if (transactionsList === null) {
+      return null;
+    } else {
+      return transactionsList;
+    }
+  }
 }
 
 export default DispatchRequestService;
