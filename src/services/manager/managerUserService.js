@@ -17,6 +17,7 @@ export const registerManager = async (params) => {
   if (!params.managerBankName) missingFields.push('managerBankName');
   if (!params.managerBankNumber) missingFields.push('managerBankNumber');
 
+
   if (missingFields.length > 0) {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
   }
@@ -38,6 +39,7 @@ export const registerManager = async (params) => {
   if (!accountRegex.test(params.managerBankNumber)) {
     throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
   }
+
 
   const transaction = await db.sequelize.transaction();
 
