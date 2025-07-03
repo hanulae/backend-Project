@@ -8,10 +8,10 @@ export const findByEmail = async (email) => {
   }
 };
 
-export const findManagerByUsername = async (managerUsername) => {
+export const findManagerByUsername = async (funeralUsername) => {
   try {
-    const manager = await db.Manager.findOne({ where: { managerUsername } });
-    return manager;
+    const funeral = await db.Funeral.findOne({ where: { funeralUsername } });
+    return funeral;
   } catch (error) {
     throw new Error('데이터베이스 조회 중 오류가 발생했습니다.');
   }
@@ -81,7 +81,7 @@ export const updateBankInfo = async (
   funeralBacnkHolder,
 ) => {
   try {
-    return await db.Manager.update(
+    return await db.Funeral.update(
       {
         funeralBankName,
         funeralBankNumber,
@@ -95,10 +95,11 @@ export const updateBankInfo = async (
 };
 
 export const findByPhone = async (funeralPhoneNumber) => {
+  console.log('🚀 ~ findByPhone ~ funeralPhoneNumber:', funeralPhoneNumber);
   try {
     return await db.Funeral.findOne({
       where: { funeralPhoneNumber: funeralPhoneNumber },
-      attributes: ['funeralEmail'],
+      attributes: ['funeralUsername'],
     });
   } catch (error) {
     throw new Error(error);
