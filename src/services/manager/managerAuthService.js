@@ -20,6 +20,11 @@ const ATTEMPT_EXPIRY = 3600; // 1시간
 
 // 로그인
 export const loginManager = async ({ managerUsername, managerPassword }) => {
+  console.log(
+    '🚀 ~ loginManager ~ managerUsername, managerPassword:',
+    managerUsername,
+    managerPassword,
+  );
   try {
     const manager = await managerAuthDao.findManagerByUsername(managerUsername);
     if (!manager) throw new Error('존재하지 않는 이메일입니다.');
@@ -40,6 +45,7 @@ export const loginManager = async ({ managerUsername, managerPassword }) => {
       manager: manager.toSafeObject(),
     };
   } catch (error) {
+    console.log('🚀 ~ loginManager ~ error:', error);
     throw new Error('🔴 로그인 오류:' + error.message);
   }
 };

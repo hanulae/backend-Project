@@ -10,14 +10,15 @@ const router = express.Router();
 router.post('/signup', uploadFuneralFile, async (req, res) => {
   try {
     const params = {
-      funeralEmail: req.body.funeralEmail,
+      funeralUsername: req.body.funeralUsername,
       funeralPassword: req.body.funeralPassword,
       funeralName: req.body.funeralName,
       funeralPhoneNumber: req.body.funeralPhoneNumber,
       funeralBankName: req.body.funeralBankName,
       funeralBankNumber: req.body.funeralBankNumber,
       funeralBankHolder: req.body.funeralBankHolder,
-      files: req.files, // ✅ 수정됨
+      funeralHome: req.body.funeralHome,
+      files: req.files,
     };
 
     const result = await funeralUserService.registerFuneral(params);
@@ -39,7 +40,6 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
 router.get('/checkUsername', async (req, res) => {
   try {
     const { username } = req.query;
-    console.log('🚀 ~ router.get ~ userName:', username);
     const isAvailable = await funeralUserService.isUsernameAvailable(username);
 
     res.status(200).json({

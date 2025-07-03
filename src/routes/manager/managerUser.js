@@ -17,6 +17,7 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
       managerBankNumber: req.body.managerBankNumber,
       files: req.files,
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await managerUserService.registerManager(params);
     res.status(201).json({
@@ -36,8 +37,8 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
 // 아이디 중복 확인
 router.get('/checkUsername', async (req, res) => {
   try {
-    const { userName } = req.query;
-    const isAvailable = await managerUserService.isUsernameAvailable(userName);
+    const { username } = req.query;
+    const isAvailable = await managerUserService.isUsernameAvailable(username);
 
     res.status(200).json({
       message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.',

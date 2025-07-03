@@ -6,16 +6,18 @@ import * as funeralPointHistoryDao from '../../daos/funeral/funeralPointHistoryD
 
 export const registerFuneral = async (params) => {
   if (
-    !params.funeralEmail ||
+    !params.funeralUsername ||
     !params.funeralPassword ||
     !params.funeralName ||
     !params.funeralPhoneNumber ||
     !params.funeralBankName ||
     !params.funeralBankNumber ||
     !params.funeralBankHolder ||
-    !params.files ||
-    !Array.isArray(params.files) ||
-    params.files.length === 0
+    !params.funeralHome
+    // 'files' 필드에 대한 필수 검사 제거
+    // !params.files ||
+    // !Array.isArray(params.files) ||
+    // params.files.length === 0
   ) {
     throw new Error('필수 정보가 누락되었습니다.');
   }
@@ -24,27 +26,30 @@ export const registerFuneral = async (params) => {
 
   try {
     const funeralData = {
-      funeralEmail: params.funeralEmail,
+      funeralUsername: params.funeralUsername,
       funeralPassword: params.funeralPassword,
       funeralName: params.funeralName,
       funeralPhoneNumber: params.funeralPhoneNumber,
       funeralBankName: params.funeralBankName,
       funeralBankNumber: params.funeralBankNumber,
       funeralBankHolder: params.funeralBankHolder,
+      funeralHome: params.funeralHome,
     };
 
     const result = await funeralUserDao.insert(funeralData, transaction);
 
-    // ✅ 여러 파일 반복 저장
-    for (const file of params.files) {
-      await funeralAddDocumentDao.create(
-        {
-          funeralId: result.funeralId,
-          funeralDocName: file.originalname,
-          funeralDocPath: file.location,
-        },
-        { transaction },
-      );
+    // ✅ 여러 파일 반복 저장 (files 배열이 있는 경우에만)
+    if (params.files && Array.isArray(params.files) && params.files.length > 0) {
+      for (const file of params.files) {
+        await funeralAddDocumentDao.create(
+          {
+            funeralId: result.funeralId,
+            funeralDocName: file.originalname,
+            funeralDocPath: file.location,
+          },
+          { transaction },
+        );
+      }
     }
 
     await funeralPointHistoryDao.create(
@@ -70,7 +75,7 @@ export const registerFuneral = async (params) => {
 
     return {
       funeral: result,
-      fileCount: params.files.length,
+      fileCount: params.files ? params.files.length : 0, // files 배열이 있는 경우에만 fileCount 반환
     };
   } catch (error) {
     await transaction.rollback();
