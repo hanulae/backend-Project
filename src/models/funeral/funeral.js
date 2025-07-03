@@ -11,17 +11,17 @@ class Funeral extends Sequelize.Model {
           primaryKey: true,
           comment: '장례식장 고유 ID',
         },
-        funeralEmail: {
+        funeralUsername: {
           type: DataTypes.STRING(50),
           allowNull: false,
           unique: {
-            name: 'funeral_email_unique',
-            msg: '이미 사용중인 이메일 입니다.',
+            name: 'funeral_username_unique',
+            msg: '이미 사용 중인 아이디입니다',
           },
           validate: {
-            isEmail: true,
+            notEmpty: true,
           },
-          comment: '장례식장 이메일 = 로그인 아이디',
+          comment: '상조팀장 아이디 = 로그인 아이디',
         },
         funeralPassword: {
           type: DataTypes.STRING,
@@ -52,6 +52,11 @@ class Funeral extends Sequelize.Model {
           type: DataTypes.STRING(50),
           allowNull: false,
           comment: '장례식장 계좌 예금주명',
+        },
+        funeralHome: {
+          type: DataTypes.STRING(100), // 필요에 따라 타입과 길이를 조정하세요
+          allowNull: true,
+          comment: '장례식장 정보',
         },
         funeralPoint: {
           type: DataTypes.INTEGER,

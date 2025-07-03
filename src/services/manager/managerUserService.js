@@ -10,23 +10,23 @@ dotenv.config();
 export const registerManager = async (params) => {
   const missingFields = [];
 
-  if (!params.managerEmail) missingFields.push('managerEmail');
+  if (!params.managerUsername) missingFields.push('managerUsername');
   if (!params.managerPassword) missingFields.push('managerPassword');
   if (!params.managerName) missingFields.push('managerName');
   if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
   if (!params.managerBankName) missingFields.push('managerBankName');
   if (!params.managerBankNumber) missingFields.push('managerBankNumber');
-  if (!params.files || params.files.length === 0) missingFields.push('file');
+
 
   if (missingFields.length > 0) {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
   }
 
-  // ✅ 이메일 형식 검증
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(params.managerEmail)) {
-    throw new Error('유효한 이메일 형식이 아닙니다.');
-  }
+  // // ✅ 이메일 형식 검증
+  // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // if (!emailRegex.test(params.managerEmail)) {
+  //   throw new Error('유효한 이메일 형식이 아닙니다.');
+  // }
 
   // ✅ 핸드폰 번호 형식 검증 (대한민국 기준)
   const phoneRegex = /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/;
@@ -40,15 +40,13 @@ export const registerManager = async (params) => {
     throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
   }
 
-  const fileUrl = params.files?.[0]?.location || null;
-  const fileName = params.files?.[0]?.originalname || null;
 
   const transaction = await db.sequelize.transaction();
 
   try {
     // 1. 상조팀장 생성
     const managerData = {
-      managerEmail: params.managerEmail,
+      managerUsername: params.managerUsername,
       managerPassword: params.managerPassword,
       managerName: params.managerName,
       managerPhoneNumber: params.managerPhoneNumber,
@@ -59,15 +57,24 @@ export const registerManager = async (params) => {
 
     const result = await managerUserDao.insert(managerData, { transaction });
 
-    // 2. 문서 정보 저장
-    await managerAddDocumentDao.create(
-      {
-        managerId: result.managerId,
-        managerDocName: fileName,
-        managerDocPath: fileUrl,
-      },
-      { transaction },
-    );
+    // 2. 문서 정보 저장 (files 배열이 있는 경우에만)
+    const fileUrls = [];
+    if (params.files && params.files.length > 0) {
+      for (const file of params.files) {
+        const fileUrl = file.location;
+        const fileName = file.originalname;
+        fileUrls.push(fileUrl);
+
+        await managerAddDocumentDao.create(
+          {
+            managerId: result.managerId,
+            managerDocName: fileName,
+            managerDocPath: fileUrl,
+          },
+          { transaction },
+        );
+      }
+    }
 
     // 3. 포인트 히스토리 초기화
     await managerPointHistoryDao.create(
@@ -105,7 +112,7 @@ export const registerManager = async (params) => {
     await transaction.commit();
     return {
       manager: result,
-      fileUrl, // ✅ 추가된 리턴 값
+      fileUrls, // files 배열이 있는 경우에만 fileUrls 반환
     };
   } catch (error) {
     await transaction.rollback();
@@ -114,6 +121,16 @@ export const registerManager = async (params) => {
       await managerUserDao.deleteByEmail(params.managerEmail);
     }
 
+    throw error;
+  }
+};
+
+export const isUsernameAvailable = async (managerUsername) => {
+  try {
+    const manager = await managerUserDao.findByUsername(managerUsername);
+    return !manager; // Return true if no manager is found, meaning the username is available
+  } catch (error) {
+    console.error('아이디 중복 확인 서비스 오류:', error.message);
     throw error;
   }
 };

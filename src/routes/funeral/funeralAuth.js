@@ -83,9 +83,10 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
 });
 
 // SMS 인증코드 전송
-router.post('/find/email/send-sms', async (req, res) => {
+router.post('/find/username/send-sms', async (req, res) => {
   try {
     const { funeralPhoneNumber } = req.body;
+    console.log('🚀 ~ router.post ~ funeralPhoneNumber:', funeralPhoneNumber);
     if (!funeralPhoneNumber) {
       return res.status(400).json({ message: '전화번호를 입력해주세요.' });
     }
@@ -97,18 +98,19 @@ router.post('/find/email/send-sms', async (req, res) => {
   }
 });
 
-// 인증코드 검증 후 이메일 찾기
-router.post('/find/email', async (req, res) => {
+// 인증코드 검증 후 아이디 찾기
+router.post('/find/username/verify', async (req, res) => {
   try {
     const { funeralPhoneNumber, code } = req.body;
+    console.log('🚀 ~ router.post ~ funeralPhoneNumber:', funeralPhoneNumber);
     if (!funeralPhoneNumber || !code) {
       return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
     }
 
-    const isVerified = await funeralAuthService.verifyCode(funeralPhoneNumber, code);
+    const username = await funeralAuthService.verifyCode(funeralPhoneNumber, code);
 
-    if (isVerified) {
-      res.status(200).json({ message: '인증 성공', verified: true, email: isVerified });
+    if (username) {
+      res.status(200).json({ message: '인증 성공', verified: true, username });
     } else {
       res.status(400).json({ message: '인증 실패', verified: false });
     }

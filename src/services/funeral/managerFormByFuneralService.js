@@ -94,6 +94,20 @@ const managerFormByFuneralService = {
       throw error;
     }
   },
+
+  // 장례식장 입찰 상세 내용 조회
+  async getManagerFormBidDetail(managerFormBidId) {
+    const managerFormBidDetail = await managerFormBidDao.getManagerFormBidById(
+      managerFormBidId,
+      'funeral',
+    );
+
+    if (!managerFormBidDetail) {
+      throw new Error('입찰 정보를 찾지 못함');
+    }
+
+    return managerFormBidDetail;
+  },
 };
 
 export default managerFormByFuneralService;

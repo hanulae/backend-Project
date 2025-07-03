@@ -43,7 +43,7 @@ export const sendVerificationSMS = async (phoneNumber) => {
   await smsClient.sendOne({
     to: phoneNumber,
     from: process.env.COOLSMS_SENDER_NUMBER,
-    text: `바나나창고 인증번호는 [${code}] 입니다. 5분 내에 입력해주세요.`,
+    text: `하늘애 인증번호는 [${code}] 입니다. 5분 내에 입력해주세요.`,
   });
 };
 

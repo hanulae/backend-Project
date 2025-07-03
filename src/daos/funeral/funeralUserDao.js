@@ -1,11 +1,20 @@
 import db from '../../models/index.js';
 
-export const insert = async (funeralData) => {
+export const insert = async (funeralData, transaction) => {
   try {
-    const newFuneral = await db.Funeral.create(funeralData);
+    const newFuneral = await db.Funeral.create(funeralData, { transaction });
     return newFuneral;
   } catch (error) {
     throw new Error('장례식장 회원가입 DAO 오류:' + error.message);
+  }
+};
+
+export const findByUsername = async (funeralUsername) => {
+  try {
+    return await db.Funeral.findOne({ where: { funeralUsername } });
+  } catch (error) {
+    console.error('🔴 아이디 중복 확인 DAO 오류:', error.message);
+    throw error;
   }
 };
 

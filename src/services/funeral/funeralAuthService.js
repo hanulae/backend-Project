@@ -16,8 +16,10 @@ const CODE_EXPIRY = 300; // 5분
 const ATTEMPT_LIMIT = 5;
 const ATTEMPT_EXPIRY = 3600; // 1시간
 
-export const login = async ({ funeralEmail, funeralPassword }) => {
-  const funeral = await funeralAuthDao.findByEmail(funeralEmail);
+export const login = async ({ funeralUsername, funeralPassword }) => {
+  const funeral = await funeralAuthDao.findManagerByUsername(funeralUsername);
+  if (!funeral) throw new Error('존재하지 않는 이메일입니다.');
+  if (!funeral.isApproved) throw new Error('관리자의 승인이 필요합니다.');
   if (!funeral) {
     throw new Error('등록되지 않은 이메일입니다.');
   }
@@ -155,7 +157,7 @@ export const findEmailByPhone = async (phoneNumber) => {
   }
 };
 
-// 이메일 찾기
+// 아이디 찾기
 export const sendVerificationSMS = async (funeralPhoneNumber) => {
   const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
   if (!phoneRegex.test(funeralPhoneNumber)) {
@@ -190,6 +192,10 @@ export const sendVerificationSMS = async (funeralPhoneNumber) => {
 
 export const verifyCode = async (funeralPhoneNumber, inputCode) => {
   try {
+    // 전화번호에서 하이픈 제거
+    const cleanedPhoneNumber = funeralPhoneNumber.replace(/-/g, '');
+    console.log('🚀 ~ verifyCode ~ cleanedPhoneNumber:', cleanedPhoneNumber);
+
     const storedCode = await redis.get(`sms:${funeralPhoneNumber}`);
 
     if (!storedCode) {
@@ -207,14 +213,16 @@ export const verifyCode = async (funeralPhoneNumber, inputCode) => {
       redis.del(`lastRequest:${funeralPhoneNumber}`),
     ]);
 
-    // 인증 성공 후, 해당 휴대폰 번호로 가입한 이메일 조회
-    const funeral = await funeralAuthDao.findByPhone(funeralPhoneNumber);
+    // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
+    const funeral = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
+    console.log('🚀 ~ verifyCode ~ funeral:', funeral);
 
     if (!funeral) {
-      throw new Error('해당 휴대폰 번호로 등록된 이메일이 없습니다.');
+      throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
 
-    return funeral.funeralEmail;
+    console.log('🚀 ~ verifyCode ~ funeral.funeralUsername:', funeral.funeralUsername);
+    return funeral.funeralUsername;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }

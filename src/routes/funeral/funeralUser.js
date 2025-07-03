@@ -10,15 +10,17 @@ const router = express.Router();
 router.post('/signup', uploadFuneralFile, async (req, res) => {
   try {
     const params = {
-      funeralEmail: req.body.funeralEmail,
+      funeralUsername: req.body.funeralUsername,
       funeralPassword: req.body.funeralPassword,
       funeralName: req.body.funeralName,
       funeralPhoneNumber: req.body.funeralPhoneNumber,
       funeralBankName: req.body.funeralBankName,
       funeralBankNumber: req.body.funeralBankNumber,
       funeralBankHolder: req.body.funeralBankHolder,
-      files: req.files, // ✅ 수정됨
+      funeralHome: req.body.funeralHome,
+      files: req.files,
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await funeralUserService.registerFuneral(params);
 
@@ -32,6 +34,22 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
       await deleteS3Object(req.files.location);
     }
     res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
+  }
+});
+
+// 아이디 중복 확인
+router.get('/checkUsername', async (req, res) => {
+  try {
+    const { username } = req.query;
+    const isAvailable = await funeralUserService.isUsernameAvailable(username);
+
+    res.status(200).json({
+      message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.',
+      available: isAvailable,
+    });
+  } catch (error) {
+    console.error('아이디 중복 확인 오류:', error.message);
+    res.status(500).json({ message: '아이디 중복 확인 중 오류가 발생했습니다.' });
   }
 });
 
