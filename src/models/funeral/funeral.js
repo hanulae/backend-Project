@@ -53,6 +53,11 @@ class Funeral extends Sequelize.Model {
           allowNull: false,
           comment: '장례식장 계좌 예금주명',
         },
+        funeralHome: {
+          type: DataTypes.UUID,
+          allowNull: false,
+          comment: '장례식장 리스트 ID (FK)',
+        },
         funeralPoint: {
           type: DataTypes.INTEGER,
           defaultValue: 0,
@@ -126,6 +131,13 @@ class Funeral extends Sequelize.Model {
       foreignKey: 'funeralId',
       as: 'funeralList',
     });
+
+    // 장례식장 리스트 테이블과의 관계설정
+    this.belongsTo(models.FuneralList, {
+      foreignKey: 'funeralHome',
+      as: 'funeralList',
+    });
+
     // 장례식장 호실 테이블과의 관계설정
     this.hasMany(models.FuneralHallInfo, {
       foreignKey: 'funeralId',

@@ -16,7 +16,6 @@ export const registerManager = async (params) => {
   if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
   if (!params.managerBankName) missingFields.push('managerBankName');
   if (!params.managerBankNumber) missingFields.push('managerBankNumber');
-  //if (!params.file) missingFields.push('file');
 
   if (missingFields.length > 0) {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
@@ -40,9 +39,6 @@ export const registerManager = async (params) => {
     throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
   }
 
-  const fileUrl = params.file.location;
-  const fileName = params.file.originalname;
-
   const transaction = await db.sequelize.transaction();
 
   try {
@@ -59,15 +55,24 @@ export const registerManager = async (params) => {
 
     const result = await managerUserDao.insert(managerData, { transaction });
 
-    // 2. 문서 정보 저장
-    await managerAddDocumentDao.create(
-      {
-        managerId: result.managerId,
-        managerDocName: fileName,
-        managerDocPath: fileUrl,
-      },
-      { transaction },
-    );
+    // 2. 문서 정보 저장 (files 배열이 있는 경우에만)
+    const fileUrls = [];
+    if (params.files && params.files.length > 0) {
+      for (const file of params.files) {
+        const fileUrl = file.location;
+        const fileName = file.originalname;
+        fileUrls.push(fileUrl);
+
+        await managerAddDocumentDao.create(
+          {
+            managerId: result.managerId,
+            managerDocName: fileName,
+            managerDocPath: fileUrl,
+          },
+          { transaction },
+        );
+      }
+    }
 
     // 3. 포인트 히스토리 초기화
     await managerPointHistoryDao.create(
@@ -105,7 +110,7 @@ export const registerManager = async (params) => {
     await transaction.commit();
     return {
       manager: result,
-      fileUrl, // ✅ 추가된 리턴 값
+      fileUrls, // files 배열이 있는 경우에만 fileUrls 반환
     };
   } catch (error) {
     await transaction.rollback();
