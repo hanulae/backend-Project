@@ -61,7 +61,7 @@ export async function connectToDatabase() {
       // force: true는 모든 테이블을 지우고 재생성합니다 유의해주세요 (데이터 손실됨)
       // alter: true는 테이블 구조만 변경합니다.
       //await sequelize.sync({ alter: true });
-      await sequelize.sync({ force: true });
+      //await sequelize.sync({ force: true });
       logger.info('데이터베이스 모델 동기화 완료');
     }
     return sequelize;
