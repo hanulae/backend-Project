@@ -2,6 +2,12 @@ import axios from 'axios';
 import { getIamportToken } from '../../utils/iamportClient.js';
 
 export const verifyAccountOwner = async ({ bankCode, bankNumber, name }) => {
+  console.log(
+    '🚀 ~ verifyAccountOwner ~  bankCode, bankNumber, name :',
+    bankCode,
+    bankNumber,
+    name,
+  );
   try {
     // 1. 토큰 발급
     const token = await getIamportToken();
@@ -9,6 +15,7 @@ export const verifyAccountOwner = async ({ bankCode, bankNumber, name }) => {
     // 2. 실명 조회 (GET 요청 + 쿼리 파라미터 사용)
     const url = `https://api.iamport.kr/vbanks/holder?bank_code=${bankCode}&bank_num=${bankNumber}`;
 
+    console.log('🚀 ~ verifyAccountOwner ~ url:', url);
     const { data } = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${token}`, // Bearer 꼭 필요

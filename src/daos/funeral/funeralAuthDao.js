@@ -95,10 +95,11 @@ export const updateBankInfo = async (
 };
 
 export const findByPhone = async (funeralPhoneNumber) => {
+  console.log('🚀 ~ findByPhone ~ funeralPhoneNumber:', funeralPhoneNumber);
   try {
     return await db.Funeral.findOne({
       where: { funeralPhoneNumber: funeralPhoneNumber },
-      attributes: ['funeralEmail'],
+      attributes: ['funeralUsername'],
     });
   } catch (error) {
     throw new Error(error);

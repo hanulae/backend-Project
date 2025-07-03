@@ -12,8 +12,7 @@ export const registerFuneral = async (params) => {
     !params.funeralPhoneNumber ||
     !params.funeralBankName ||
     !params.funeralBankNumber ||
-    !params.funeralBankHolder ||
-    !params.funeralHome
+    !params.funeralBankHolder
     // 'files' 필드에 대한 필수 검사 제거
     // !params.files ||
     // !Array.isArray(params.files) ||
@@ -33,7 +32,7 @@ export const registerFuneral = async (params) => {
       funeralBankName: params.funeralBankName,
       funeralBankNumber: params.funeralBankNumber,
       funeralBankHolder: params.funeralBankHolder,
-      funeralHome: params.funeralHome,
+      funeralHome: params.funeralHome || null,
     };
 
     const result = await funeralUserDao.insert(funeralData, transaction);

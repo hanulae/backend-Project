@@ -55,7 +55,7 @@ class Funeral extends Sequelize.Model {
         },
         funeralHome: {
           type: DataTypes.STRING(100), // 필요에 따라 타입과 길이를 조정하세요
-          allowNull: false,
+          allowNull: true,
           comment: '장례식장 정보',
         },
         funeralPoint: {
