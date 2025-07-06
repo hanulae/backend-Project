@@ -16,25 +16,35 @@ class FuneralStaffPermission extends Sequelize.Model {
           allowNull: false,
           comment: '직원 ID (FK)',
         },
-        canManageStaff: {
+        roomManagement: {
           type: DataTypes.BOOLEAN,
           defaultValue: false,
-          comment: '직원관리 메뉴 접근 여부',
+          comment: '호실 관리 접근 여부',
         },
-        canRequestRefund: {
+        infoEdit: {
           type: DataTypes.BOOLEAN,
           defaultValue: false,
-          comment: '환급요청 메뉴 접근 여부',
+          comment: '정보 수정 접근 여부',
         },
-        canViewDispatch: {
+        dispatchHistory: {
           type: DataTypes.BOOLEAN,
           defaultValue: false,
-          comment: '출동요청상세 접근 여부',
+          comment: '지난 출동 내역 접근 여부',
         },
-        canManageRoom: {
+        dispatchPending: {
           type: DataTypes.BOOLEAN,
           defaultValue: false,
-          comment: '호실관리 접근 여부',
+          comment: '출동 대기 내역 접근 여부',
+        },
+        estimateHistory: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+          comment: '견적 내역 접근 여부',
+        },
+        appSettings: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+          comment: '앱 설정 접근 여부',
         },
       },
       {

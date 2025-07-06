@@ -54,9 +54,9 @@ router.post('/refund', authMiddleware, async (req, res) => {
 });
 
 // 캐시 사용/적립 내역 조회
-router.get('/history/:managerId', async (req, res) => {
+router.get('/history/list', authMiddleware, async (req, res) => {
   try {
-    const { managerId } = req.params;
+    const managerId = req.user.managerId;
     const history = await managerCashService.getCashHistory(managerId);
     res.status(200).json({ message: '캐시 히스토리 조회 성공', data: history });
   } catch (error) {

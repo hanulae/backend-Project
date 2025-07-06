@@ -25,6 +25,14 @@ export const findById = async (funeralId) => {
   }
 };
 
+export const findByUserInfo = async (funeralId) => {
+  try {
+    return await db.Funeral.findOne({ where: { funeralId } });
+  } catch (error) {
+    throw new Error('🔴 findByUserInfo 오류:' + error.message);
+  }
+};
+
 export const updatePassword = async (funeralId, newPassword) => {
   try {
     const funeral = await db.Funeral.findByPk(funeralId);
@@ -95,14 +103,13 @@ export const updateBankInfo = async (
 };
 
 export const findByPhone = async (funeralPhoneNumber) => {
-  console.log('🚀 ~ findByPhone ~ funeralPhoneNumber:', funeralPhoneNumber);
   try {
     return await db.Funeral.findOne({
       where: { funeralPhoneNumber: funeralPhoneNumber },
       attributes: ['funeralUsername'],
     });
   } catch (error) {
-    throw new Error(error);
+    throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
   }
 };
 

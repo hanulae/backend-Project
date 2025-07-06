@@ -21,3 +21,21 @@ export const update = async (funeralStaffId, data) => {
     throw new Error('직원 권한 수정 오류: ' + error.message);
   }
 };
+
+export const getPermissionsByStaffId = async (staffId) => {
+  try {
+    return await db.FuneralStaffPermission.findOne({
+      where: { funeralStaffId: staffId },
+      attributes: [
+        'roomManagement',
+        'infoEdit',
+        'dispatchHistory',
+        'dispatchPending',
+        'estimateHistory',
+        'appSettings',
+      ],
+    });
+  } catch (error) {
+    throw new Error('직원 권한 조회 오류: ' + error.message);
+  }
+};
