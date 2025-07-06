@@ -69,7 +69,22 @@ export const registerFuneral = async (params) => {
       },
       { where: { funeralId: result.funeralId }, transaction },
     );
+    // 약관 동의 정보 저장
+    const termsData = {
+      serviceAgreement: params.serviceAgreement,
+      personalInfoAgreement: params.personalInfoAgreement,
+      locationInfoAgreement: params.locationInfoAgreement,
+      age14OrOlderAgreement: params.age14OrOlderAgreement,
+      marketingInfoAgreement: params.marketingInfoAgreement,
+    };
 
+    if (params.userType === 'manager') {
+      termsData.managerId = result.managerId;
+    } else if (params.userType === 'funeral') {
+      termsData.funeralId = result.funeralId;
+    }
+
+    await funeralUserDao.createTermsAgreement(termsData, transaction);
     await transaction.commit();
 
     return {

@@ -31,6 +31,16 @@ class FuneralStaff extends Sequelize.Model {
           allowNull: false,
           comment: '직원 직급',
         },
+        funeralStaffPassword: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          comment: '장례식장 직원 비밀번호',
+        },
+        funeralMainPhoneNumber: {
+          type: DataTypes.STRING(20),
+          allowNull: false,
+          comment: '장례식장 대표번호',
+        },
       },
       {
         sequelize,
@@ -53,6 +63,11 @@ class FuneralStaff extends Sequelize.Model {
       foreignKey: 'funeralId',
       as: 'funeral',
       onDelete: 'CASCADE',
+    });
+
+    this.hasMany(models.FuneralStaffPermission, {
+      foreignKey: 'funeralStaffId',
+      as: 'permissions',
     });
   }
 }

@@ -9,6 +9,8 @@ const router = express.Router();
 // 장례식장 회원가입
 router.post('/signup', uploadFuneralFile, async (req, res) => {
   try {
+    const agreements = JSON.parse(req.body.agreements);
+
     const params = {
       funeralUsername: req.body.funeralUsername,
       funeralPassword: req.body.funeralPassword,
@@ -18,9 +20,14 @@ router.post('/signup', uploadFuneralFile, async (req, res) => {
       funeralBankNumber: req.body.funeralBankNumber,
       funeralBankHolder: req.body.funeralBankHolder,
       funeralHome: req.body.funeralHome,
-      files: req.files,
+      files: req.files || [], // 파일이 없을 경우 빈 배열로 설정
+      serviceAgreement: agreements.service,
+      personalInfoAgreement: agreements.privacy,
+      locationInfoAgreement: agreements.location,
+      age14OrOlderAgreement: agreements.age,
+      marketingInfoAgreement: agreements.marketing,
+      userType: 'funeral',
     };
-    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await funeralUserService.registerFuneral(params);
 

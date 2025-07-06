@@ -18,10 +18,10 @@ const ATTEMPT_EXPIRY = 3600; // 1시간
 
 export const login = async ({ funeralUsername, funeralPassword }) => {
   const funeral = await funeralAuthDao.findManagerByUsername(funeralUsername);
-  if (!funeral) throw new Error('존재하지 않는 이메일입니다.');
+  if (!funeral) throw new Error('존재하지 않는아이디입니다.');
   if (!funeral.isApproved) throw new Error('관리자의 승인이 필요합니다.');
   if (!funeral) {
-    throw new Error('등록되지 않은 이메일입니다.');
+    throw new Error('등록되지 않은 아이디입니다.');
   }
 
   if (!funeral.isApproved) {
@@ -31,7 +31,7 @@ export const login = async ({ funeralUsername, funeralPassword }) => {
   // 비밀번호 비교
   const isPasswordValid = await funeral.verifyPassword(funeralPassword);
   if (!isPasswordValid) {
-    throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
+    throw new Error('아이디 또는 비밀번호가 일치하지 않습니다.');
   }
 
   const accessToken = generateToken({ funeralId: funeral.funeralId });
@@ -47,24 +47,20 @@ export const login = async ({ funeralUsername, funeralPassword }) => {
 //비밀번호변경
 export const updatePassword = async (params) => {
   try {
-    const { funeralId, currentPassword, newPassword } = params;
+    const { funeralId, newPassword } = params;
 
-    // 필수 정보 확인
-    if (!funeralId || !currentPassword || !newPassword) {
-      throw new Error('필수 정보가 누락되었습니다.');
-    }
-    // 비밀번호 형식 확인
-    if (currentPassword === newPassword) {
-      throw new Error('새로운 비밀번호가 기존 비밀번호와 동일합니다.');
-    }
-    // 장례식장 정보 조회
     const funeral = await funeralAuthDao.findById(funeralId);
     if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
 
+    // 필수 정보 확인
+    if (!funeralId || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+
     // 비밀번호가 현재 비밀번호와 동일한지 확인
-    const isPasswordValid = await funeral.verifyPassword(currentPassword);
-    if (!isPasswordValid) {
-      throw new Error('기존 비밀번호가 일치하지 않습니다.');
+    const isPasswordValid = await funeral.verifyPassword(newPassword);
+    if (isPasswordValid) {
+      throw new Error('기존 비밀번호와 동일합니다.');
     }
 
     return await funeralAuthDao.updatePassword(funeralId, newPassword);
@@ -77,17 +73,14 @@ export const updatePassword = async (params) => {
 // 휴대폰 번호 변경
 export const updatePhoneNumber = async (params) => {
   try {
-    const { funeralId, currentPhone, newPhone } = params;
+    const { funeralId, newPhone } = params;
 
     const funeral = await funeralAuthDao.findById(funeralId);
+
     if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
 
-    if (funeral.funeralPhoneNumber !== currentPhone) {
-      throw new Error('기존 휴대폰 번호가 일치하지 않습니다.');
-    }
-
-    if (currentPhone === newPhone) {
-      throw new Error('새로운 번호가 기존 번호와 동일합니다.');
+    if (funeral.funeralPhoneNumber === newPhone) {
+      throw new Error('기존 휴대폰 번호와 동일합니다.');
     }
 
     // 전화번호 변경 후 갱신된 유저 정보 리턴
@@ -107,10 +100,10 @@ export const updateBankAccount = async (params) => {
     const { funeralId, funeralBankName, funeralBankNumber, funeralBacnkHolder } = params;
 
     const funeral = await funeralAuthDao.findById(funeralId);
-    if (!funeral) throw new Error('상조팀장을 찾을 수 없습니다.');
+    if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
 
     // 기존 정보와 동일한 경우 변경 안함
-    if (funeral.managerBankNumber === funeralBankNumber) {
+    if (funeral.funeralBankNumber === funeralBankNumber) {
       throw new Error('기존 계좌 번호와 동일합니다.');
     }
 
@@ -194,7 +187,6 @@ export const verifyCode = async (funeralPhoneNumber, inputCode) => {
   try {
     // 전화번호에서 하이픈 제거
     const cleanedPhoneNumber = funeralPhoneNumber.replace(/-/g, '');
-    console.log('🚀 ~ verifyCode ~ cleanedPhoneNumber:', cleanedPhoneNumber);
 
     const storedCode = await redis.get(`sms:${funeralPhoneNumber}`);
 
@@ -215,13 +207,11 @@ export const verifyCode = async (funeralPhoneNumber, inputCode) => {
 
     // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
     const funeral = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
-    console.log('🚀 ~ verifyCode ~ funeral:', funeral);
 
     if (!funeral) {
       throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
 
-    console.log('🚀 ~ verifyCode ~ funeral.funeralUsername:', funeral.funeralUsername);
     return funeral.funeralUsername;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);

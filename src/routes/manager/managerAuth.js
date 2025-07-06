@@ -81,7 +81,7 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
 });
 
 // SMS 인증코드 전송
-router.post('/find/email/send-sms', async (req, res) => {
+router.post('/find/username/send-sms', async (req, res) => {
   try {
     const { managerPhoneNumber } = req.body;
     if (!managerPhoneNumber) {
@@ -95,8 +95,8 @@ router.post('/find/email/send-sms', async (req, res) => {
   }
 });
 
-// 인증코드 검증 후 이메일 찾기
-router.post('/find/email', async (req, res) => {
+// 인증코드 검증 후 아이디 찾기
+router.post('/find/username/verify', async (req, res) => {
   try {
     const { managerPhone, code } = req.body;
     if (!managerPhone || !code) {

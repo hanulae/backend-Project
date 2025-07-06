@@ -31,7 +31,7 @@ router.post('/refund', authMiddleware, async (req, res) => {
 });
 
 // 캐시 사용/적립 내역 조회
-router.get('/history', authMiddleware, async (req, res) => {
+router.get('/history/list', authMiddleware, async (req, res) => {
   try {
     const funeralId = req.user.funeralId;
     const history = await funeralCashService.getCashHistory(funeralId);

@@ -27,9 +27,10 @@ export const findByPhone = async (managerPhoneNumber) => {
   try {
     return await db.Manager.findOne({
       where: { managerPhoneNumber: managerPhoneNumber },
+      attributes: ['managerUsername'],
     });
   } catch (error) {
-    throw new Error('🔴 휴대폰으로 이메일 찾기 오류:' + error.message);
+    throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
   }
 };
 

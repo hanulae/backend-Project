@@ -11,12 +11,13 @@ const router = express.Router();
 // 인증 코드 전송
 router.post('/send', async (req, res) => {
   try {
-    const { managerPhone } = req.body;
+    const { managerPhone, userType } = req.body;
+    //userType 핸드폰번호 중복 체크 시 사용
     if (!managerPhone) {
       return res.status(400).json({ message: '전화번호를 입력해주세요.' });
     }
 
-    await sendVerificationSMS(managerPhone);
+    await sendVerificationSMS(managerPhone, userType);
     res.status(200).json({ message: '인증 코드가 전송되었습니다.' });
   } catch (error) {
     res.status(400).json({ message: error.message });
