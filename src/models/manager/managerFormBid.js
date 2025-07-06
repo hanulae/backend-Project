@@ -36,7 +36,7 @@ class ManagerFormBid extends Sequelize.Model {
           comment: '제안가',
         },
         discount: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.FLOAT,
           allowNull: true,
           comment: '할인률',
         },
