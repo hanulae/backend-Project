@@ -68,10 +68,19 @@ router.put(
 
       // 2. 할인률 유효성 검사
       if (req.body.discount !== undefined) {
-        if (isNaN(Number(req.body.discount)) || Number(req.body.discount) < 0) {
+        const discountValue = parseFloat(req.body.discount);
+        if (isNaN(discountValue) || discountValue < 0) {
           return res.status(400).json({
             success: false,
             message: '할인 금액은 0 이상의 숫자여야 합니다.',
+          });
+        }
+
+        // 할인률 100% 초과 방지
+        if (discountValue > 100) {
+          return res.status(400).json({
+            success: false,
+            message: '할인률은 100%를 초과할 수 없습니다.',
           });
         }
       }
@@ -94,7 +103,7 @@ router.put(
       logger.error(error.message);
       return res.status(400).json({
         success: false,
-        message: error.message,
+        message: error,
       });
     }
   },
