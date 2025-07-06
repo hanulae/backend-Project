@@ -21,6 +21,7 @@ export const verifyAccountOwner = async ({ bankCode, bankNumber, name }) => {
         Authorization: `Bearer ${token}`, // Bearer 꼭 필요
       },
     });
+    console.log('🚀 ~ verifyAccountOwner ~ data:', data);
 
     // 3. 오류 처리
     if (data.code !== 0) {

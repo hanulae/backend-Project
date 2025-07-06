@@ -1,8 +1,8 @@
 import db from '../models/index.js';
 
 export const createDefaultAdmin = async () => {
-  const adminEmail = 'admin@example.com';
-  const adminPassword = 'admin1234'; // 운영 시 .env 사용 권장
+  const adminEmail = 'admin@hanulae.com';
+  const adminPassword = 'Admin1234!'; // 운영 시 .env 사용 권장
 
   try {
     const exists = await db.Admin.findOne({ where: { adminEmail } });
