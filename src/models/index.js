@@ -19,6 +19,7 @@ import FuneralStaffPermission from './funeral/funeralStaffPermission.js';
 import FuneralList from './funeral/funeralList.js';
 import FuneralCashRefundRequest from './funeral/funeralCashRefundRequest.js';
 import TermsAgreement from './common/TermsAgreement.js';
+import FuneralListImage from './funeral/funeralListImage.js';
 
 import DispatchRequest from './common/dispatchRequest.js';
 import TransactionList from './common/transactionList.js';
@@ -51,6 +52,7 @@ db.FuneralStaffPermission = FuneralStaffPermission;
 db.FuneralList = FuneralList;
 db.FuneralCashRefundRequest = FuneralCashRefundRequest;
 db.TermsAgreement = TermsAgreement;
+db.FuneralListImage = FuneralListImage;
 
 db.DispatchRequest = DispatchRequest;
 db.TransactionList = TransactionList;

@@ -72,7 +72,8 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: result,
+        data: result.funeralDetail,
+        images: result.images,
       });
     } catch (error) {
       logger.error(error.message);
