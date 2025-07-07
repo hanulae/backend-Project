@@ -1,0 +1,183 @@
+// backend-project/src/services/common/fcmService.js
+import admin from '../../config/firebase.js';
+import logger from '../../config/logger.js';
+import { sequelize } from '../../config/database.js';
+import fcmTokenDao from '../../dao/common/fcmTokenDao.js';
+import notificationHistoryDao from '../../dao/common/notificationHistoryDao.js';
+import {
+  getNotificationContent,
+  canReceiveNotification,
+} from '../../utils/notificationTemplates.js';
+// import { validateUserExists } from '../../utils/userHelper.js';
+
+const fcmService = {
+  /**
+   * FCM 토큰 등록/업데이트
+   */
+  async registerToken({ userId, userType, fcmToken, deviceId, deviceType }) {
+    try {
+      // 1. 사용자 존재 여부 검증 (테스트를 위해 임시로 주석 처리)
+      // await validateUserExists(userId, userType);
+
+      // 2. FCM 토큰 등록/업데이트
+      const tokenRecord = await fcmTokenDao.createOrUpdateFcmToken({
+        userId,
+        userType,
+        fcmToken,
+        deviceId,
+        deviceType,
+      });
+
+      logger.info(`FCM 토큰 등록 성공: ${userType}(${userId})`);
+      return {
+        success: true,
+        data: tokenRecord,
+        message: 'FCM 토큰이 성공적으로 등록되었습니다.',
+      };
+    } catch (error) {
+      logger.error('FCM 토큰 등록 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 단일 사용자에게 푸시 알림 전송
+   */
+  async sendNotificationToUser({
+    receiverId,
+    receiverType,
+    notificationType,
+    data = {},
+    senderId = null,
+    senderType = 'system',
+  }) {
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. 알림 권한 확인
+      if (!canReceiveNotification(receiverType, notificationType)) {
+        await transaction.rollback();
+        logger.warn(`사용자 ${receiverType}는 ${notificationType} 알림을 받을 수 없습니다.`);
+        return { success: false, reason: 'No permission' };
+      }
+
+      // 2. 알림 내용 생성
+      const { title, body } = getNotificationContent(notificationType, data);
+
+      // 3. 사용자의 활성 FCM 토큰 조회
+      const tokens = await fcmTokenDao.findActiveTokensByUser(receiverId, receiverType);
+
+      // 4. 알림 이력 저장
+      const notification = await notificationHistoryDao.createNotification(
+        {
+          receiverId,
+          receiverType,
+          senderId,
+          senderType,
+          notificationType,
+          title,
+          body,
+          data,
+        },
+        { transaction },
+      );
+
+      if (tokens.length === 0) {
+        await transaction.commit();
+        logger.warn(`활성 FCM 토큰이 없습니다: ${receiverType}(${receiverId})`);
+        return { success: false, reason: 'No active tokens' };
+      }
+
+      // 5. FCM 전송
+      const fcmTokens = tokens.map((token) => token.fcmToken);
+      const message = {
+        notification: { title, body },
+        data: {
+          notificationId: notification.notificationId,
+          notificationType,
+          ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])),
+        },
+        tokens: fcmTokens,
+      };
+
+      const response = await admin.messaging().sendEachForMulticast(message);
+
+      // 6. 실패한 토큰 처리
+      if (response.failureCount > 0) {
+        await this.handleFailedTokens(response.responses, tokens, { transaction });
+      }
+
+      await transaction.commit();
+
+      logger.info(`알림 전송 완료: ${title} → ${receiverType}(${receiverId})`);
+      return {
+        success: true,
+        successCount: response.successCount,
+        failureCount: response.failureCount,
+        notificationId: notification.notificationId,
+      };
+    } catch (error) {
+      await transaction.rollback();
+      logger.error('FCM 알림 전송 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 실패한 토큰들 처리
+   */
+  async handleFailedTokens(responses, tokens, options = {}) {
+    const failedTokenIds = [];
+
+    responses.forEach((response, index) => {
+      if (!response.success) {
+        const errorCode = response.error?.code;
+        if (
+          [
+            'messaging/registration-token-not-registered',
+            'messaging/invalid-registration-token',
+          ].includes(errorCode)
+        ) {
+          failedTokenIds.push(tokens[index].fcmTokenId);
+        }
+      }
+    });
+
+    if (failedTokenIds.length > 0) {
+      await fcmTokenDao.deactivateTokensById(failedTokenIds, options);
+      logger.info(`비활성화된 토큰 수: ${failedTokenIds.length}`);
+    }
+  },
+
+  /**
+   * 알림 목록 조회
+   */
+  async getNotifications(userId, userType, { page = 1, limit = 20, unreadOnly = false } = {}) {
+    try {
+      const result = await notificationHistoryDao.findNotificationsByUser(userId, userType, {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        unreadOnly: unreadOnly === 'true',
+      });
+
+      const unreadCount = await notificationHistoryDao.countUnreadByUser(userId, userType);
+
+      return {
+        success: true,
+        data: {
+          notifications: result.rows,
+          pagination: {
+            totalCount: result.count,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(result.count / limit),
+          },
+          unreadCount,
+        },
+      };
+    } catch (error) {
+      logger.error('알림 목록 조회 실패:', error);
+      throw error;
+    }
+  },
+};
+
+export default fcmService;

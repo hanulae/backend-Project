@@ -2,6 +2,8 @@ import { getPortOneToken, verifyPortOnePayment } from '../../utils/portone.js';
 import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
 import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
 import db from '../../models/index.js';
+import logger from '../../config/logger.js';
+import fcmService from '../common/fcmService.js';
 
 export const topupCash = async ({ imp_uid, amount, funeralId }) => {
   const transaction = await db.sequelize.transaction();
@@ -62,6 +64,31 @@ export const requestCashRefund = async ({ funeralId, amountCash }) => {
       funeralCashBalanceAfter: funeral.funeralCash - amountCash,
       status: 'pending',
     });
+
+    // 관리자에게 환급 요청 알림 전송
+    try {
+      // 관리자 계정 ID는 환경변수나 고정값으로 설정
+      const adminId = process.env.ADMIN_USER_ID || 'admin';
+
+      await fcmService.sendNotificationToUser({
+        receiverId: adminId,
+        receiverType: 'admin',
+        notificationType: 'cash_refund_requested',
+        data: {
+          requestId: refundRequest.id,
+          funeralId: funeralId,
+          funeralName: funeral.funeralName,
+          amount: amountCash,
+          requestType: 'funeral',
+        },
+        senderId: funeralId,
+        senderType: 'funeral',
+      });
+      logger.info(`장례식장 환급 요청 알림 전송 성공: 관리자 ${adminId}`);
+    } catch (notificationError) {
+      logger.error('장례식장 환급 요청 알림 전송 실패', notificationError);
+      // 알림 전송 실패해도 환급 요청 자체는 성공으로 처리
+    }
 
     return refundRequest;
   } catch (error) {

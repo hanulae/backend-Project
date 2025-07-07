@@ -87,10 +87,10 @@ class NotificationHistory extends Sequelize.Model {
       {
         sequelize,
         modelName: 'NotificationHistory',
-        tableName: 'notification_histories',
+        tableName: 'notification_history',
         underscored: true,
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         comment: '알림 이력 테이블',
         indexes: [
           {

@@ -55,7 +55,7 @@ class FcmToken extends Sequelize.Model {
         tableName: 'fcm_tokens',
         underscored: true,
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         comment: 'FCM 토큰 관리 테이블',
         indexes: [
           {
