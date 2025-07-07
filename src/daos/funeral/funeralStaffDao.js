@@ -84,3 +84,14 @@ export async function findByPhoneNumber(funeralStaffPhoneNumber) {
     where: { funeralStaffPhoneNumber },
   });
 }
+
+export const findByPhone = async (funeralStaffPhoneNumber) => {
+  try {
+    return await db.FuneralStaff.findOne({
+      where: { funeralStaffPhoneNumber: funeralStaffPhoneNumber },
+      attributes: ['funeralStaffUsername'],
+    });
+  } catch (error) {
+    throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
+  }
+};

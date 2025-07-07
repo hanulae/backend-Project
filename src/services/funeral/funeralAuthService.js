@@ -1,4 +1,6 @@
 import * as funeralAuthDao from '../../daos/funeral/funeralAuthDao.js';
+import * as funeralStaffDao from '../../daos/funeral/funeralStaffDao.js';
+import * as managerAuthDao from '../../daos/manager/managerAuthDao.js';
 import { generateToken, generateRefreshToken } from '../../utils/jwt.js';
 import coolsms from 'coolsms-node-sdk';
 import redis from '../../config/redis.js';
@@ -168,6 +170,7 @@ export const sendVerificationSMS = async (funeralPhoneNumber) => {
   }
 
   const code = generateVerificationCode();
+  console.log('🚀 ~ sendVerificationSMS ~ code:', code);
 
   await Promise.all([
     redis.set(`sms:${funeralPhoneNumber}`, code, 'EX', CODE_EXPIRY),
@@ -183,7 +186,7 @@ export const sendVerificationSMS = async (funeralPhoneNumber) => {
   });
 };
 
-export const verifyCode = async (funeralPhoneNumber, inputCode) => {
+export const verifyCode = async (funeralPhoneNumber, inputCode, userType) => {
   try {
     // 전화번호에서 하이픈 제거
     const cleanedPhoneNumber = funeralPhoneNumber.replace(/-/g, '');
@@ -205,14 +208,30 @@ export const verifyCode = async (funeralPhoneNumber, inputCode) => {
       redis.del(`lastRequest:${funeralPhoneNumber}`),
     ]);
 
-    // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
-    const funeral = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
+    let userCheck = null;
 
-    if (!funeral) {
-      throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
+    // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
+    if (userType === 'funeral') {
+      userCheck = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
+      if (!userCheck) {
+        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
+      }
+      return userCheck;
+    } else if (userType === 'staff') {
+      userCheck = await funeralStaffDao.findByPhone(cleanedPhoneNumber);
+      if (!userCheck) {
+        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
+      }
+      return userCheck;
+    } else if (userType === 'manager') {
+      userCheck = await managerAuthDao.findByPhone(cleanedPhoneNumber);
+      if (!userCheck) {
+        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
+      }
+      return userCheck;
     }
 
-    return funeral.funeralUsername;
+    return userCheck;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }
