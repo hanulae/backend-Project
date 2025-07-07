@@ -1,4 +1,5 @@
 import db from '../../models/index.js';
+import bcrypt from 'bcrypt';
 
 export const findByEmail = async (email) => {
   try {
@@ -46,6 +47,18 @@ export const updatePassword = async (funeralId, newPassword) => {
     return funeral;
   } catch (error) {
     throw new Error(error);
+  }
+};
+
+export const lostUpdatePassword = async (phoneNumber, newPassword) => {
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await db.Funeral.update(
+      { funeralPassword: hashedPassword },
+      { where: { funeralPhoneNumber: phoneNumber } },
+    );
+  } catch (error) {
+    throw new Error('비밀번호 업데이트 실패: ' + error.message);
   }
 };
 

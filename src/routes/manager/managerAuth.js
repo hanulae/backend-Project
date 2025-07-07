@@ -39,6 +39,22 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
   }
 });
 
+// 비밀번호 분실 시 비밀번호 변경
+router.patch('/update/password/lost', async (req, res) => {
+  try {
+    const { phoneNumber, newPassword } = req.body;
+
+    const params = { phoneNumber, newPassword };
+
+    await managerAuthService.lostPasswordUpdate(params);
+
+    res.json({ message: '비밀번호 변경 완료' });
+  } catch (error) {
+    console.error('비밀번호 변경 오류:', error.message);
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // 휴대폰 번호 변경
 router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
@@ -81,7 +97,7 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
 });
 
 // SMS 인증코드 전송
-router.post('/find/username/send-sms', async (req, res) => {
+router.post('/find/username/send', async (req, res) => {
   try {
     const { managerPhoneNumber } = req.body;
     if (!managerPhoneNumber) {
@@ -98,15 +114,15 @@ router.post('/find/username/send-sms', async (req, res) => {
 // 인증코드 검증 후 아이디 찾기
 router.post('/find/username/verify', async (req, res) => {
   try {
-    const { managerPhone, code } = req.body;
+    const { managerPhone, code, userType } = req.body;
     if (!managerPhone || !code) {
       return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
     }
 
-    const isVerified = await managerAuthService.verifyCode(managerPhone, code);
+    const isVerified = await managerAuthService.verifyCode(managerPhone, code, userType);
 
     if (isVerified) {
-      res.status(200).json({ message: '인증 성공', verified: true, email: isVerified });
+      res.status(200).json({ message: '인증 성공', verified: true, username: isVerified });
     } else {
       res.status(400).json({ message: '인증 실패', verified: false });
     }

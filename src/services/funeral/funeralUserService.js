@@ -1,8 +1,7 @@
 import db from '../../models/index.js';
 import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js';
 import * as funeralAddDocumentDao from '../../daos/admin/funeralAddDocumentDao.js';
-import * as funeralPointHistoryDao from '../../daos/funeral/funeralPointHistoryDao.js';
-//import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
+import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
 
 export const registerFuneral = async (params) => {
   if (
@@ -51,12 +50,12 @@ export const registerFuneral = async (params) => {
       }
     }
 
-    await funeralPointHistoryDao.create(
+    await funeralCashHistoryDao.create(
       {
         funeralId: result.funeralId,
-        transactionType: 'service_point',
-        funeralPointAmount: 50000,
-        funeralPointBalanceAfter: 50000,
+        transactionType: 'service_cash',
+        funeralCashAmount: 50000,
+        funeralCashBalanceAfter: 50000,
         status: 'completed',
       },
       { transaction },
@@ -64,8 +63,8 @@ export const registerFuneral = async (params) => {
 
     await db.Funeral.update(
       {
-        funeralPoint: 50000,
-        funeralCash: 0,
+        funeralPoint: 0,
+        funeralCash: 50000,
       },
       { where: { funeralId: result.funeralId }, transaction },
     );

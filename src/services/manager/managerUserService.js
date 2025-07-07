@@ -1,8 +1,8 @@
 import db from '../../models/index.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as managerAddDocumentDao from '../../daos/admin/managerAddDocumentDao.js';
-import * as managerPointHistoryDao from '../../daos/manager/managerPointHistoryDao.js';
-//import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
+
+import * as managerCashHistoryDao from '../../daos/manager/managerCashHistoryDao.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,7 +16,6 @@ export const registerManager = async (params) => {
   if (!params.managerPhoneNumber) missingFields.push('managerPhoneNumber');
   if (!params.managerBankName) missingFields.push('managerBankName');
   if (!params.managerBankNumber) missingFields.push('managerBankNumber');
-
 
   if (missingFields.length > 0) {
     throw new Error(`다음 필수 정보가 누락되었습니다: ${missingFields.join(', ')}`);
@@ -39,7 +38,6 @@ export const registerManager = async (params) => {
   if (!accountRegex.test(params.managerBankNumber)) {
     throw new Error('유효한 계좌번호 형식이 아닙니다. 숫자만 입력해주세요.');
   }
-
 
   const transaction = await db.sequelize.transaction();
 
@@ -76,35 +74,35 @@ export const registerManager = async (params) => {
       }
     }
 
-    // 3. 포인트 히스토리 초기화
-    await managerPointHistoryDao.create(
-      {
-        managerId: result.managerId,
-        transactionType: 'service_point',
-        managerPointAmount: 50000,
-        managerPointBalanceAfter: 50000,
-        status: 'completed',
-      },
-      { transaction },
-    );
-
-    // 4. 캐시 히스토리 초기화
-    // await managerCashHistoryDao.create(
+    // // 3. 포인트 히스토리 초기화
+    // await managerPointHistoryDao.create(
     //   {
     //     managerId: result.managerId,
-    //     transactionType: 'service_cash',
-    //     managerCashAmount: 0,
-    //     managerCashBalanceAfter: 0,
+    //     transactionType: 'service_point',
+    //     managerPointAmount: 50000,
+    //     managerPointBalanceAfter: 50000,
     //     status: 'completed',
     //   },
     //   { transaction },
     // );
 
+    // 4. 캐시 히스토리 초기화
+    await managerCashHistoryDao.create(
+      {
+        managerId: result.managerId,
+        transactionType: 'service_cash',
+        managerCashAmount: 50000,
+        managerCashBalanceAfter: 50000,
+        status: 'completed',
+      },
+      { transaction },
+    );
+
     // 🔁 실제 Manager 테이블 업데이트
     await db.Manager.update(
       {
-        managerPoint: 50000,
-        managerCash: 0,
+        managerPoint: 0,
+        managerCash: 50000,
       },
       { where: { managerId: result.managerId }, transaction },
     );

@@ -1,6 +1,4 @@
 import * as funeralAuthDao from '../../daos/funeral/funeralAuthDao.js';
-import * as funeralStaffDao from '../../daos/funeral/funeralStaffDao.js';
-import * as managerAuthDao from '../../daos/manager/managerAuthDao.js';
 import { generateToken, generateRefreshToken } from '../../utils/jwt.js';
 import coolsms from 'coolsms-node-sdk';
 import redis from '../../config/redis.js';
@@ -68,6 +66,30 @@ export const updatePassword = async (params) => {
     return await funeralAuthDao.updatePassword(funeralId, newPassword);
   } catch (error) {
     console.error('🔴 비밀번호 변경 오류:' + error.message);
+    throw new Error('🔴 비밀번호 변경 오류:' + error.message);
+  }
+};
+
+// 비밀번호 변경
+export const lostPasswordUpdate = async (params) => {
+  try {
+    const { phoneNumber, newPassword } = params;
+
+    // 필수정보 확인
+    if (!phoneNumber || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+    // 상조팀장 정보 조회
+    const funeral = await funeralAuthDao.findByPhone(phoneNumber);
+    if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
+
+    const isPasswordValid = await funeral.verifyPassword(newPassword);
+    if (isPasswordValid) {
+      throw new Error('기존 비밀번호가 일치 합니다.');
+    }
+    const updatedPassword = await funeralAuthDao.lostUpdatePassword(phoneNumber, newPassword);
+    return updatedPassword;
+  } catch (error) {
     throw new Error('🔴 비밀번호 변경 오류:' + error.message);
   }
 };
@@ -186,7 +208,7 @@ export const sendVerificationSMS = async (funeralPhoneNumber) => {
   });
 };
 
-export const verifyCode = async (funeralPhoneNumber, inputCode, userType) => {
+export const verifyCode = async (funeralPhoneNumber, inputCode) => {
   try {
     // 전화번호에서 하이픈 제거
     const cleanedPhoneNumber = funeralPhoneNumber.replace(/-/g, '');
@@ -209,29 +231,12 @@ export const verifyCode = async (funeralPhoneNumber, inputCode, userType) => {
     ]);
 
     let userCheck = null;
-
-    // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
-    if (userType === 'funeral') {
-      userCheck = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
-      if (!userCheck) {
-        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
-      }
-      return userCheck;
-    } else if (userType === 'staff') {
-      userCheck = await funeralStaffDao.findByPhone(cleanedPhoneNumber);
-      if (!userCheck) {
-        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
-      }
-      return userCheck;
-    } else if (userType === 'manager') {
-      userCheck = await managerAuthDao.findByPhone(cleanedPhoneNumber);
-      if (!userCheck) {
-        throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
-      }
-      return userCheck;
+    userCheck = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
+    console.log('🚀 ~ verifyCode ~ userCheck:', userCheck);
+    if (!userCheck) {
+      throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
-
-    return userCheck;
+    return userCheck.funeralUsername;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }

@@ -30,6 +30,7 @@ export const createStaff = async (params) => {
         dispatchPending: params.permissions?.dispatch_pending ?? false,
         estimateHistory: params.permissions?.estimate_history ?? false,
         appSettings: params.permissions?.app_settings ?? false,
+        pointHistory: params.permissions?.point_history ?? false,
       },
       { transaction },
     );
@@ -71,6 +72,7 @@ export const updateStaff = async (params) => {
       dispatchPending: permissions?.dispatch_pending ?? false,
       estimateHistory: permissions?.estimate_history ?? false,
       appSettings: permissions?.app_settings ?? false,
+      pointHistory: permissions?.point_history ?? false,
     });
 
     return { staff, permissions: staffPermissions };
