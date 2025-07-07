@@ -51,6 +51,7 @@ router.post('/send/funeral', async (req, res) => {
 router.post('/verify/funeral', async (req, res) => {
   try {
     const { funeralPhone, code } = req.body;
+
     if (!funeralPhone || !code) return res.status(400).json({ message: '필수값 누락' });
 
     const isVerified = await funeralSMSService.verifyCodeFuneral(funeralPhone, code);

@@ -51,6 +51,7 @@ router.post('/update/send', authMiddleware, async (req, res) => {
 router.post('/verify', async (req, res) => {
   try {
     const { managerPhone, code } = req.body;
+
     if (!managerPhone || !code) {
       return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
     }

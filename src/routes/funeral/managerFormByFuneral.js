@@ -52,8 +52,16 @@ router.get(
 // 입찰 신청
 router.put(
   '/bid',
-  validateRequiredFields(['managerFormBidId', 'funeralHallId', 'proponentMoney', 'discount']),
-  validateUUID(['managerFormBidId', 'funeralHallId']),
+  validateRequiredFields([
+    'managerFormBidId',
+    'funeralHallName',
+    'funeralHallSize',
+    'funeralHallNumberOfMourners',
+    'funeralHallDetailPrice',
+    'funeralHallPrice',
+    'proponentMoney',
+    'discount',
+  ]),
   async (req, res) => {
     try {
       // 신청자의 Id 값을 토큰으로 받아서 유효한 유저인지 확인 및 검증 로직 필요 (2025.06.05)
@@ -88,7 +96,11 @@ router.put(
       // 파라미터 구성
       const params = {
         managerFormBidId: req.body.managerFormBidId,
-        funeralHallId: req.body.funeralHallId,
+        funeralHallName: req.body.funeralHallName,
+        funeralHallSize: req.body.funeralHallSize,
+        funeralHallNumberOfMourners: req.body.funeralHallNumberOfMourners,
+        funeralHallDetailPrice: req.body.funeralHallDetailPrice,
+        funeralHallPrice: req.body.funeralHallPrice,
         proponentMoney: req.body.proponentMoney,
         discount: req.body.discount,
       };
