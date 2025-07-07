@@ -51,6 +51,18 @@ export const updatePassword = async (managerId, newPassword) => {
   }
 };
 
+export const lostUpdatePassword = async (phoneNumber, newPassword) => {
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await db.Manager.update(
+      { managerPassword: hashedPassword },
+      { where: { managerPhoneNumber: phoneNumber } },
+    );
+  } catch (error) {
+    throw new Error('비밀번호 업데이트 실패: ' + error.message);
+  }
+};
+
 export const updatePhoneNumber = async (managerId, newPhoneNumber) => {
   try {
     return await db.Manager.update(

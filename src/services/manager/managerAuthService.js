@@ -79,6 +79,30 @@ export const updatePassword = async (params) => {
   }
 };
 
+// 비밀번호 변경
+export const lostPasswordUpdate = async (params) => {
+  try {
+    const { phoneNumber, newPassword } = params;
+
+    // 필수정보 확인
+    if (!phoneNumber || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+    // 상조팀장 정보 조회
+    const manager = await managerAuthDao.findByPhone(phoneNumber);
+    if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
+
+    const isPasswordValid = await manager.verifyPassword(newPassword);
+    if (isPasswordValid) {
+      throw new Error('기존 비밀번호가 일치 합니다.');
+    }
+    const updatedPassword = await managerAuthDao.lostUpdatePassword(phoneNumber, newPassword);
+    return updatedPassword;
+  } catch (error) {
+    throw new Error('🔴 비밀번호 변경 오류:' + error.message);
+  }
+};
+
 // 휴대폰 번호 변경
 export const updatePhoneNumber = async (params) => {
   try {
@@ -189,15 +213,13 @@ export const verifyCode = async (managerPhoneNumber, inputCode) => {
       redis.del(`attempts:${managerPhoneNumber}`),
       redis.del(`lastRequest:${managerPhoneNumber}`),
     ]);
-
     // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
-    const manager = await managerAuthDao.findByPhone(managerPhoneNumber);
-
+    const manager = await managerAuthDao.findByPhone(cleanedPhoneNumber);
     if (!manager) {
       throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
 
-    return manager.funeralUsername;
+    return manager.managerUsername;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }

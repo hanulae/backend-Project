@@ -46,6 +46,11 @@ class FuneralStaffPermission extends Sequelize.Model {
           defaultValue: false,
           comment: '앱 설정 접근 여부',
         },
+        pointHistory: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+          comment: '포인트 내역 접근 여부',
+        },
       },
       {
         sequelize,
