@@ -13,13 +13,6 @@ import apiRoutes from './routes/index.js';
 // Express 앱 초기화
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:8081', // 개발 서버
-  'http://10.0.2.2:8081',
-  'http://127.0.0.1:8081', // 로컬호스트
-  'http://192.168.219.100:8081',
-];
-
 // 기본 미들웨어 설정
 app.use(
   cors({
@@ -28,6 +21,7 @@ app.use(
       'http://localhost:3000', // 로컬 웹 개발용 (필요 시)
       'https://wooricenter.co.kr', // 실제 배포 도메인
       'https://www.wooricenter.co.kr', // 실제 배포 도메인
+      'http://192.168.219.100:8081',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
