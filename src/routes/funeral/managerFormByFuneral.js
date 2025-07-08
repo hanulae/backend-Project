@@ -52,6 +52,7 @@ router.get(
 // 입찰 신청
 router.put(
   '/bid',
+  authMiddleware,
   validateRequiredFields([
     'managerFormBidId',
     'funeralHallName',
@@ -64,7 +65,7 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      // 신청자의 Id 값을 토큰으로 받아서 유효한 유저인지 확인 및 검증 로직 필요 (2025.06.05)
+      const { funeralId } = req.user;
 
       // 1. 제안가 유효성 검사
       if (isNaN(Number(req.body.proponentMoney)) || Number(req.body.proponentMoney) <= 0) {
@@ -95,6 +96,7 @@ router.put(
 
       // 파라미터 구성
       const params = {
+        funeralId: funeralId,
         managerFormBidId: req.body.managerFormBidId,
         funeralHallName: req.body.funeralHallName,
         funeralHallSize: req.body.funeralHallSize,

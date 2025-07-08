@@ -94,9 +94,9 @@ const managerFormByFuneralService = {
       // 4. 트랜잭션 커밋 후 상조팀장에게 알림 전송
       try {
         await fcmService.sendNotificationToUser({
-          receiverId: existingBid.managerId,
+          receiverId: existingBid.managerForm.managerId,
           receiverType: 'manager',
-          notificationType: 'bid_received',
+          notificationType: 'bid_submitted',
           data: {
             managerFormId: existingBid.managerFormId,
             managerFormBidId: params.managerFormBidId,

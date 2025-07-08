@@ -1,6 +1,7 @@
 import ManagerFormBid from '../../models/manager/managerFormBid.js';
 import funeralList from '../../models/funeral/funeralList.js';
 import funeralHallInfo from '../../models/funeral/funeralHallInfo.js';
+import managerForm from '../../models/manager/managerForm.js';
 import { Op, fn, col } from 'sequelize';
 
 // 상태별 업데이트 데이터 준비 함수 (중앙화)
@@ -156,7 +157,19 @@ const managerFormBidDao = {
    */
   async getManagerFormBidById(managerFormBidId, type, options = {}) {
     if (type === 'funeral') {
-      const bid = await ManagerFormBid.findByPk(managerFormBidId, options);
+      const bid = await ManagerFormBid.findOne({
+        where: {
+          managerFormBidId: managerFormBidId,
+        },
+        include: [
+          {
+            model: managerForm,
+            as: 'managerForm',
+            attributes: ['managerId'],
+          },
+        ],
+        ...options,
+      });
       return bid;
     } else if (type === 'manager') {
       const bid = await ManagerFormBid.findOne({

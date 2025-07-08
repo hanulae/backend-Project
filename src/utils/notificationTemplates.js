@@ -13,11 +13,6 @@ export const NOTIFICATION_TEMPLATES = {
     body: (data) => `${data.chiefMournerName || '고객'}님으로부터 견적 요청이 도착했습니다.`,
     icon: 'form',
   },
-  bid_received: {
-    title: '입찰 제안 도착',
-    body: (data) => `${data.funeralName || '장례식장'}에서 입찰 제안이 도착했습니다.`,
-    icon: 'bid',
-  },
   bid_submitted: {
     title: '입찰 제안 도착',
     body: (data) => `${data.funeralName || '장례식장'}에서 입찰 제안이 도착했습니다.`,
@@ -118,7 +113,6 @@ export function getNotificationContent(type, data = {}) {
  */
 export const NOTIFICATION_PERMISSIONS = {
   manager: [
-    'bid_received',
     'bid_submitted',
     'dispatch_approved',
     'dispatch_rejected',
@@ -168,7 +162,6 @@ export const NOTIFICATION_PRIORITY = {
   normal: [
     'estimate_request',
     'manager_form_created',
-    'bid_received',
     'bid_submitted',
     'dispatch_requested',
     'transaction_request',
