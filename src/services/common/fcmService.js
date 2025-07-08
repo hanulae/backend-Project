@@ -178,6 +178,39 @@ const fcmService = {
       throw error;
     }
   },
+
+  /**
+   * 사용자별 모든 FCM 토큰 비활성화 (로그아웃 시)
+   */
+  async deactivateUserTokens({ userId, userType, deviceId = null }) {
+    try {
+      const whereCondition = { userId, userType, isActive: true };
+
+      // 특정 기기만 비활성화하는 경우
+      if (deviceId) {
+        whereCondition.deviceId = deviceId;
+      }
+
+      const [affectedCount] = await fcmTokenDao.deactivateUserTokens(whereCondition);
+
+      logger.info(`FCM 토큰 비활성화 완료: ${userType}(${userId}) - ${affectedCount}개 토큰`);
+      return {
+        success: true,
+        deactivatedCount: affectedCount,
+        message: 'FCM 토큰이 비활성화되었습니다.',
+      };
+    } catch (error) {
+      logger.error('FCM 토큰 비활성화 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 특정 기기의 FCM 토큰만 비활성화
+   */
+  async deactivateDeviceToken({ userId, userType, deviceId }) {
+    return await this.deactivateUserTokens({ userId, userType, deviceId });
+  },
 };
 
 export default fcmService;

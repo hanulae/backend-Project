@@ -11,28 +11,71 @@ const fcmTokenDao = {
     try {
       const { userId, userType, fcmToken, deviceId, deviceType } = tokenData;
 
-      // 기존 토큰들 비활성화
-      await db.FcmToken.update(
-        { isActive: false },
-        {
-          where: { userId, userType },
-          ...options,
-        },
-      );
+      // 1. 먼저 동일한 FCM 토큰이 존재하는지 확인
+      const existingToken = await db.FcmToken.findOne({
+        where: { fcmToken },
+        ...options,
+      });
 
-      // 새 토큰 생성
-      return await db.FcmToken.create(
-        {
-          userId,
-          userType,
-          fcmToken,
-          deviceId,
-          deviceType,
-          isActive: true,
-          lastUsedAt: new Date(),
-        },
-        options,
-      );
+      if (existingToken) {
+        // 2. 기존 토큰이 있으면 업데이트
+        await db.FcmToken.update(
+          {
+            userId,
+            userType,
+            deviceId,
+            deviceType,
+            isActive: true,
+            lastUsedAt: new Date(),
+          },
+          {
+            where: { fcmToken },
+            ...options,
+          },
+        );
+
+        // 3. 같은 사용자의 다른 토큰들은 비활성화 (현재 토큰 제외)
+        await db.FcmToken.update(
+          { isActive: false },
+          {
+            where: {
+              userId,
+              userType,
+              fcmToken: { [db.Sequelize.Op.ne]: fcmToken },
+            },
+            ...options,
+          },
+        );
+
+        // 4. 업데이트된 토큰 반환
+        return await db.FcmToken.findOne({
+          where: { fcmToken },
+          ...options,
+        });
+      } else {
+        // 5. 기존 토큰이 없으면 사용자의 모든 토큰 비활성화 후 새로 생성
+        await db.FcmToken.update(
+          { isActive: false },
+          {
+            where: { userId, userType },
+            ...options,
+          },
+        );
+
+        // 6. 새 토큰 생성
+        return await db.FcmToken.create(
+          {
+            userId,
+            userType,
+            fcmToken,
+            deviceId,
+            deviceType,
+            isActive: true,
+            lastUsedAt: new Date(),
+          },
+          options,
+        );
+      }
     } catch (error) {
       logger.error('FCM 토큰 생성/업데이트 DAO 오류:', error);
       throw error;
@@ -122,6 +165,24 @@ const fcmTokenDao = {
       );
     } catch (error) {
       logger.error('FCM 토큰 마지막 사용시간 업데이트 DAO 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 사용자별 FCM 토큰 비활성화 (로그아웃 시)
+   */
+  async deactivateUserTokens(whereCondition, options = {}) {
+    try {
+      return await db.FcmToken.update(
+        { isActive: false },
+        {
+          where: whereCondition,
+          ...options,
+        },
+      );
+    } catch (error) {
+      logger.error('사용자 FCM 토큰 비활성화 DAO 오류:', error);
       throw error;
     }
   },

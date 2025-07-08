@@ -34,6 +34,27 @@ router.post('/fcm/token', authMiddleware, async (req, res) => {
   }
 });
 
+// FCM 토큰 비활성화 (로그아웃 시)
+router.post('/fcm/deactivate', authMiddleware, async (req, res) => {
+  try {
+    const { deviceId } = req.body;
+    const { userId, userType } = req.user;
+
+    const result = await fcmService.deactivateUserTokens({
+      userId,
+      userType,
+      deviceId, // 특정 기기만 비활성화하거나 전체 비활성화
+    });
+
+    res.status(200).json({
+      message: 'FCM 토큰이 비활성화되었습니다.',
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // 알림 목록 조회
 router.get('/list', authMiddleware, async (req, res) => {
   try {

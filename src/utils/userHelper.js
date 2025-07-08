@@ -105,15 +105,15 @@ export async function getUserBasicInfo(userId, userType) {
     manager: {
       id: user.managerId,
       name: user.managerName,
-      email: user.managerEmail,
-      phoneNumber: user.managerPhoneNumber,
+      username: user.managerUsername,
+      phoneNumber: user.managerPhoneNum,
       type: 'manager',
     },
     funeral: {
       id: user.funeralId,
-      name: user.funeralName,
-      email: user.funeralEmail,
-      phoneNumber: user.funeralPhoneNumber,
+      name: user.funeralStaffName,
+      username: user.funeralUsername,
+      phoneNumber: user.funeralPhoneNum,
       type: 'funeral',
     },
     funeralStaff: {
