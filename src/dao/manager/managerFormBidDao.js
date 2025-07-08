@@ -1,6 +1,5 @@
 import ManagerFormBid from '../../models/manager/managerFormBid.js';
 import funeralList from '../../models/funeral/funeralList.js';
-import funeralHallInfo from '../../models/funeral/funeralHallInfo.js';
 import managerForm from '../../models/manager/managerForm.js';
 import { Op, fn, col } from 'sequelize';
 
@@ -82,20 +81,20 @@ const managerFormBidDao = {
       where: {
         managerFormBidId: managerFormBidId,
       },
-      attributes: ['proponentMoney', 'discount'],
-      include: [
-        {
-          model: funeralHallInfo,
-          as: 'funeralHallInfo',
-          attributes: [
-            'funeralHallName',
-            'funeralHallSize',
-            'funeralHallNumberOfMourners',
-            'funeralHallPrice',
-            'funeralHallDetailPrice',
-          ],
-        },
-      ],
+      // attributes: ['proponentMoney', 'discount'],
+      // include: [
+      //   {
+      //     model: funeralHallInfo,
+      //     as: 'funeralHallInfo',
+      //     attributes: [
+      //       'funeralHallName',
+      //       'funeralHallSize',
+      //       'funeralHallNumberOfMourners',
+      //       'funeralHallPrice',
+      //       'funeralHallDetailPrice',
+      //     ],
+      //   },
+      // ],
     });
 
     return result;
@@ -133,6 +132,14 @@ const managerFormBidDao = {
         funeralId: funeralId,
       },
       attributes: ['managerFormBidId', 'managerFormCreatedAt', 'bidSubmittedAt', 'bidStatus'],
+      include: [
+        {
+          model: managerForm,
+          as: 'managerForm',
+          attributes: ['chiefMournerName'],
+        },
+      ],
+      order: [['managerFormCreatedAt', 'DESC']],
     });
 
     return result;

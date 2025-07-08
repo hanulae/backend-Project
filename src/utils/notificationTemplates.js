@@ -3,11 +3,6 @@
  */
 export const NOTIFICATION_TEMPLATES = {
   // 견적 관련
-  estimate_request: {
-    title: '새로운 견적 요청',
-    body: (data) => `${data.chiefMournerName || '고객'}님으로부터 견적 요청이 도착했습니다.`,
-    icon: 'form',
-  },
   manager_form_created: {
     title: '새로운 견적 요청',
     body: (data) => `${data.chiefMournerName || '고객'}님으로부터 견적 요청이 도착했습니다.`,
@@ -42,16 +37,16 @@ export const NOTIFICATION_TEMPLATES = {
   },
 
   // 거래 관련
-  transaction_completed: {
-    title: '거래 완료',
-    body: (data) =>
-      `거래가 성공적으로 완료되었습니다. ${data.amount ? `금액: ${data.amount.toLocaleString()}원` : ''}`,
-    icon: 'money',
-  },
-  transaction_request: {
+  transaction_completed_requested: {
     title: '거래 완료 요청',
     body: (data) => `${data.requesterName || '상대방'}이 거래 완료를 요청했습니다.`,
     icon: 'request',
+  },
+  transaction_completed: {
+    title: '거래 완료',
+    body: (data) =>
+      `거래가 성공적으로 완료되었습니다. ${data.amount ? ` ${data.amount.toLocaleString()}원` : ''}`,
+    icon: 'money',
   },
 
   // 환급 관련
@@ -116,8 +111,8 @@ export const NOTIFICATION_PERMISSIONS = {
     'bid_submitted',
     'dispatch_approved',
     'dispatch_rejected',
+    'transaction_completed_requested',
     'transaction_completed',
-    'transaction_request',
     'cash_refund_approved',
     'cash_refund_rejected',
     'account_approved',
@@ -125,11 +120,10 @@ export const NOTIFICATION_PERMISSIONS = {
     'cash_granted',
   ],
   funeral: [
-    'estimate_request',
     'manager_form_created',
     'dispatch_requested',
+    'transaction_completed_requested',
     'transaction_completed',
-    'transaction_request',
     'cash_refund_approved',
     'cash_refund_rejected',
     'account_approved',
@@ -137,11 +131,10 @@ export const NOTIFICATION_PERMISSIONS = {
     'cash_granted',
   ],
   funeralStaff: [
-    'estimate_request',
     'manager_form_created',
     'dispatch_requested',
+    'transaction_completed_requested',
     'transaction_completed',
-    'transaction_request',
   ],
   admin: ['cash_refund_requested', 'account_approved'],
 };
@@ -160,11 +153,10 @@ export function canReceiveNotification(userType, notificationType) {
 export const NOTIFICATION_PRIORITY = {
   high: ['dispatch_approved', 'dispatch_rejected', 'transaction_completed'],
   normal: [
-    'estimate_request',
     'manager_form_created',
     'bid_submitted',
     'dispatch_requested',
-    'transaction_request',
+    'transaction_completed_requested',
   ],
   low: ['account_approved', 'point_granted', 'cash_granted'],
 };

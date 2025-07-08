@@ -383,9 +383,9 @@ class DispatchRequestService {
     }
 
     const InfoData = {
-      funeralHallName: managerFormBid.funeralHallInfo.funeralHallName,
-      funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
-      funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      funeralHallName: managerFormBid.funeralHallName,
+      funeralHallPrice: managerFormBid.funeralHallPrice,
+      funeralHallDetailPrice: managerFormBid.funeralHallDetailPrice,
       proponentMoney: managerFormBid.proponentMoney,
       discount: managerFormBid.discount,
     };
@@ -504,7 +504,7 @@ class DispatchRequestService {
           await fcmService.sendNotificationToUser({
             receiverId: counterpartId,
             receiverType: counterpartType,
-            notificationType: 'transaction_request',
+            notificationType: 'transaction_completed_requested',
             data: {
               dispatchRequestId: dispatchRequestId,
               requesterType: userType,
@@ -679,7 +679,6 @@ class DispatchRequestService {
             amount: managerCashAmount,
             transactionId: transactionId,
           },
-          senderId: 'system',
           senderType: 'system',
         });
 
@@ -693,7 +692,6 @@ class DispatchRequestService {
             amount: totalAmount,
             transactionId: transactionId,
           },
-          senderId: 'system',
           senderType: 'system',
         });
 

@@ -40,6 +40,7 @@ class NotificationHistory extends Sequelize.Model {
             'dispatch_approved', // 출동 승인
             'dispatch_cancelled', // 출동 취소
             'dispatch_rejected', // 출동 거절
+            'transaction_completed_requested', // 거래 완료 요청
             'transaction_completed', // 거래 완료
             'cash_refund_requested', // 환급 요청
             'cash_refund_approved', // 환급 승인
