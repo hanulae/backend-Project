@@ -61,7 +61,7 @@ router.get('/list', authMiddleware, async (req, res) => {
     const { userId, userType } = req.user;
     const { page = 1, limit = 20, type } = req.query;
 
-    const result = await notificationHistoryDao.getNotificationsByUser(userId, userType, {
+    const result = await notificationHistoryDao.findNotificationsByUser(userId, userType, {
       page: parseInt(page),
       limit: parseInt(limit),
       type: type || null,
@@ -143,7 +143,7 @@ router.post('/test-send', authMiddleware, async (req, res) => {
       });
     }
 
-    const result = await fcmService.sendNotification({
+    const result = await fcmService.sendNotificationToUser({
       receiverId,
       receiverType,
       senderId: userId,
