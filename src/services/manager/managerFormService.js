@@ -44,7 +44,7 @@ const managerFormService = {
               await fcmService.sendNotificationToUser({
                 receiverId: item.funeralId,
                 receiverType: 'funeral',
-                notificationType: 'estimate_request',
+                notificationType: 'manager_form_created',
                 data: {
                   managerFormId: managerForm.managerFormId,
                   chiefMournerName: managerFormData.chiefMournerName,
