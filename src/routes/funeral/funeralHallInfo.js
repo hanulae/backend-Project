@@ -212,4 +212,28 @@ router.delete(
   },
 );
 
+/**
+ * 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
+ * 이름, 평수, 수용 가능 인원
+ */
+router.get('/summary/:funeralId', async (req, res) => {
+  try {
+    const funeralId = req.params.funeralId;
+
+    const result = await funeralHallInfoService.getFuneralHallInfoSummary(funeralId);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    logger.error('호실 요약 정보 불러오기 실패: ', error.message);
+    return res.status(500).json({
+      success: false,
+      message: '호실 요약 정보 불러오기 실패',
+      error: error.message,
+    });
+  }
+});
+
 export default router;

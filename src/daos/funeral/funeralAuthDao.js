@@ -1,4 +1,5 @@
 import db from '../../models/index.js';
+import bcrypt from 'bcrypt';
 
 export const findByEmail = async (email) => {
   try {
@@ -8,11 +9,28 @@ export const findByEmail = async (email) => {
   }
 };
 
+export const findManagerByUsername = async (funeralUsername) => {
+  try {
+    const funeral = await db.Funeral.findOne({ where: { funeralUsername } });
+    return funeral;
+  } catch (error) {
+    throw new Error('데이터베이스 조회 중 오류가 발생했습니다.');
+  }
+};
+
 export const findById = async (funeralId) => {
   try {
     return await db.Funeral.findByPk(funeralId);
   } catch (error) {
     throw new Error('🔴 findById 오류:' + error.message);
+  }
+};
+
+export const findByUserInfo = async (funeralId) => {
+  try {
+    return await db.Funeral.findOne({ where: { funeralId } });
+  } catch (error) {
+    throw new Error('🔴 findByUserInfo 오류:' + error.message);
   }
 };
 
@@ -29,6 +47,18 @@ export const updatePassword = async (funeralId, newPassword) => {
     return funeral;
   } catch (error) {
     throw new Error(error);
+  }
+};
+
+export const lostUpdatePassword = async (phoneNumber, newPassword) => {
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await db.Funeral.update(
+      { funeralPassword: hashedPassword },
+      { where: { funeralPhoneNumber: phoneNumber } },
+    );
+  } catch (error) {
+    throw new Error('비밀번호 업데이트 실패: ' + error.message);
   }
 };
 
@@ -72,7 +102,7 @@ export const updateBankInfo = async (
   funeralBacnkHolder,
 ) => {
   try {
-    return await db.Manager.update(
+    return await db.Funeral.update(
       {
         funeralBankName,
         funeralBankNumber,
@@ -89,10 +119,10 @@ export const findByPhone = async (funeralPhoneNumber) => {
   try {
     return await db.Funeral.findOne({
       where: { funeralPhoneNumber: funeralPhoneNumber },
-      attributes: ['funeralEmail'],
+      attributes: ['funeralUsername'],
     });
   } catch (error) {
-    throw new Error(error);
+    throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
   }
 };
 

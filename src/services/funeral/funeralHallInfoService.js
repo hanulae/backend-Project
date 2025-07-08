@@ -1,17 +1,27 @@
 import funeralHallInfoDao from '../../dao/funeral/funeralHallInfoDao.js';
+import funeralListDao from '../../dao/funeral/funeralListDao.js';
 import logger from '../../config/logger.js';
+import { sequelize } from '../../config/database.js';
 
 const funeralHallInfoService = {
   async createFuneralHallInfo(roomInfo) {
+    const transaction = await sequelize.transaction();
     try {
-      await funeralHallInfoDao.createFuneralHallInfo(roomInfo);
+      // 1. 호실 추가
+      await funeralHallInfoDao.createFuneralHallInfo(roomInfo, { transaction });
+
+      // 2. funeralList 테이블의 장례식장 정보 업데이트
+      await funeralListDao.incrementFuneralTotalRooms(roomInfo.funeralId, 1, { transaction });
+
+      await transaction.commit();
 
       return {
         success: true,
         message: '호실 정보 등록 완료',
       };
     } catch (error) {
-      logger.error(error);
+      await transaction.rollback();
+      logger.error(error.message);
       throw error;
     }
   },
@@ -172,22 +182,45 @@ const funeralHallInfoService = {
    * @returns {object} 삭제 결과
    */
   async deleteFuneralHallInfo(funeralHallId, funeralId) {
-    const currentHallInfo = await funeralHallInfoDao.getFuneralHallInfoDetail(funeralHallId);
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. 호실 정보 조회
+      const currentHallInfo = await funeralHallInfoDao.getFuneralHallInfoDetail(funeralHallId);
 
-    if (!currentHallInfo) {
-      throw new Error('삭제하려는 호실 정보를 찾을 수 없음');
+      if (!currentHallInfo) {
+        throw new Error('삭제하려는 호실 정보를 찾을 수 없음');
+      }
+
+      if (currentHallInfo.funeralId !== funeralId) {
+        throw new Error('삭제 권한이 없음');
+      }
+
+      // 2. 호실 삭제
+      await funeralHallInfoDao.deleteFuneralHallInfo(funeralHallId, { transaction });
+
+      // 3. funeralList 테이블의 호실 갯수 업데이트
+      await funeralListDao.decrementFuneralTotalRooms(funeralId, 1, { transaction });
+
+      await transaction.commit();
+
+      return {
+        success: true,
+        message: '호실 정보가 성공적으로 삭제되었습니다.',
+      };
+    } catch (error) {
+      await transaction.rollback();
+      logger.error(error.message);
+      throw error;
     }
+  },
 
-    if (currentHallInfo.funeralId !== funeralId) {
-      throw new Error('삭제 권한이 없음');
-    }
-
-    await funeralHallInfoDao.deleteFuneralHallInfo(funeralHallId);
-
-    return {
-      success: true,
-      message: '호실 정보가 성공적으로 삭제되었습니다.',
-    };
+  /**
+   * 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
+   * 이름, 평수, 수용 가능 인원
+   */
+  async getFuneralHallInfoSummary(funeralId) {
+    const result = await funeralHallInfoDao.getFuneralHallInfoSummary(funeralId);
+    return result;
   },
 };
 

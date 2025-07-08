@@ -9,6 +9,7 @@ import logger from './config/logger.js';
 //dotenv.config();
 
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 async function startServer() {
   try {
@@ -21,7 +22,7 @@ async function startServer() {
     //await createDefaultAdmin(); // 관리자 계정 생성
 
     // 서버 시작
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, HOST, () => {
       logger.info(`서버가 포트 ${PORT}에서 실행 중입니다.`);
     });
 

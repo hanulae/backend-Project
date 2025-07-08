@@ -1,4 +1,5 @@
 import managerFuneralListDao from '../../daos/manager/managerFuneralListDao.js';
+import * as funeralListDao from '../../daos/funeral/funeralListDao.js';
 
 const funeralListService = {
   /**
@@ -12,7 +13,14 @@ const funeralListService = {
     if (!funeralDetail)
       throw new Error('실패: 해당 funeralListId로 저장된 장례식장 데이터가 없습니다.');
 
-    return funeralDetail;
+    // 이미지 데이터를 가져옵니다.
+    const images = await funeralListDao.findImagesByFuneralListId(funeralListId);
+    console.log('🚀 ~ getFuneralDetail ~ images:', images);
+
+    return {
+      funeralDetail,
+      images,
+    };
   },
 
   /**

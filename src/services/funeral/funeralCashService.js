@@ -99,9 +99,10 @@ export const requestCashRefund = async ({ funeralId, amountCash }) => {
 // 캐시 히스토리 조회
 export const getCashHistory = async (funeralId) => {
   try {
-    return await funeralCashHistoryDao.findCashHistoryByFuneralId(funeralId);
+    return await funeralCashDao.findCashHistoryByFuneralId(funeralId);
   } catch (error) {
-    throw new error('🔴 장례식장 캐시 히스토리 조회 오류:', error.message);
+    console.error('캐시 내역 조회 오류:', error.message);
+    throw error;
   }
 };
 

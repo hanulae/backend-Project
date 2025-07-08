@@ -169,17 +169,6 @@ const managerFormBidDao = {
             as: 'funeralList',
             attributes: ['funeral_name'],
           },
-          {
-            model: funeralHallInfo,
-            as: 'funeralHallInfo',
-            attributes: [
-              'funeralHallName',
-              'funeralHallSize',
-              'funeralHallNumberOfMourners',
-              'funeralHallPrice',
-              'funeralHallDetailPrice',
-            ],
-          },
         ],
       });
       return bid;

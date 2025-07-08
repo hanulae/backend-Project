@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/signup', uploadManagerFile, async (req, res) => {
   try {
     const params = {
-      managerEmail: req.body.managerEmail,
+      managerUsername: req.body.managerUsername,
       managerPassword: req.body.managerPassword,
       managerName: req.body.managerName,
       managerPhoneNumber: req.body.managerPhone,
@@ -17,6 +17,7 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
       managerBankNumber: req.body.managerBankNumber,
       files: req.files,
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const result = await managerUserService.registerManager(params);
     res.status(201).json({
@@ -26,10 +27,31 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
   } catch (error) {
     console.error('회원가입 오류:', error.message);
     // ✅ 실패 시 S3에 업로드된 파일 삭제
-    if (req.files?.location) {
-      await deleteS3Object(req.files.location);
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        if (file.location) {
+          await deleteS3Object(file.location);
+          console.log('🗑️ S3 삭제 완료:', file.location);
+        }
+      }
     }
     res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
+  }
+});
+
+// 아이디 중복 확인
+router.get('/checkUsername', async (req, res) => {
+  try {
+    const { username } = req.query;
+    const isAvailable = await managerUserService.isUsernameAvailable(username);
+
+    res.status(200).json({
+      message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.',
+      available: isAvailable,
+    });
+  } catch (error) {
+    console.error('아이디 중복 확인 오류:', error.message);
+    res.status(500).json({ message: '아이디 중복 확인 중 오류가 발생했습니다.' });
   }
 });
 

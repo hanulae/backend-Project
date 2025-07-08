@@ -93,6 +93,42 @@ router.get(
 );
 
 /**
+ * 거래 흐름 상태 조회
+ * 상조팀장 거래 완료 시 버튼 상태 확인을 위한 라우터
+ */
+router.get(
+  '/transaction-detail/:dispatchRequestId',
+  validateRequiredFields(['dispatchRequestId'], 'params'),
+  validateUUID(['dispatchRequestId'], 'params'),
+  async (req, res) => {
+    try {
+      const dispatchRequestId = req.params.dispatchRequestId;
+
+      const transactionStatus =
+        await dispatchRequestService.getTransactionStatus(dispatchRequestId);
+
+      if (transactionStatus === null) {
+        return res.status(200).json({
+          success: true,
+          data: null,
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: transactionStatus,
+      });
+    } catch (error) {
+      logger.error('거래 흐름 상태 조회 중 오류 발생', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || '거래 흐름 상태 조회 중 오류가 발생했습니다.',
+      });
+    }
+  },
+);
+
+/**
  * 출동 신청 내역 리스트 조회
  */
 router.get('/list', authMiddleware, async (req, res) => {
@@ -139,56 +175,56 @@ router.delete(
       });
     }
   },
+);
 
-  /**
-   * 장례식장 전화번호 불러오기
-   */
-  router.get(
-    '/funeral-phone-number/:funeralId',
-    validateRequiredFields(['funeralId'], 'params'),
-    validateUUID(['funeralId'], 'params'),
-    async (req, res) => {
-      const funeralId = req.params.funeralId;
+/**
+ * 장례식장 전화번호 불러오기
+ */
+router.get(
+  '/funeral-phone-number/:funeralId',
+  validateRequiredFields(['funeralId'], 'params'),
+  validateUUID(['funeralId'], 'params'),
+  async (req, res) => {
+    const funeralId = req.params.funeralId;
 
-      const funeralPhoneNumber = await dispatchRequestService.getFuneralPhoneNumber(funeralId);
+    const funeralPhoneNumber = await dispatchRequestService.getFuneralPhoneNumber(funeralId);
 
-      res.status(200).json({
-        success: true,
-        funeralPhoneNumber,
+    res.status(200).json({
+      success: true,
+      funeralPhoneNumber,
+    });
+  },
+);
+
+/**
+ * 상조 팀장 거래 완료
+ * @Header {string} managerId(JWT) - 토큰 값 (추가예정)
+ * @Body {
+ *  dispatchRequestId: string, // 출동 신청 Id
+ * }
+ */
+router.post(
+  '/complete/:dispatchRequestId',
+  validateRequiredFields(['dispatchRequestId'], 'params'),
+  validateUUID(['dispatchRequestId'], 'params'),
+  async (req, res) => {
+    try {
+      const dispatchRequestId = req.params.dispatchRequestId;
+
+      const result = await dispatchRequestService.completeDispatchRequest(
+        dispatchRequestId,
+        'manager',
+      );
+
+      res.status(200).json(result);
+    } catch (error) {
+      logger.error('상조 팀장 거래 완료 요청중 오류 발생', error.message);
+      res.status(500).json({
+        success: false,
+        message: error.message,
       });
-    },
-  ),
-
-  /**
-   * 상조 팀장 거래 완료
-   * @Header {string} managerId(JWT) - 토큰 값 (추가예정)
-   * @Body {
-   *  dispatchRequestId: string, // 출동 신청 Id
-   * }
-   */
-  router.post(
-    '/complete/:dispatchRequestId',
-    validateRequiredFields(['dispatchRequestId'], 'params'),
-    validateUUID(['dispatchRequestId'], 'params'),
-    async (req, res) => {
-      try {
-        const dispatchRequestId = req.params.dispatchRequestId;
-
-        const result = await dispatchRequestService.completeDispatchRequest(
-          dispatchRequestId,
-          'manager',
-        );
-
-        res.status(200).json(result);
-      } catch (error) {
-        logger.error('상조 팀장 거래 완료 요청중 오류 발생', error.message);
-        res.status(500).json({
-          success: false,
-          message: error.message,
-        });
-      }
-    },
-  ),
+    }
+  },
 );
 
 export default router;

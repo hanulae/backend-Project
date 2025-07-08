@@ -4,8 +4,8 @@ const funeralHallInfoDao = {
   /**
    * 장례식장 호실 정보 추가 생성
    */
-  async createFuneralHallInfo(roomInfo) {
-    const result = await funeralHallInfo.create(roomInfo);
+  async createFuneralHallInfo(roomInfo, options = {}) {
+    const result = await funeralHallInfo.create(roomInfo, options);
 
     return result;
   },
@@ -121,6 +121,25 @@ const funeralHallInfoDao = {
       where: {
         funeralHallId: funeralHallId,
       },
+    });
+
+    return result;
+  },
+
+  /**
+   * 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
+   */
+  async getFuneralHallInfoSummary(funeralId) {
+    const result = await funeralHallInfo.findAll({
+      where: {
+        funeralId: funeralId,
+      },
+      attributes: [
+        'funeralHallId',
+        'funeralHallName',
+        'funeralHallSize',
+        'funeralHallNumberOfMourners',
+      ],
     });
 
     return result;

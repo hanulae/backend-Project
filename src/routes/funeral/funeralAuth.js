@@ -27,15 +27,32 @@ router.post('/logout', (req, res) => {
 // 비밀번호 변경
 router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
     const funeralId = req.user.funeralId;
 
-    const params = { funeralId, currentPassword, newPassword };
+    const params = { funeralId, newPassword };
 
     await funeralAuthService.updatePassword(params);
 
     res.json({ message: '비밀번호 변경 완료' });
   } catch (error) {
+    console.error('비밀번호 변경 오류:', error.message);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// 비밀번호 분실 시 비밀번호 변경
+router.patch('/update/password/lost', async (req, res) => {
+  try {
+    const { phoneNumber, newPassword } = req.body;
+
+    const params = { phoneNumber, newPassword };
+
+    await funeralAuthService.lostPasswordUpdate(params);
+
+    res.json({ message: '비밀번호 변경 완료' });
+  } catch (error) {
+    console.error('비밀번호 변경 오류:', error.message);
     res.status(400).json({ message: error.message });
   }
 });
@@ -43,16 +60,16 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
 // 휴대폰 번호 변경
 router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
-    const { currentPhone, newPhone } = req.body;
+    const { newPhone } = req.body;
     const funeralId = req.user.funeralId;
 
-    const params = { funeralId, currentPhone, newPhone };
+    const params = { funeralId, newPhone };
 
     const updatedFuneral = await funeralAuthService.updatePhoneNumber(params);
 
     res.status(200).json({
       message: '휴대폰 번호 변경 완료',
-      manager: updatedFuneral.toSafeObject ? updatedFuneral.toSafeObject() : updatedFuneral,
+      funeral: updatedFuneral.toSafeObject ? updatedFuneral.toSafeObject() : updatedFuneral,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -63,19 +80,19 @@ router.patch('/update/phone', authMiddleware, async (req, res) => {
 router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   try {
     const funeralId = req.user.funeralId;
-    const { funeralBankName, funeralBankNumber, funeralBacnkHolder } = req.body;
+    const { funeralBankName, funeralBankNumber, funeralBankHolder } = req.body;
 
     // 유효성 검사: 숫자 형식 체크
     if (!/^\d+$/.test(funeralBankNumber)) {
       return res.status(400).json({ message: '계좌번호는 숫자만 입력 가능합니다.' });
     }
 
-    const params = { funeralId, funeralBankName, funeralBankNumber, funeralBacnkHolder };
-    const updatedManager = await funeralAuthService.updateBankAccount(params);
+    const params = { funeralId, funeralBankName, funeralBankNumber, funeralBankHolder };
+    const updatedFuneral = await funeralAuthService.updateBankAccount(params);
 
     res.status(200).json({
       message: '계좌 정보 변경 완료',
-      data: updatedManager,
+      data: updatedFuneral,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -83,7 +100,7 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
 });
 
 // SMS 인증코드 전송
-router.post('/find/email/send-sms', async (req, res) => {
+router.post('/find/username/send', async (req, res) => {
   try {
     const { funeralPhoneNumber } = req.body;
     if (!funeralPhoneNumber) {
@@ -97,18 +114,18 @@ router.post('/find/email/send-sms', async (req, res) => {
   }
 });
 
-// 인증코드 검증 후 이메일 찾기
-router.post('/find/email', async (req, res) => {
+// 인증코드 검증 후 아이디 찾기
+router.post('/find/username/verify', async (req, res) => {
   try {
     const { funeralPhoneNumber, code } = req.body;
     if (!funeralPhoneNumber || !code) {
       return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
     }
 
-    const isVerified = await funeralAuthService.verifyCode(funeralPhoneNumber, code);
+    const username = await funeralAuthService.verifyCode(funeralPhoneNumber, code);
 
-    if (isVerified) {
-      res.status(200).json({ message: '인증 성공', verified: true, email: isVerified });
+    if (username) {
+      res.status(200).json({ message: '인증 성공', verified: true, username });
     } else {
       res.status(400).json({ message: '인증 실패', verified: false });
     }

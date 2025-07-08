@@ -19,11 +19,11 @@ const uploadFuneralRoomFile = multer({
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const allowedTypes = /jpeg|jpg|png/;
     const isAllowed = allowedTypes.test(file.mimetype);
     if (isAllowed) cb(null, true);
-    else cb(new Error('Only PDF, JPG, JPEG, PNG files are allowed.'));
+    else cb(new Error('Only JPG, JPEG, PNG image files are allowed.'));
   },
 });
 
-export default uploadFuneralRoomFile.single('funeralRoomFile');
+export default uploadFuneralRoomFile.array('funeralRoomFiles', 10);

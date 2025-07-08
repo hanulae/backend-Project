@@ -36,7 +36,7 @@ export const remove = async (funeralStaffId) => {
   }
 };
 
-export const findByFuneralId = async (funeralId) => {
+export const findByFuneralStaff = async (funeralId) => {
   try {
     return await db.FuneralStaff.findAll({
       where: { funeralId },
@@ -44,5 +44,54 @@ export const findByFuneralId = async (funeralId) => {
     });
   } catch (error) {
     throw new Error('직원 목록 조회 오류:' + error);
+  }
+};
+
+export const findByFuneralStaffWithPermissions = async (funeralId) => {
+  try {
+    return await db.FuneralStaff.findAll({
+      where: { funeralId },
+      include: [
+        {
+          model: db.FuneralStaffPermission,
+          as: 'permissions',
+        },
+      ],
+    });
+  } catch (error) {
+    throw new Error('직원 및 권한 조회 실패: ' + error.message);
+  }
+};
+
+export async function getStaffByPhoneNumberAndFuneralId(phoneNumber, funeralId) {
+  try {
+    // Sequelize 모델이 FuneralStaff라고 가정합니다.
+    const staff = await db.FuneralStaff.findOne({
+      where: {
+        funeralStaffPhoneNumber: phoneNumber,
+        funeralId,
+      },
+    });
+    return staff;
+  } catch (error) {
+    throw new Error(`직원 조회 실패: ${error.message}`);
+  }
+}
+
+export async function findByPhoneNumber(funeralStaffPhoneNumber) {
+  // Assuming you have a model named FuneralStaff
+  return await db.FuneralStaff.findOne({
+    where: { funeralStaffPhoneNumber },
+  });
+}
+
+export const findByPhone = async (funeralStaffPhoneNumber) => {
+  try {
+    return await db.FuneralStaff.findOne({
+      where: { funeralStaffPhoneNumber: funeralStaffPhoneNumber },
+      attributes: ['funeralStaffUsername'],
+    });
+  } catch (error) {
+    throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
   }
 };
