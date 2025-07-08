@@ -83,3 +83,11 @@ export const getCashHistory = async (funeralId) => {
 export const getCurrentCash = async (funeralId) => {
   return await funeralCashDao.getCurrentCash(funeralId);
 };
+
+export const getCashHistoryByUser = async (funeralId) => {
+  try {
+    return await funeralCashDao.findCashHistoryByFuneralId(funeralId);
+  } catch (error) {
+    throw new Error('회원별 캐시 충전 내역 조회 실패: ' + error.message);
+  }
+};

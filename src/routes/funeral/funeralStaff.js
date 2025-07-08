@@ -23,6 +23,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       funeralMainPhoneNumber: req.body.funeralPhoneNumber,
       permissions: req.body.permissions, // 프론트에서 전달되는 권한
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const staff = await funeralStaffService.createStaff(params);
     res.status(201).json({ message: '직원 생성 완료', data: staff });
@@ -51,6 +52,7 @@ router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
       funeralMainPhoneNumber: req.body.funeralPhoneNumber,
       permissions: req.body.permissions, // 권한 정보
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const updatedStaff = await funeralStaffService.updateStaff(params);
     res.status(200).json({ message: '직원 수정 완료', data: updatedStaff });

@@ -32,6 +32,7 @@ export const sendVerificationSMS = async (phoneNumber) => {
   }
 
   const code = generateVerificationCode();
+  console.log('🚀 ~ sendVerificationSMS ~ code:', code);
 
   await Promise.all([
     redis.set(`sms:${phoneNumber}`, code, 'EX', CODE_EXPIRY),

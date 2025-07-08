@@ -69,4 +69,25 @@ router.post('/verify', async (req, res) => {
   }
 });
 
+// 인증 코드 검증
+router.post('/update/verify', authMiddleware, async (req, res) => {
+  try {
+    const { phoneNumber, code, userType } = req.body;
+
+    if (!phoneNumber || !code) {
+      return res.status(400).json({ message: '전화번호와 인증코드를 모두 입력해주세요.' });
+    }
+
+    const isVerified = await verifyCode(phoneNumber, code, userType);
+
+    if (isVerified) {
+      res.status(200).json({ message: '인증 성공', verified: true });
+    } else {
+      res.status(400).json({ message: '인증 실패', verified: false });
+    }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

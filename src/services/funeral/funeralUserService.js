@@ -119,3 +119,7 @@ export const getMyProfile = async (funeralId) => {
     throw new Error('프로필 조회 실패: ' + error.message);
   }
 };
+
+export const getFuneralById = async (funeralId) => {
+  return await funeralUserDao.findById(funeralId);
+};
