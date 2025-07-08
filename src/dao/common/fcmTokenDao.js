@@ -41,7 +41,7 @@ const fcmTokenDao = {
             where: {
               userId,
               userType,
-              fcmToken: { [db.Sequelize.Op.ne]: fcmToken },
+              fcmToken: { [Op.ne]: fcmToken },
             },
             ...options,
           },
