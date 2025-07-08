@@ -14,7 +14,13 @@ const adminAuthMiddleware = async (req, res, next) => {
       return res.status(403).json({ message: '관리자만 접근할 수 있습니다.' });
     }
 
-    req.user = decoded; // 관리자 정보 저장
+    // 관리자 정보 매핑
+    req.user = {
+      ...decoded,
+      userId: decoded.adminId,
+      userType: 'admin',
+    };
+
     next();
   } catch (error) {
     return res.status(401).json({ message: '토큰 인증 실패: ' + error.message });
