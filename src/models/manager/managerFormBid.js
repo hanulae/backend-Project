@@ -30,13 +30,38 @@ class ManagerFormBid extends Sequelize.Model {
           allowNull: true,
           comment: '장례식장의 호실 별 고유 ID (FK)',
         },
+        funeralHallName: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          comment: '장례식장의 호실 별 이름',
+        },
+        funeralHallSize: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          comment: '장례식장의 호실 별 크기',
+        },
+        funeralHallNumberOfMourners: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          comment: '장례식장의 호실 별 수용 인원',
+        },
+        funeralHallDetailPrice: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          comment: '장례식장 지불 금액',
+        },
+        funeralHallPrice: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          comment: '장례식장의 호실 기본 가격',
+        },
         proponentMoney: {
           type: DataTypes.INTEGER,
           allowNull: true,
           comment: '제안가',
         },
         discount: {
-          type: DataTypes.INTEGER,
+          type: DataTypes.FLOAT,
           allowNull: true,
           comment: '할인률',
         },

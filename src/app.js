@@ -21,6 +21,7 @@ app.use(
       'http://localhost:3000', // 로컬 웹 개발용 (필요 시)
       'https://wooricenter.co.kr', // 실제 배포 도메인
       'https://www.wooricenter.co.kr', // 실제 배포 도메인
+      'http://192.168.219.100:8081',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -29,7 +30,6 @@ app.use(
 );
 app.use(helmet());
 app.use(compression());
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));

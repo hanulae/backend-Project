@@ -87,6 +87,16 @@ class FuneralList extends Sequelize.Model {
           allowNull: true,
           comment: '검색 키워드 (쉼표로 구분)',
         },
+        funeralHomePage: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+          comment: '장례식장 홈페이지 URL',
+        },
+        funeralPhoneNumber: {
+          type: DataTypes.STRING(20),
+          allowNull: true,
+          comment: '장례식장 대표 전화번호',
+        },
       },
       {
         sequelize,

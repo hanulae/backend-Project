@@ -20,20 +20,15 @@ const ATTEMPT_EXPIRY = 3600; // 1시간
 
 // 로그인
 export const loginManager = async ({ managerUsername, managerPassword }) => {
-  console.log(
-    '🚀 ~ loginManager ~ managerUsername, managerPassword:',
-    managerUsername,
-    managerPassword,
-  );
   try {
     const manager = await managerAuthDao.findManagerByUsername(managerUsername);
-    if (!manager) throw new Error('존재하지 않는 이메일입니다.');
+    if (!manager) throw new Error('존재하지 않는 아이디입니다.');
     if (!manager.isApproved) throw new Error('관리자의 승인이 필요합니다.');
 
     // 비밀번호 비교
     const isPasswordValid = await manager.verifyPassword(managerPassword);
     if (!isPasswordValid) {
-      throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
+      throw new Error('아이디 또는 비밀번호가 일치하지 않습니다.');
     }
 
     const accessToken = generateToken({ managerId: manager.managerId });
@@ -45,7 +40,7 @@ export const loginManager = async ({ managerUsername, managerPassword }) => {
       manager: manager.toSafeObject(),
     };
   } catch (error) {
-    console.log('🚀 ~ loginManager ~ error:', error);
+    console.error('🚀 ~ loginManager ~ error:', error);
     throw new Error('🔴 로그인 오류:' + error.message);
   }
 };
@@ -78,6 +73,30 @@ export const updatePassword = async (params) => {
       throw new Error('기존 비밀번호가 일치 합니다.');
     }
     const updatedPassword = await managerAuthDao.updatePassword(managerId, newPassword);
+    return updatedPassword;
+  } catch (error) {
+    throw new Error('🔴 비밀번호 변경 오류:' + error.message);
+  }
+};
+
+// 비밀번호 변경
+export const lostPasswordUpdate = async (params) => {
+  try {
+    const { phoneNumber, newPassword } = params;
+
+    // 필수정보 확인
+    if (!phoneNumber || !newPassword) {
+      throw new Error('필수 정보가 누락되었습니다.');
+    }
+    // 상조팀장 정보 조회
+    const manager = await managerAuthDao.findByPhone(phoneNumber);
+    if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
+
+    const isPasswordValid = await manager.verifyPassword(newPassword);
+    if (isPasswordValid) {
+      throw new Error('기존 비밀번호가 일치 합니다.');
+    }
+    const updatedPassword = await managerAuthDao.lostUpdatePassword(phoneNumber, newPassword);
     return updatedPassword;
   } catch (error) {
     throw new Error('🔴 비밀번호 변경 오류:' + error.message);
@@ -139,7 +158,7 @@ export const updateBankAccount = async (params) => {
   }
 };
 
-// 이메일 찾기
+// 아이디 찾기
 export const sendVerificationSMS = async (managerPhoneNumber) => {
   const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
   if (!phoneRegex.test(managerPhoneNumber)) {
@@ -174,6 +193,10 @@ export const sendVerificationSMS = async (managerPhoneNumber) => {
 
 export const verifyCode = async (managerPhoneNumber, inputCode) => {
   try {
+    // 전화번호에서 하이픈 제거
+    const cleanedPhoneNumber = managerPhoneNumber.replace(/-/g, '');
+    console.error('🚀 ~ verifyCode ~ cleanedPhoneNumber:', cleanedPhoneNumber);
+
     const storedCode = await redis.get(`sms:${managerPhoneNumber}`);
 
     if (!storedCode) {
@@ -190,15 +213,13 @@ export const verifyCode = async (managerPhoneNumber, inputCode) => {
       redis.del(`attempts:${managerPhoneNumber}`),
       redis.del(`lastRequest:${managerPhoneNumber}`),
     ]);
-
-    // 인증 성공 후, 해당 휴대폰 번호로 가입한 이메일 조회
-    const manager = await managerAuthDao.findByPhone(managerPhoneNumber);
-
+    // 인증 성공 후, 해당 휴대폰 번호로 가입한 아이디 조회
+    const manager = await managerAuthDao.findByPhone(cleanedPhoneNumber);
     if (!manager) {
-      throw new Error('해당 휴대폰 번호로 등록된 이메일이 없습니다.');
+      throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
 
-    return manager.managerEmail;
+    return manager.managerUsername;
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }
