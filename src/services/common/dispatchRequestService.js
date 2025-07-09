@@ -209,6 +209,38 @@ class DispatchRequestService {
         throw new Error('실패: 출동 신청 취소 중 처리하려는 입찰 내역이 DB에서 찾을 수 없습니다.');
       }
 
+      // 5. 다른 장례식장들의 상태를 원래대로 되돌리기 (출동 취소 시)
+      const otherManagerFormBids = await managerFormBidDao.getOtherManagerFormBidByManagerFormId(
+        getDispatchRequest.managerFormId,
+        getDispatchRequest.managerFormBidId, // 현재 취소된 입찰제안서 제외
+        { transaction },
+      );
+
+      // 각 입찰제안서의 상태를 원래대로 되돌리기
+      for (const managerFormBid of otherManagerFormBids) {
+        let restoredStatus = '';
+
+        // 현재 상태에 따라 원래 상태로 복원
+        if (managerFormBid.bidStatus === 'rejected') {
+          // rejected -> bid_submitted (입찰 제안을 했던 상태로 되돌리기)
+          restoredStatus = 'bid_submitted';
+        } else if (managerFormBid.bidStatus === 'expired') {
+          // expired -> pending (입찰 제안을 하지 않은 상태로 되돌리기)
+          restoredStatus = 'pending';
+        } else {
+          // 다른 상태들은 그대로 유지
+          continue;
+        }
+
+        await managerFormBidDao.updateManagerFormBidStatus(
+          {
+            managerFormBidId: managerFormBid.managerFormBidId,
+          },
+          restoredStatus,
+          { transaction },
+        );
+      }
+
       await transaction.commit();
 
       // 5. 트랜잭션 커밋 후 장례식장에게 출동 취소 알림 전송
