@@ -36,10 +36,15 @@ router.get('/requests/file/:funeralId/file', async (req, res) => {
 router.patch('/requests/approve/:funeralId', async (req, res) => {
   try {
     const { funeralId } = req.params;
-    const { isApproved } = req.body;
+    const { isApproved, message } = req.body; // message 추가
 
     if (typeof isApproved !== 'boolean') {
       return res.status(400).json({ message: 'isApproved는 true 또는 false여야 합니다.' });
+    }
+
+    if (!isApproved && !message) {
+      // 거절 메시지 요구
+      return res.status(400).json({ message: '거절 메시지가 필요합니다.' });
     }
 
     const result = await funeralApprovalService.setApprovalStatus(funeralId, isApproved);
@@ -50,6 +55,13 @@ router.patch('/requests/approve/:funeralId', async (req, res) => {
 
     if (!result) {
       return res.status(404).json({ message: '존재하지 않는 장례식장 ID입니다.' });
+    }
+
+    if (!isApproved) {
+      // Send rejection SMS
+      const funeral = await funeralApprovalService.getFuneralById(funeralId); // Assuming this function exists
+      const phoneNumber = funeral.phoneNumber; // Assuming funeral object has a phoneNumber field
+      await funeralApprovalService.sendRejectionSMS(phoneNumber, message);
     }
 
     res.status(200).json({
