@@ -19,7 +19,27 @@ export const getFuneralDocument = async (funeralId) => {
 };
 
 export const setApprovalStatus = async (funeralId, isApproved) => {
-  return await funeralApprovalDao.updateApproval(funeralId, isApproved);
+  const funeral = await funeralApprovalDao.findByFuneralId(funeralId);
+  if (!funeral) return null;
+
+  // 승인 처리
+  if (isApproved) {
+    // funeralHome 컬럼에 funeralListId가 들어있다고 가정
+    const funeralListId = funeral.funeralHome;
+    if (funeralListId) {
+      // funeral_lists 테이블의 funeralId, FuneralTotalRooms 컬럼 업데이트
+      await funeralApprovalDao.updateFuneralList(
+        { funeralId, FuneralTotalRooms: 0 },
+        { funeralListId },
+      );
+    }
+  }
+
+  // funeral의 isApproved 필드 등 업데이트
+  funeral.isApproved = isApproved;
+  await funeral.save();
+
+  return funeral;
 };
 
 export const sendRejectionSMS = async (phoneNumber, message) => {

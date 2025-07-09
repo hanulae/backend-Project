@@ -28,3 +28,12 @@ export const findById = async (managerId) => {
     throw error;
   }
 };
+
+export const findByPhone = async (managerPhoneNumber) => {
+  try {
+    return await db.Manager.findOne({ where: { managerPhoneNumber } });
+  } catch (error) {
+    console.error('🔴 휴대폰으로 아이디 찾기 DAO 오류:', error.message);
+    throw error;
+  }
+};

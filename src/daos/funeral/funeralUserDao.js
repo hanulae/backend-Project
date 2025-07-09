@@ -35,3 +35,12 @@ export const createTermsAgreement = async (termsData, transaction) => {
     throw new Error('약관 동의 정보 저장 DAO 오류:' + error.message);
   }
 };
+
+export const findByPhone = async (funeralPhoneNumber) => {
+  try {
+    return await db.Funeral.findOne({ where: { funeralPhoneNumber } });
+  } catch (error) {
+    console.error('🔴 휴대폰으로 아이디 찾기 DAO 오류:', error.message);
+    throw error;
+  }
+};

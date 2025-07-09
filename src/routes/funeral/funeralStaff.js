@@ -62,6 +62,25 @@ router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
   }
 });
 
+// 직원 비밀번호 수정
+router.patch('/updatePassword/:funeralStaffId', authMiddleware, async (req, res) => {
+  try {
+    const { funeralStaffId } = req.user;
+    console.log('🚀 ~ router.patch ~ funeralStaffId:', funeralStaffId);
+    const { funeralStaffPassword } = req.body;
+    console.log('🚀 ~ router.patch ~ funeralStaffPassword:', funeralStaffPassword);
+
+    if (!funeralStaffPassword) {
+      return res.status(400).json({ message: '새 비밀번호를 입력해주세요.' });
+    }
+
+    await funeralStaffService.updateStaffPassword(funeralStaffId, funeralStaffPassword);
+    res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // 직원 삭제
 router.delete('/:funeralStaffId', async (req, res) => {
   try {

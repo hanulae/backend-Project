@@ -27,7 +27,7 @@ export const findByPhone = async (managerPhoneNumber) => {
   try {
     return await db.Manager.findOne({
       where: { managerPhoneNumber: managerPhoneNumber },
-      attributes: ['managerUsername'],
+      attributes: ['managerUsername', 'managerPassword'],
     });
   } catch (error) {
     throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
@@ -51,12 +51,17 @@ export const updatePassword = async (managerId, newPassword) => {
   }
 };
 
-export const lostUpdatePassword = async (phoneNumber, newPassword) => {
+export const lostUpdatePassword = async (cleanedPhoneNumber, newPassword) => {
+  console.log(
+    '🚀 ~ lostUpdatePassword ~ cleanedPhoneNumber, newPassword:',
+    cleanedPhoneNumber,
+    newPassword,
+  );
   try {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     return await db.Manager.update(
       { managerPassword: hashedPassword },
-      { where: { managerPhoneNumber: phoneNumber } },
+      { where: { managerPhoneNumber: cleanedPhoneNumber } },
     );
   } catch (error) {
     throw new Error('비밀번호 업데이트 실패: ' + error.message);

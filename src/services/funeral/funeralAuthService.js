@@ -17,31 +17,31 @@ const ATTEMPT_LIMIT = 5;
 const ATTEMPT_EXPIRY = 3600; // 1시간
 
 export const login = async ({ funeralUsername, funeralPassword }) => {
-  const funeral = await funeralAuthDao.findManagerByUsername(funeralUsername);
-  if (!funeral) throw new Error('존재하지 않는아이디입니다.');
-  if (!funeral.isApproved) throw new Error('관리자의 승인이 필요합니다.');
-  if (!funeral) {
-    throw new Error('등록되지 않은 아이디입니다.');
+  try {
+    console.log('🚀 ~ login ~ funeralUsername, funeralPassword:', funeralUsername, funeralPassword);
+    const funeral = await funeralAuthDao.findManagerByUsername(funeralUsername);
+    if (!funeral) throw new Error('존재하지 않는 아이디입니다.');
+    if (!funeral.isApproved) throw new Error('관리자의 승인이 필요합니다.');
+
+    console.log('🚀 ~ login ~ funeral:', funeral.funeralPassword);
+    // 비밀번호 비교
+    const isPasswordValid = await funeral.verifyPassword(funeralPassword);
+    console.log('🚀 ~ login ~ isPasswordValid:', isPasswordValid);
+    if (!isPasswordValid) {
+      throw new Error('아이디 또는 비밀번호가 일치하지 않습니다.');
+    }
+
+    const accessToken = generateToken({ funeralId: funeral.funeralId });
+    const refreshToken = generateRefreshToken({ funeralId: funeral.funeralId });
+
+    return {
+      accessToken,
+      refreshToken,
+      funeral: funeral.toSafeObject(),
+    };
+  } catch (error) {
+    throw new Error('로그인 오류: ' + error.message);
   }
-
-  if (!funeral.isApproved) {
-    throw new Error('관리자 승인 전 계정입니다.');
-  }
-
-  // 비밀번호 비교
-  const isPasswordValid = await funeral.verifyPassword(funeralPassword);
-  if (!isPasswordValid) {
-    throw new Error('아이디 또는 비밀번호가 일치하지 않습니다.');
-  }
-
-  const accessToken = generateToken({ funeralId: funeral.funeralId });
-  const refreshToken = generateRefreshToken({ funeralId: funeral.funeralId });
-
-  return {
-    accessToken,
-    refreshToken,
-    funeral: funeral.toSafeObject(),
-  };
 };
 
 //비밀번호변경
@@ -74,20 +74,27 @@ export const updatePassword = async (params) => {
 export const lostPasswordUpdate = async (params) => {
   try {
     const { phoneNumber, newPassword } = params;
+    console.log('🚀 ~ lostPasswordUpdate ~ phoneNumber, newPassword:', phoneNumber, newPassword);
 
     // 필수정보 확인
     if (!phoneNumber || !newPassword) {
       throw new Error('필수 정보가 누락되었습니다.');
     }
+    const cleanedPhoneNumber = removeHyphensFromPhoneNumber(phoneNumber);
+
     // 상조팀장 정보 조회
-    const funeral = await funeralAuthDao.findByPhone(phoneNumber);
+    const funeral = await funeralAuthDao.findByPhone(cleanedPhoneNumber);
+    console.log('🚀 ~ lostPasswordUpdate ~ funeral:', funeral);
     if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
 
     const isPasswordValid = await funeral.verifyPassword(newPassword);
     if (isPasswordValid) {
       throw new Error('기존 비밀번호가 일치 합니다.');
     }
-    const updatedPassword = await funeralAuthDao.lostUpdatePassword(phoneNumber, newPassword);
+    const updatedPassword = await funeralAuthDao.lostUpdatePassword(
+      cleanedPhoneNumber,
+      newPassword,
+    );
     return updatedPassword;
   } catch (error) {
     throw new Error('🔴 비밀번호 변경 오류:' + error.message);
@@ -240,4 +247,10 @@ export const verifyCode = async (funeralPhoneNumber, inputCode) => {
   } catch (error) {
     throw new Error(`인증 실패: ${error.message}`);
   }
+};
+
+// 하이픈 제거 함수
+const removeHyphensFromPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber) return phoneNumber;
+  return phoneNumber.replace(/-/g, '');
 };

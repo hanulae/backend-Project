@@ -33,6 +33,7 @@ export const registerFuneral = async (params) => {
       funeralBankHolder: params.funeralBankHolder,
       funeralHome: params.funeralHome || null,
     };
+    console.log('🚀 ~ registerFuneral ~ funeralData:', funeralData);
 
     const result = await funeralUserDao.insert(funeralData, transaction);
 
