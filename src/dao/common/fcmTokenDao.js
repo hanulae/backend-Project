@@ -303,6 +303,101 @@ const fcmTokenDao = {
       throw error;
     }
   },
+
+  /**
+   * 장례식장 그룹의 활성 FCM 토큰 조회 (대표 + 모든 직원)
+   */
+  async findActiveTokensByFuneralGroup(funeralId) {
+    try {
+      // 1. 장례식장 대표의 토큰 조회
+      const funeralTokens = await db.FcmToken.findAll({
+        where: {
+          userId: funeralId,
+          userType: 'funeral',
+          isActive: true,
+        },
+        order: [['lastUsedAt', 'DESC']],
+      });
+
+      // 2. 해당 장례식장의 모든 직원 ID 조회
+      const staffList = await db.FuneralStaff.findAll({
+        where: {
+          funeralId: funeralId,
+        },
+        attributes: ['funeralStaffId'],
+      });
+
+      const staffIds = staffList.map((staff) => staff.funeralStaffId);
+
+      // 3. 직원들의 토큰 조회
+      let staffTokens = [];
+      if (staffIds.length > 0) {
+        staffTokens = await db.FcmToken.findAll({
+          where: {
+            userId: {
+              [Op.in]: staffIds,
+            },
+            userType: 'funeralStaff',
+            isActive: true,
+          },
+          order: [['lastUsedAt', 'DESC']],
+        });
+      }
+
+      // 3. 대표 토큰과 직원 토큰들을 합쳐서 반환
+      const allTokens = [...funeralTokens, ...staffTokens];
+
+      logger.info(
+        `장례식장 그룹 토큰 조회 완료: 대표 ${funeralTokens.length}개, 직원 ${staffTokens.length}개, 총 ${allTokens.length}개`,
+      );
+
+      return allTokens;
+    } catch (error) {
+      logger.error('장례식장 그룹 활성 FCM 토큰 조회 DAO 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 장례식장 그룹의 사용자 정보 조회 (알림 이력 저장용)
+   */
+  async findFuneralGroupUsers(funeralId) {
+    try {
+      const users = [];
+
+      // 1. 장례식장 대표 정보 추가
+      const funeral = await db.Funeral.findByPk(funeralId);
+      if (funeral) {
+        users.push({
+          userId: funeralId,
+          userType: 'funeral',
+          name: funeral.funeralName || '장례식장 대표',
+        });
+      }
+
+      // 2. 해당 장례식장의 모든 직원 정보 추가
+      const staffList = await db.FuneralStaff.findAll({
+        where: {
+          funeralId: funeralId,
+        },
+        attributes: ['funeralStaffId', 'funeralStaffName'],
+      });
+
+      staffList.forEach((staff) => {
+        users.push({
+          userId: staff.funeralStaffId,
+          userType: 'funeralStaff',
+          name: staff.funeralStaffName,
+        });
+      });
+
+      logger.info(`장례식장 그룹 사용자 조회 완료: 총 ${users.length}명`);
+      return users;
+    } catch (error) {
+      logger.error('장례식장 그룹 사용자 조회 DAO 오류:', error);
+      throw error;
+    }
+  },
 };
 
 export default fcmTokenDao;

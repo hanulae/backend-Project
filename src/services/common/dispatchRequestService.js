@@ -9,7 +9,7 @@ import {
   updateFuneralPointAndCash,
   getFuneralPhoneNumber,
 } from '../../daos/funeral/funeralAuthDao.js';
-import { updateManagerCash } from '../../daos/manager/managerCashDao.js';
+import { addManagerCash } from '../../daos/manager/managerCashDao.js';
 import {
   createFuneralPointHistory,
   updateFuneralPointHistoryStatus,
@@ -647,7 +647,7 @@ class DispatchRequestService {
     await this.updateAllStatusToCompleted(dispatchRequest, options);
 
     // 공통처리: 상조팀장 캐시 증가 (항상 필요)
-    await updateManagerCash(dispatchRequest.managerId, managerCashAmount, options);
+    await addManagerCash(dispatchRequest.managerId, managerCashAmount, options);
 
     // 공통처리: 상조팀장 캐시 히스토리 생성 (항상 필요)
     await this.createManagerCashHistory(dispatchRequest, managerCashAmount, options);

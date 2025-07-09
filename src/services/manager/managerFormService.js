@@ -32,7 +32,6 @@ const managerFormService = {
 
       await managerFormBidDao.createManagerFormBid(bidDataArr, { transaction });
 
-      // 4. 각각의 장례식장에 알림 전송
       await transaction.commit();
 
       // 트랜잭션 커밋 후 비동기 알림 전송
@@ -41,23 +40,20 @@ const managerFormService = {
           .filter((item) => item.funeralId) // 회원가입한 장례식장만 알림 전송
           .map(async (item) => {
             try {
-              await fcmService.sendNotificationToUser({
-                receiverId: item.funeralId,
-                receiverType: 'funeral',
+              await fcmService.sendNotificationToFuneralGroup({
+                funeralId: item.funeralId,
                 notificationType: 'manager_form_created',
                 data: {
                   managerFormId: managerForm.managerFormId,
                   chiefMournerName: managerFormData.chiefMournerName,
-                  funeralDate: managerFormData.funeralDate,
-                  funeralLocation: managerFormData.funeralLocation,
                 },
                 senderId: managerFormData.managerId,
                 senderType: 'manager',
               });
-              logger.info(`견적 신청 알림 전송 성공: 장례식장 ${item.funeralId}`);
+              logger.info(`견적 신청 그룹 알림 전송 성공: 장례식장 ${item.funeralId}`);
             } catch (notificationError) {
               logger.error(
-                `견적 신청 알림 전송 실패: 장례식장 ${item.funeralId}`,
+                `견적 신청 그룹 알림 전송 실패: 장례식장 ${item.funeralId}`,
                 notificationError,
               );
             }
