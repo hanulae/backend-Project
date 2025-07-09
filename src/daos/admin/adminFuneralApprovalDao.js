@@ -44,7 +44,6 @@ export const findByFuneralId = async (funeralId) => {
   try {
     return await db.Funeral.findOne({
       where: { funeralId },
-      attributes: ['funeralHome', 'createdAt'],
     });
   } catch (error) {
     throw new Error('장례식장 파일 조회 오류: ' + error.message);
