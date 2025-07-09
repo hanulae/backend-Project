@@ -33,6 +33,7 @@ export const getPermissionsByStaffId = async (staffId) => {
         'dispatchPending',
         'estimateHistory',
         'appSettings',
+        'pointHistory',
       ],
     });
   } catch (error) {

@@ -146,3 +146,7 @@ export const getMyProfile = async (managerId) => {
     throw new Error('프로필 조회 실패: ' + error.message);
   }
 };
+
+export const getManagerById = async (managerId) => {
+  return await managerUserDao.findById(managerId);
+};
