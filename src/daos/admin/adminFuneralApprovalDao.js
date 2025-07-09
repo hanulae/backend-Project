@@ -63,3 +63,11 @@ export const findByApprovalStatus = async (isApproved = false) => {
     throw error;
   }
 };
+
+export const updateFuneralList = async (updateValues, whereValues) => {
+  try {
+    return await db.FuneralList.update(updateValues, { where: whereValues });
+  } catch (error) {
+    throw new Error('장례식장 리스트 업데이트 오류: ' + error.message);
+  }
+};

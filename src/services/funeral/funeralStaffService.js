@@ -92,6 +92,7 @@ export const deleteStaff = async (funeralStaffId) => {
 export const getStaffListByFuneral = async (funeralId) => {
   try {
     const staffList = await funeralStaffDao.findByFuneralStaffWithPermissions(funeralId);
+    console.log('🚀 ~ getStaffListByFuneral ~ staffList:', staffList);
     return staffList;
   } catch (error) {
     throw new Error('직원 목록 조회 실패: ' + error.message);
@@ -100,33 +101,57 @@ export const getStaffListByFuneral = async (funeralId) => {
 
 export async function getStaffByPhoneNumber(phoneNumber, funeralId) {
   try {
+    // funeralId에 속한 직원 중 해당 전화번호가 있는지 조회
     const staff = await funeralStaffDao.getStaffByPhoneNumberAndFuneralId(phoneNumber, funeralId);
-    return staff;
+
+    if (staff) {
+      throw new Error('이미 등록된 전화번호입니다.');
+    }
+
+    return staff; // 중복이 없으면 null 또는 undefined 반환
   } catch (error) {
-    throw new Error(`직원 조회 서비스 실패: ${error.message}`);
+    throw new Error(`${error.message}`);
+  }
+}
+
+export async function getStaffPermissions(staffId) {
+  try {
+    return await funeralStaffPermissionDao.getPermissionsByStaffId(staffId);
+  } catch (error) {
+    throw new Error('직원 권한 조회 오류: ' + error.message);
   }
 }
 
 export async function loginStaff({ funeralStaffPhoneNumber, funeralStaffPassword }) {
+  console.log(
+    '🚀 ~ loginStaff ~ funeralStaffPhoneNumber, funeralStaffPassword:',
+    funeralStaffPhoneNumber,
+    funeralStaffPassword,
+  );
   const staff = await funeralStaffDao.findByPhoneNumber(funeralStaffPhoneNumber);
+  console.log('🚀 ~ loginStaff ~ staff:', staff);
 
   if (!staff || staff.funeralStaffPassword !== funeralStaffPassword) {
     return null; // 로그인 실패
   }
 
+  console.log('🚀 ~ loginStaff ~ staff.funeralStaffPassword:', staff.funeralStaffPassword);
   // 토큰 생성
   const accessToken = generateToken({
     funeralId: staff.funeralId,
     funeralStaffId: staff.funeralStaffId,
   });
+  console.log('🚀 ~ loginStaff ~ accessToken:', accessToken);
 
   const refreshToken = generateRefreshToken({
     funeralId: staff.funeralId,
     funeralStaffId: staff.funeralStaffId,
   });
+  console.log('🚀 ~ loginStaff ~ refreshToken:', refreshToken);
 
   // 직원 권한 가져오기
   const permissions = await getStaffPermissions(staff.funeralStaffId);
+  console.log('🚀 ~ loginStaff ~ permissions:', permissions);
 
   return {
     accessToken,
@@ -136,7 +161,28 @@ export async function loginStaff({ funeralStaffPhoneNumber, funeralStaffPassword
   };
 }
 
-export async function getStaffPermissions(staffId) {
-  // 직원 ID로 권한을 가져오는 DAO 함수가 있다고 가정합니다
-  return await funeralStaffPermissionDao.getPermissionsByStaffId(staffId);
+export async function updateStaffPassword(funeralStaffId, newPassword) {
+  console.log(
+    '🚀 ~ updateStaffPassword ~ funeralStaffId, newPassword:',
+    funeralStaffId,
+    newPassword,
+  );
+  try {
+    // 1. 기존 비밀번호 조회
+    const staff = await funeralStaffDao.findById(funeralStaffId);
+    if (!staff) {
+      throw new Error('직원을 찾을 수 없습니다.');
+    }
+
+    // 2. 기존 비밀번호와 같은지 체크 (해싱 안할 경우)
+    if (staff.funeralStaffPassword === newPassword) {
+      throw new Error('기존 비밀번호와 동일합니다. 다른 비밀번호를 입력해주세요.');
+    }
+
+    // 3. 비밀번호 업데이트
+    await funeralStaffDao.updatePassword(funeralStaffId, newPassword);
+    return true;
+  } catch (error) {
+    throw new Error(error.message);
+  }
 }

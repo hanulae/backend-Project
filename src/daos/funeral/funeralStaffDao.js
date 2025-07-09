@@ -63,13 +63,12 @@ export const findByFuneralStaffWithPermissions = async (funeralId) => {
   }
 };
 
-export async function getStaffByPhoneNumberAndFuneralId(phoneNumber, funeralId) {
+export async function getStaffByPhoneNumberAndFuneralId(phoneNumber) {
   try {
     // Sequelize 모델이 FuneralStaff라고 가정합니다.
     const staff = await db.FuneralStaff.findOne({
       where: {
         funeralStaffPhoneNumber: phoneNumber,
-        funeralId,
       },
     });
     return staff;
@@ -95,3 +94,26 @@ export const findByPhone = async (funeralStaffPhoneNumber) => {
     throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);
   }
 };
+
+export async function updatePassword(funeralStaffId, newPassword) {
+  try {
+    const [updatedCount] = await db.FuneralStaff.update(
+      { funeralStaffPassword: newPassword },
+      { where: { funeralStaffId } },
+    );
+    if (updatedCount === 0) {
+      throw new Error('해당 직원이 존재하지 않습니다.');
+    }
+    return true;
+  } catch (error) {
+    throw new Error('직원 비밀번호 DB수정 오류: ' + error.message);
+  }
+}
+
+export async function findById(funeralStaffId) {
+  try {
+    return await db.FuneralStaff.findByPk(funeralStaffId);
+  } catch (error) {
+    throw new Error('직원 조회 오류: ' + error.message);
+  }
+}

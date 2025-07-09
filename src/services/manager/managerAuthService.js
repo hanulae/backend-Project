@@ -25,8 +25,10 @@ export const loginManager = async ({ managerUsername, managerPassword }) => {
     if (!manager) throw new Error('존재하지 않는 아이디입니다.');
     if (!manager.isApproved) throw new Error('관리자의 승인이 필요합니다.');
 
+    console.log('🚀 ~ loginManager ~ manager:', manager.managerPassword);
     // 비밀번호 비교
     const isPasswordValid = await manager.verifyPassword(managerPassword);
+    console.log('🚀 ~ loginManager ~ isPasswordValid:', isPasswordValid);
     if (!isPasswordValid) {
       throw new Error('아이디 또는 비밀번호가 일치하지 않습니다.');
     }
@@ -88,15 +90,19 @@ export const lostPasswordUpdate = async (params) => {
     if (!phoneNumber || !newPassword) {
       throw new Error('필수 정보가 누락되었습니다.');
     }
+    const cleanedPhoneNumber = removeHyphensFromPhoneNumber(phoneNumber);
     // 상조팀장 정보 조회
-    const manager = await managerAuthDao.findByPhone(phoneNumber);
+    const manager = await managerAuthDao.findByPhone(cleanedPhoneNumber);
     if (!manager) throw new Error('상조팀장을 찾을 수 없습니다.');
 
     const isPasswordValid = await manager.verifyPassword(newPassword);
     if (isPasswordValid) {
       throw new Error('기존 비밀번호가 일치 합니다.');
     }
-    const updatedPassword = await managerAuthDao.lostUpdatePassword(phoneNumber, newPassword);
+    const updatedPassword = await managerAuthDao.lostUpdatePassword(
+      cleanedPhoneNumber,
+      newPassword,
+    );
     return updatedPassword;
   } catch (error) {
     throw new Error('🔴 비밀번호 변경 오류:' + error.message);
@@ -236,4 +242,9 @@ export const getUserPassword = async (managerId) => {
     console.error('🔴 getUserPhone 에러:', error.message);
     throw new Error('전화번호 조회 실패: ' + error.message);
   }
+};
+
+export const removeHyphensFromPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber) return phoneNumber;
+  return phoneNumber.replace(/-/g, '');
 };
