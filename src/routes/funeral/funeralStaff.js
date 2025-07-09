@@ -1,6 +1,7 @@
 import express from 'express';
 import * as funeralStaffService from '../../services/funeral/funeralStaffService.js';
 import authMiddleware from '../../middlewares/authMiddleware.js'; // 토큰 인증 미들웨어
+import fcmService from '../../services/common/fcmService.js';
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       funeralMainPhoneNumber: req.body.funeralPhoneNumber,
       permissions: req.body.permissions, // 프론트에서 전달되는 권한
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const staff = await funeralStaffService.createStaff(params);
     res.status(201).json({ message: '직원 생성 완료', data: staff });
@@ -51,9 +53,29 @@ router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
       funeralMainPhoneNumber: req.body.funeralPhoneNumber,
       permissions: req.body.permissions, // 권한 정보
     };
+    console.log('🚀 ~ router.post ~ params:', params);
 
     const updatedStaff = await funeralStaffService.updateStaff(params);
     res.status(200).json({ message: '직원 수정 완료', data: updatedStaff });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 직원 비밀번호 수정
+router.patch('/updatePassword/:funeralStaffId', authMiddleware, async (req, res) => {
+  try {
+    const { funeralStaffId } = req.user;
+    console.log('🚀 ~ router.patch ~ funeralStaffId:', funeralStaffId);
+    const { funeralStaffPassword } = req.body;
+    console.log('🚀 ~ router.patch ~ funeralStaffPassword:', funeralStaffPassword);
+
+    if (!funeralStaffPassword) {
+      return res.status(400).json({ message: '새 비밀번호를 입력해주세요.' });
+    }
+
+    await funeralStaffService.updateStaffPassword(funeralStaffId, funeralStaffPassword);
+    res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -119,6 +141,30 @@ router.post('/login', async (req, res) => {
       message: '로그인 성공',
       ...result,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 직원 로그아웃
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+    const { deviceId } = req.body; // 선택적으로 특정 기기만 로그아웃
+
+    // FCM 토큰 비활성화
+    try {
+      await fcmService.deactivateUserTokens({
+        userId,
+        userType,
+        deviceId, // deviceId가 없으면 모든 토큰 비활성화
+      });
+    } catch (fcmError) {
+      console.warn('FCM 토큰 비활성화 실패:', fcmError.message);
+      // FCM 오류가 있어도 로그아웃은 계속 진행
+    }
+
+    res.status(200).json({ message: '로그아웃 성공' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

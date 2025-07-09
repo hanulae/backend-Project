@@ -32,3 +32,6 @@ Thumbs.db
 
 # 장례식장 데이터
 장례식장_데이터.xlsx
+
+# Firebase
+config/firebase-service-account.json

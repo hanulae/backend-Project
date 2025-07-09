@@ -50,12 +50,17 @@ export const updatePassword = async (funeralId, newPassword) => {
   }
 };
 
-export const lostUpdatePassword = async (phoneNumber, newPassword) => {
+export const lostUpdatePassword = async (cleanedPhoneNumber, newPassword) => {
+  console.log(
+    '🚀 ~ lostUpdatePassword ~ cleanedPhoneNumber, newPassword:',
+    cleanedPhoneNumber,
+    newPassword,
+  );
   try {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     return await db.Funeral.update(
       { funeralPassword: hashedPassword },
-      { where: { funeralPhoneNumber: phoneNumber } },
+      { where: { funeralPhoneNumber: cleanedPhoneNumber } },
     );
   } catch (error) {
     throw new Error('비밀번호 업데이트 실패: ' + error.message);
@@ -119,7 +124,7 @@ export const findByPhone = async (funeralPhoneNumber) => {
   try {
     return await db.Funeral.findOne({
       where: { funeralPhoneNumber: funeralPhoneNumber },
-      attributes: ['funeralUsername'],
+      attributes: ['funeralUsername', 'funeralPassword'],
     });
   } catch (error) {
     throw new Error('휴대폰으로 아이디 찾기 오류:' + error.message);

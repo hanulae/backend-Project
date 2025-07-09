@@ -1,6 +1,8 @@
 import * as cashRefundDao from '../../daos/admin/adminCashRefundDao.js';
 import * as managerCashDao from '../../daos/manager/managerCashDao.js';
 import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
+import logger from '../../config/logger.js';
+import fcmService from '../common/fcmService.js';
 
 export const getGroupedManagerRefundRequests = async () => {
   const all = await cashRefundDao.findManagerRefundRequests();
@@ -22,7 +24,7 @@ export const getGroupedFuneralRefundRequests = async () => {
   };
 };
 
-export const processRefundApproval = async ({ type, requestId, action }) => {
+export const processRefundApproval = async ({ type, requestId, action, reason = null }) => {
   const isManager = type === 'manager';
 
   const refundRequest = isManager
@@ -50,6 +52,32 @@ export const processRefundApproval = async ({ type, requestId, action }) => {
         refundRequest.funeralCashBalanceAfter,
       );
     }
+  }
+
+  // 신청자에게 환급 결과 알림 전송
+  const receiverId = isManager ? refundRequest.managerId : refundRequest.funeralId;
+  const receiverType = isManager ? 'manager' : 'funeral';
+  const notificationType = action === 'approve' ? 'cash_refund_approved' : 'cash_refund_rejected';
+
+  try {
+    await fcmService.sendNotificationToUser({
+      receiverId: receiverId,
+      receiverType: receiverType,
+      notificationType: notificationType,
+      data: {
+        requestId: requestId,
+        amount: refundRequest.amount,
+        reason: reason,
+        processedAt: new Date().toISOString(),
+      },
+      senderId: 'admin',
+      senderType: 'admin',
+    });
+
+    logger.info(`환급 ${status} 알림 전송 성공: ${receiverType} ${receiverId}`);
+  } catch (notificationError) {
+    logger.error(`환급 ${status} 알림 전송 실패: ${receiverType} ${receiverId}`, notificationError);
+    // 알림 전송 실패해도 환급 처리 자체는 성공으로 처리
   }
 
   return refundRequest;

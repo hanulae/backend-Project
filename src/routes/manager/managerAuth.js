@@ -1,6 +1,7 @@
 import express from 'express';
 import * as managerAuthService from '../../services/manager/managerAuthService.js';
 import authMiddleware from '../../middlewares/authMiddleware.js';
+import fcmService from '../../services/common/fcmService.js';
 
 const router = express.Router();
 
@@ -16,10 +17,29 @@ router.post('/login', async (req, res) => {
 });
 
 // 로그아웃
-router.post('/logout', authMiddleware, (req, res) => {
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
-  res.status(200).json({ message: '로그아웃 성공' });
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+    const { deviceId } = req.body; // 선택적으로 특정 기기만 로그아웃
+
+    // FCM 토큰 비활성화
+    try {
+      await fcmService.deactivateUserTokens({
+        userId,
+        userType,
+        deviceId, // deviceId가 없으면 모든 토큰 비활성화
+      });
+    } catch (fcmError) {
+      console.warn('FCM 토큰 비활성화 실패:', fcmError.message);
+      // FCM 오류가 있어도 로그아웃은 계속 진행
+    }
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(200).json({ message: '로그아웃 성공' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // 비밀번호 변경
@@ -43,6 +63,7 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
 router.patch('/update/password/lost', async (req, res) => {
   try {
     const { phoneNumber, newPassword } = req.body;
+    console.log('🚀 ~ router.patch ~ phoneNumber, newPassword:', phoneNumber, newPassword);
 
     const params = { phoneNumber, newPassword };
 

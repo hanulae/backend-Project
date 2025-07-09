@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 //import path from 'path';
 import { generateVerificationCode } from '../../utils/codeGenerator.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
+import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js';
 
 //dotenv.config({ path: path.resolve(process.cwd(), '.env.development') });
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
@@ -15,36 +16,59 @@ const CODE_EXPIRY = 300; // 5분
 const ATTEMPT_LIMIT = 5;
 const ATTEMPT_EXPIRY = 3600; // 1시간
 
-export const sendVerificationSMS = async (phoneNumber) => {
-  const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
-  if (!phoneRegex.test(phoneNumber)) {
-    throw new Error('유효한 전화번호 형식이 아닙니다.');
+export const removeHyphensFromPhoneNumber = (phoneNumber) => {
+  if (!phoneNumber) return phoneNumber;
+  return phoneNumber.replace(/-/g, '');
+};
+
+export const sendVerificationSMS = async (phoneNumber, status) => {
+  console.log('🚀 ~ sendVerificationSMS ~ phoneNumber, status:', phoneNumber, status);
+  try {
+    const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      throw new Error('유효한 전화번호 형식이 아닙니다.');
+    }
+
+    const cleanedPhoneNumber = removeHyphensFromPhoneNumber(phoneNumber);
+
+    // 회원가입 시 전화번호 중복 체크 (상조팀장, 장례식장 모두)
+    if (status === 'signup') {
+      const managerUser = await managerUserDao.findByPhone(cleanedPhoneNumber);
+      const funeralUser = await funeralUserDao.findByPhone(cleanedPhoneNumber);
+
+      if (managerUser || funeralUser) {
+        throw new Error('이미 등록된 전화번호입니다.');
+      }
+    }
+
+    const attempts = await redis.get(`attempts:${phoneNumber}`);
+    if (attempts && parseInt(attempts) >= ATTEMPT_LIMIT) {
+      throw new Error('인증 시도 횟수 초과. 1시간 후 다시 시도해주세요.');
+    }
+
+    const lastRequest = await redis.get(`lastRequest:${phoneNumber}`);
+    if (lastRequest && Date.now() - parseInt(lastRequest) < 60000) {
+      throw new Error('1분 후 다시 시도해주세요.');
+    }
+
+    const code = generateVerificationCode();
+    console.log('🚀 ~ sendVerificationSMS ~ code:', code);
+
+    await Promise.all([
+      redis.set(`sms:${phoneNumber}`, code, 'EX', CODE_EXPIRY),
+      redis.set(`lastRequest:${phoneNumber}`, Date.now(), 'EX', 60),
+      redis.incr(`attempts:${phoneNumber}`),
+      redis.expire(`attempts:${phoneNumber}`, ATTEMPT_EXPIRY),
+    ]);
+
+    await smsClient.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: `하늘애 인증번호는 [${code}] 입니다. 5분 내에 입력해주세요.`,
+    });
+  } catch (error) {
+    throw new Error(error.message);
   }
-
-  const attempts = await redis.get(`attempts:${phoneNumber}`);
-  if (attempts && parseInt(attempts) >= ATTEMPT_LIMIT) {
-    throw new Error('인증 시도 횟수 초과. 1시간 후 다시 시도해주세요.');
-  }
-
-  const lastRequest = await redis.get(`lastRequest:${phoneNumber}`);
-  if (lastRequest && Date.now() - parseInt(lastRequest) < 60000) {
-    throw new Error('1분 후 다시 시도해주세요.');
-  }
-
-  const code = generateVerificationCode();
-
-  await Promise.all([
-    redis.set(`sms:${phoneNumber}`, code, 'EX', CODE_EXPIRY),
-    redis.set(`lastRequest:${phoneNumber}`, Date.now(), 'EX', 60),
-    redis.incr(`attempts:${phoneNumber}`),
-    redis.expire(`attempts:${phoneNumber}`, ATTEMPT_EXPIRY),
-  ]);
-
-  await smsClient.sendOne({
-    to: phoneNumber,
-    from: process.env.COOLSMS_SENDER_NUMBER,
-    text: `하늘애 인증번호는 [${code}] 입니다. 5분 내에 입력해주세요.`,
-  });
 };
 
 export const verifyCode = async (phoneNumber, inputCode) => {

@@ -1,6 +1,8 @@
 import * as managerCashDao from '../../daos/manager/managerCashDao.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as cashRefundRequestDao from '../../daos/manager/managerCashRefundRequestDao.js';
+import logger from '../../config/logger.js';
+import fcmService from '../common/fcmService.js';
 
 export const topupCash = async ({ managerId, amount, bankTransactionId }) => {
   try {
@@ -58,6 +60,31 @@ export const requestCashRefund = async (params) => {
       managerCashBalanceAfter: manager.managerCash - amountCash,
       status: 'pending',
     });
+
+    // 3. 관리자에게 환급 요청 알림 전송
+    try {
+      // 관리자 계정 ID는 환경변수나 고정값으로 설정
+      const adminId = process.env.ADMIN_USER_ID || 'admin';
+
+      await fcmService.sendNotificationToUser({
+        receiverId: adminId,
+        receiverType: 'admin',
+        notificationType: 'cash_refund_requested',
+        data: {
+          requestId: refundRequest.id,
+          managerId: managerId,
+          managerName: manager.managerName,
+          amount: amountCash,
+          requestType: 'manager',
+        },
+        senderId: managerId,
+        senderType: 'manager',
+      });
+      logger.info(`상조팀장 환급 요청 알림 전송 성공: 관리자 ${adminId}`);
+    } catch (notificationError) {
+      logger.error('상조팀장 환급 요청 알림 전송 실패', notificationError);
+      // 알림 전송 실패해도 환급 요청 자체는 성공으로 처리
+    }
 
     return refundRequest;
   } catch (error) {

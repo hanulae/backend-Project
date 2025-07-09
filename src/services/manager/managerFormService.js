@@ -3,6 +3,7 @@ import logger from '../../config/logger.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
+import fcmService from '../common/fcmService.js';
 
 const managerFormService = {
   /**
@@ -31,9 +32,38 @@ const managerFormService = {
 
       await managerFormBidDao.createManagerFormBid(bidDataArr, { transaction });
 
-      // 4. 각각의 장례식장에 알림 전송 (추후 추가)
-
       await transaction.commit();
+
+      // 트랜잭션 커밋 후 비동기 알림 전송
+      try {
+        const notificationPromises = funeralData
+          .filter((item) => item.funeralId) // 회원가입한 장례식장만 알림 전송
+          .map(async (item) => {
+            try {
+              await fcmService.sendNotificationToFuneralGroup({
+                funeralId: item.funeralId,
+                notificationType: 'manager_form_created',
+                data: {
+                  managerFormId: managerForm.managerFormId,
+                  chiefMournerName: managerFormData.chiefMournerName,
+                },
+                senderId: managerFormData.managerId,
+                senderType: 'manager',
+              });
+              logger.info(`견적 신청 그룹 알림 전송 성공: 장례식장 ${item.funeralId}`);
+            } catch (notificationError) {
+              logger.error(
+                `견적 신청 그룹 알림 전송 실패: 장례식장 ${item.funeralId}`,
+                notificationError,
+              );
+            }
+          });
+
+        await Promise.allSettled(notificationPromises);
+      } catch (error) {
+        logger.error('견적 신청 알림 전송 중 오류 발생', error);
+        // 알림 전송 실패해도 견적 신청 자체는 성공으로 처리
+      }
 
       return {
         success: true,

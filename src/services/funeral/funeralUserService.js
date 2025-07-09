@@ -33,6 +33,7 @@ export const registerFuneral = async (params) => {
       funeralBankHolder: params.funeralBankHolder,
       funeralHome: params.funeralHome || null,
     };
+    console.log('🚀 ~ registerFuneral ~ funeralData:', funeralData);
 
     const result = await funeralUserDao.insert(funeralData, transaction);
 
@@ -118,4 +119,8 @@ export const getMyProfile = async (funeralId) => {
   } catch (error) {
     throw new Error('프로필 조회 실패: ' + error.message);
   }
+};
+
+export const getFuneralById = async (funeralId) => {
+  return await funeralUserDao.findById(funeralId);
 };

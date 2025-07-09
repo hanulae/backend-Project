@@ -37,13 +37,25 @@ router.get('/requests/file/:managerId', async (req, res) => {
 router.patch('/requests/approve/:managerId', async (req, res) => {
   try {
     const { managerId } = req.params;
-    const { isApproved } = req.body;
+    const { isApproved, message } = req.body;
 
     if (typeof isApproved !== 'boolean') {
       return res.status(400).json({ message: 'isApproved는 true 또는 false여야 합니다.' });
     }
 
+    if (!isApproved && !message) {
+      return res.status(400).json({ message: '거절 메시지가 필요합니다.' });
+    }
+
     const result = await managerApprovalService.setApprovalStatus(managerId, isApproved);
+
+    if (!isApproved) {
+      // Send rejection SMS
+      const manager = await managerApprovalService.getManagerById(managerId); // Assuming this function exists
+      const phoneNumber = manager.phoneNumber; // Assuming manager object has a phoneNumber field
+      await managerApprovalService.sendRejectionSMS(phoneNumber, message);
+    }
+
     res
       .status(200)
       .json({ message: isApproved ? '가입 승인 완료' : '가입 거절 처리 완료', data: result });

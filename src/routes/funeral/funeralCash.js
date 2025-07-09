@@ -52,4 +52,15 @@ router.get('/current', authMiddleware, async (req, res) => {
   }
 });
 
+// 회원별 캐시 충전 내역 조회
+router.get('/history/:funeralId', authMiddleware, async (req, res) => {
+  try {
+    const { funeralId } = req.params;
+    const history = await funeralCashService.getCashHistoryByUser(funeralId);
+    res.status(200).json({ message: '회원별 캐시 충전 내역 조회 성공', data: history });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

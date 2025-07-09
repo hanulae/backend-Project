@@ -1,14 +1,15 @@
 import { sequelize } from '../../config/database.js';
+import logger from '../../config/logger.js';
 import dispatchRequestDao from '../../dao/common/dispatchRequestDao.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import transactionListDao from '../../dao/common/transactionListDao.js';
 import {
-  getFuneralPhoneNumber,
   getFuneralPointAndCash,
   updateFuneralPointAndCash,
+  getFuneralPhoneNumber,
 } from '../../daos/funeral/funeralAuthDao.js';
-import { updateManagerCash } from '../../daos/manager/managerCashDao.js';
+import { addManagerCash } from '../../daos/manager/managerCashDao.js';
 import {
   createFuneralPointHistory,
   updateFuneralPointHistoryStatus,
@@ -18,6 +19,7 @@ import {
   updateFuneralCashHistoryStatus,
 } from '../../daos/funeral/funeralCashHistoryDao.js';
 import { createManagerCashHistory } from '../../daos/manager/managerCashHistoryDao.js';
+import fcmService from '../common/fcmService.js';
 
 class DispatchRequestService {
   // 상조 팀장 출동 신청 생성
@@ -85,6 +87,30 @@ class DispatchRequestService {
       const dispatchRequest = await dispatchRequestDao.createDispatchRequest(params, transaction);
 
       await transaction.commit();
+
+      // 6. 트랜잭션 커밋 후 장례식장에게 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: params.funeralId,
+          receiverType: 'funeral',
+          notificationType: 'dispatch_requested',
+          data: {
+            dispatchRequestId: dispatchRequest.dispatchRequestId,
+            managerFormId: params.managerFormId,
+            managerFormBidId: params.managerFormBidId,
+            chiefMournerName: managerFormStatus.chiefMournerName,
+            funeralDate: managerFormStatus.funeralDate,
+            funeralLocation: managerFormStatus.funeralLocation,
+          },
+          senderId: params.managerId,
+          senderType: 'manager',
+        });
+        logger.info(`출동 신청 알림 전송 성공: 장례식장 ${params.funeralId}`);
+      } catch (notificationError) {
+        logger.error(`출동 신청 알림 전송 실패: 장례식장 ${params.funeralId}`, notificationError);
+        // 알림 전송 실패해도 출동 신청 자체는 성공으로 처리
+      }
+
       return dispatchRequest;
     } catch (error) {
       await transaction.rollback();
@@ -183,7 +209,64 @@ class DispatchRequestService {
         throw new Error('실패: 출동 신청 취소 중 처리하려는 입찰 내역이 DB에서 찾을 수 없습니다.');
       }
 
+      // 5. 다른 장례식장들의 상태를 원래대로 되돌리기 (출동 취소 시)
+      const otherManagerFormBids = await managerFormBidDao.getOtherManagerFormBidByManagerFormId(
+        getDispatchRequest.managerFormId,
+        getDispatchRequest.managerFormBidId, // 현재 취소된 입찰제안서 제외
+        { transaction },
+      );
+
+      // 각 입찰제안서의 상태를 원래대로 되돌리기
+      for (const managerFormBid of otherManagerFormBids) {
+        let restoredStatus = '';
+
+        // 현재 상태에 따라 원래 상태로 복원
+        if (managerFormBid.bidStatus === 'rejected') {
+          // rejected -> bid_submitted (입찰 제안을 했던 상태로 되돌리기)
+          restoredStatus = 'bid_submitted';
+        } else if (managerFormBid.bidStatus === 'expired') {
+          // expired -> pending (입찰 제안을 하지 않은 상태로 되돌리기)
+          restoredStatus = 'pending';
+        } else {
+          // 다른 상태들은 그대로 유지
+          continue;
+        }
+
+        await managerFormBidDao.updateManagerFormBidStatus(
+          {
+            managerFormBidId: managerFormBid.managerFormBidId,
+          },
+          restoredStatus,
+          { transaction },
+        );
+      }
+
       await transaction.commit();
+
+      // 5. 트랜잭션 커밋 후 장례식장에게 출동 취소 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: getDispatchRequest.funeralId,
+          receiverType: 'funeral',
+          notificationType: 'dispatch_cancelled',
+          data: {
+            dispatchRequestId: dispatchRequestId,
+            managerFormId: getDispatchRequest.managerFormId,
+            managerFormBidId: getDispatchRequest.managerFormBidId,
+            chiefMournerName: getDispatchRequest.chiefMournerName || '상조팀장',
+          },
+          senderId: getDispatchRequest.managerId,
+          senderType: 'manager',
+        });
+        logger.info(`출동 취소 알림 전송 성공: 장례식장 ${getDispatchRequest.funeralId}`);
+      } catch (notificationError) {
+        logger.error(
+          `출동 취소 알림 전송 실패: 장례식장 ${getDispatchRequest.funeralId}`,
+          notificationError,
+        );
+        // 알림 전송 실패해도 출동 취소 자체는 성공으로 처리
+      }
+
       return true;
     } catch (error) {
       await transaction.rollback();
@@ -282,6 +365,31 @@ class DispatchRequestService {
       }
 
       await transaction.commit();
+
+      // 6. 트랜잭션 커밋 후 상조팀장에게 출동 승인 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: getDispatchRequest.managerId,
+          receiverType: 'manager',
+          notificationType: 'dispatch_approved',
+          data: {
+            dispatchRequestId: dispatchRequestId,
+            managerFormId: getDispatchRequest.managerFormId,
+            managerFormBidId: getDispatchRequest.managerFormBidId,
+            funeralName: getDispatchRequest.funeralName || '장례식장',
+          },
+          senderId: getDispatchRequest.funeralId,
+          senderType: 'funeral',
+        });
+        logger.info(`출동 승인 알림 전송 성공: 상조팀장 ${getDispatchRequest.managerId}`);
+      } catch (notificationError) {
+        logger.error(
+          `출동 승인 알림 전송 실패: 상조팀장 ${getDispatchRequest.managerId}`,
+          notificationError,
+        );
+        // 알림 전송 실패해도 출동 승인 자체는 성공으로 처리
+      }
+
       return true;
     } catch (error) {
       await transaction.rollback();
@@ -307,9 +415,9 @@ class DispatchRequestService {
     }
 
     const InfoData = {
-      funeralHallName: managerFormBid.funeralHallInfo.funeralHallName,
-      funeralHallPrice: managerFormBid.funeralHallInfo.funeralHallPrice,
-      funeralHallDetailPrice: managerFormBid.funeralHallInfo.funeralHallDetailPrice,
+      funeralHallName: managerFormBid.funeralHallName,
+      funeralHallPrice: managerFormBid.funeralHallPrice,
+      funeralHallDetailPrice: managerFormBid.funeralHallDetailPrice,
       proponentMoney: managerFormBid.proponentMoney,
       discount: managerFormBid.discount,
     };
@@ -416,6 +524,36 @@ class DispatchRequestService {
 
         await transactionListDao.createTransactionList(createData, options);
       }
+
+      // 첫 번째 거래완료 요청자 - 상대방에게 알림 전송
+      const counterpartType = userType === 'manager' ? 'funeral' : 'manager';
+      const counterpartId =
+        userType === 'manager' ? dispatchRequest.funeralId : dispatchRequest.managerId;
+
+      // 알림 전송 (비동기로 처리하여 거래 로직에 영향 없음)
+      setTimeout(async () => {
+        try {
+          await fcmService.sendNotificationToUser({
+            receiverId: counterpartId,
+            receiverType: counterpartType,
+            notificationType: 'transaction_completed_requested',
+            data: {
+              dispatchRequestId: dispatchRequestId,
+              requesterType: userType,
+              requesterName: userType === 'manager' ? '상조팀장' : '장례식장',
+            },
+            senderId:
+              userType === 'manager' ? dispatchRequest.managerId : dispatchRequest.funeralId,
+            senderType: userType,
+          });
+          logger.info(`거래완료 요청 알림 전송 성공: ${counterpartType} ${counterpartId}`);
+        } catch (notificationError) {
+          logger.error(
+            `거래완료 요청 알림 전송 실패: ${counterpartType} ${counterpartId}`,
+            notificationError,
+          );
+        }
+      }, 100);
 
       return {
         bothCompleted: false,
@@ -541,7 +679,7 @@ class DispatchRequestService {
     await this.updateAllStatusToCompleted(dispatchRequest, options);
 
     // 공통처리: 상조팀장 캐시 증가 (항상 필요)
-    await updateManagerCash(dispatchRequest.managerId, managerCashAmount, options);
+    await addManagerCash(dispatchRequest.managerId, managerCashAmount, options);
 
     // 공통처리: 상조팀장 캐시 히스토리 생성 (항상 필요)
     await this.createManagerCashHistory(dispatchRequest, managerCashAmount, options);
@@ -557,6 +695,45 @@ class DispatchRequestService {
     );
 
     await transactionListDao.updateTransactionListStatus(transactionId, 'completed', options);
+
+    // 최종 거래 완료 알림을 양쪽 모두에게 전송 (비동기로 처리)
+    setTimeout(async () => {
+      try {
+        const totalAmount = parseInt(process.env.TOTAL_AMOUNT);
+
+        // 상조팀장에게 거래 완료 알림
+        await fcmService.sendNotificationToUser({
+          receiverId: dispatchRequest.managerId,
+          receiverType: 'manager',
+          notificationType: 'transaction_completed',
+          data: {
+            dispatchRequestId: dispatchRequest.dispatchRequestId,
+            amount: managerCashAmount,
+            transactionId: transactionId,
+          },
+          senderType: 'system',
+        });
+
+        // 장례식장에게 거래 완료 알림
+        await fcmService.sendNotificationToUser({
+          receiverId: dispatchRequest.funeralId,
+          receiverType: 'funeral',
+          notificationType: 'transaction_completed',
+          data: {
+            dispatchRequestId: dispatchRequest.dispatchRequestId,
+            amount: totalAmount,
+            transactionId: transactionId,
+          },
+          senderType: 'system',
+        });
+
+        logger.info(
+          `거래 완료 알림 전송 성공: 상조팀장 ${dispatchRequest.managerId}, 장례식장 ${dispatchRequest.funeralId}`,
+        );
+      } catch (notificationError) {
+        logger.error('거래 완료 알림 전송 실패', notificationError);
+      }
+    }, 100);
   }
 
   // 5. 모든 상태를 완료로 업데이트
