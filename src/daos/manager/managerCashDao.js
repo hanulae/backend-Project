@@ -9,7 +9,7 @@ export const findManagerById = async (managerId) => {
 };
 
 /**
- * 상조팀장의 캐시 업데이트
+ * 상조팀장의 캐시 업데이트 (완전 교체)
  * @param {*} managerId
  * @param {*} newBalance
  * @param {*} options
@@ -22,6 +22,33 @@ export const updateManagerCash = async (managerId, newBalance, options = {}) => 
     );
   } catch (error) {
     throw new Error('캐시 업데이트 오류:' + error.message);
+  }
+};
+
+/**
+ * 상조팀장의 캐시 추가 (현재 잔액에 추가)
+ * @param {*} managerId
+ * @param {*} amount - 추가할 금액
+ * @param {*} options
+ * @returns {*} 업데이트된 최종 잔액
+ */
+export const addManagerCash = async (managerId, amount, options = {}) => {
+  try {
+    // 현재 잔액 조회
+    const currentCash = await getCurrentCash(managerId);
+
+    // 새로운 잔액 계산
+    const newBalance = currentCash + amount;
+
+    // 업데이트 실행
+    await db.Manager.update(
+      { managerCash: newBalance },
+      { where: { managerId: managerId }, ...options },
+    );
+
+    return newBalance;
+  } catch (error) {
+    throw new Error('캐시 추가 오류:' + error.message);
   }
 };
 

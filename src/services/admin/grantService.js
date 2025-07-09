@@ -3,6 +3,8 @@ import * as managerPointDao from '../../daos/manager/managerPointHistoryDao.js';
 import * as managerCashDao from '../../daos/manager/managerCashHistoryDao.js';
 import * as funeralPointDao from '../../daos/funeral/funeralPointHistoryDao.js';
 import * as funeralCashDao from '../../daos/funeral/funeralCashHistoryDao.js';
+import logger from '../../config/logger.js';
+import fcmService from '../common/fcmService.js';
 
 export const grantReward = async ({ targetType, targetId, type, amount }) => {
   const transaction = await db.sequelize.transaction();
@@ -31,6 +33,27 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
 
       const history = await dao.create(data, { transaction });
       await transaction.commit();
+
+      // 상조팀장에게 포인트/캐시 지급 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: targetId,
+          receiverType: 'manager',
+          notificationType: type === 'point' ? 'point_granted' : 'cash_granted',
+          data: {
+            amount: amount,
+            balance: balance,
+            type: type,
+          },
+          senderId: 'admin',
+          senderType: 'admin',
+        });
+        logger.info(`${type} 지급 알림 전송 성공: 상조팀장 ${targetId}`);
+      } catch (notificationError) {
+        logger.error(`${type} 지급 알림 전송 실패: 상조팀장 ${targetId}`, notificationError);
+        // 알림 전송 실패해도 지급 자체는 성공으로 처리
+      }
+
       return history;
     } else if (targetType === 'funeral') {
       const target = await db.Funeral.findByPk(targetId, { transaction });
@@ -55,6 +78,27 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
 
       const history = await dao.create(data, { transaction });
       await transaction.commit();
+
+      // 장례식장에게 포인트/캐시 지급 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: targetId,
+          receiverType: 'funeral',
+          notificationType: type === 'point' ? 'point_granted' : 'cash_granted',
+          data: {
+            amount: amount,
+            balance: balance,
+            type: type,
+          },
+          senderId: 'admin',
+          senderType: 'admin',
+        });
+        logger.info(`${type} 지급 알림 전송 성공: 장례식장 ${targetId}`);
+      } catch (notificationError) {
+        logger.error(`${type} 지급 알림 전송 실패: 장례식장 ${targetId}`, notificationError);
+        // 알림 전송 실패해도 지급 자체는 성공으로 처리
+      }
+
       return history;
     }
 

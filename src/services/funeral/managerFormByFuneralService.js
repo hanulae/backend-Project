@@ -1,6 +1,8 @@
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import { sequelize } from '../../config/database.js';
+import logger from '../../config/logger.js';
+import fcmService from '../common/fcmService.js';
 
 const managerFormByFuneralService = {
   /**
@@ -88,6 +90,32 @@ const managerFormByFuneralService = {
       });
 
       await transaction.commit();
+
+      // 4. 트랜잭션 커밋 후 상조팀장에게 알림 전송
+      try {
+        await fcmService.sendNotificationToUser({
+          receiverId: existingBid.managerForm.managerId,
+          receiverType: 'manager',
+          notificationType: 'bid_submitted',
+          data: {
+            managerFormId: existingBid.managerFormId,
+            managerFormBidId: params.managerFormBidId,
+            funeralName: existingBid.funeralList?.funeral_name || '장례식장',
+            bidAmount: params.proponentMoney,
+            discount: params.discount,
+          },
+          senderId: params.funeralId,
+          senderType: 'funeral',
+        });
+        logger.info(`입찰 제안 알림 전송 성공: 상조팀장 ${existingBid.managerId}`);
+      } catch (notificationError) {
+        logger.error(
+          `입찰 제안 알림 전송 실패: 상조팀장 ${existingBid.managerId}`,
+          notificationError,
+        );
+        // 알림 전송 실패해도 입찰 자체는 성공으로 처리
+      }
+
       return result;
     } catch (error) {
       await transaction.rollback();

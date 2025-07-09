@@ -23,6 +23,8 @@ import FuneralListImage from './funeral/funeralListImage.js';
 
 import DispatchRequest from './common/dispatchRequest.js';
 import TransactionList from './common/transactionList.js';
+import FcmToken from './common/fcmToken.js';
+import NotificationHistory from './common/notificationHistory.js';
 
 import Admin from './admin/admin.js';
 import AdminStaff from './admin/adminStaff.js';
@@ -56,6 +58,8 @@ db.FuneralListImage = FuneralListImage;
 
 db.DispatchRequest = DispatchRequest;
 db.TransactionList = TransactionList;
+db.FcmToken = FcmToken;
+db.NotificationHistory = NotificationHistory;
 
 db.Admin = Admin;
 db.AdminStaff = AdminStaff;
