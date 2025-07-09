@@ -64,7 +64,7 @@ export async function connectToDatabase() {
       //await sequelize.sync({ force: true });
       logger.info('데이터베이스 모델 동기화 완료');
     }
-    await sequelize.sync({ force: true });
+    //await sequelize.sync({ force: true });
     return sequelize;
   } catch (error) {
     logger.error('데이터베이스 연결 실패: ', error);
