@@ -27,7 +27,7 @@ class ManagerAddDocument extends Sequelize.Model {
         tableName: 'manager_add_documents',
         underscored: true,
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         comment: '상조팀장 추가 제출 서류 테이블',
       },
     );

@@ -109,6 +109,43 @@ router.put('/read-all', authMiddleware, async (req, res) => {
   }
 });
 
+// 배지 카운트 조회 (읽지 않은 알림 개수)
+router.get('/badge-count', authMiddleware, async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+
+    const unreadCount = await notificationHistoryDao.countUnreadByUser(userId, userType);
+
+    res.status(200).json({
+      message: '배지 카운트 조회 성공',
+      data: {
+        unreadCount,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// 배지 초기화 (앱 포그라운드 진입 시)
+router.post('/badge-reset', authMiddleware, async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+
+    // 읽지 않은 알림을 모두 읽음 처리
+    const result = await notificationHistoryDao.markAllAsRead(userId, userType);
+
+    res.status(200).json({
+      message: '배지 초기화 완료',
+      data: {
+        affectedRows: result[0], // 업데이트된 행의 개수
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // 알림 통계 조회
 router.get('/stats', authMiddleware, async (req, res) => {
   try {

@@ -77,7 +77,7 @@ class TransactionList extends Sequelize.Model {
         tableName: 'transaction_lists',
         underscored: true,
         timestamps: true,
-        paranoid: true,
+        paranoid: false,
         comment: '거래 목록 관리 테이블',
       },
     );
