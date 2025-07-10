@@ -151,13 +151,7 @@ const fcmService = {
       // 4. 장례식장 그룹의 활성 FCM 토큰 조회
       const tokens = await fcmTokenDao.findActiveTokensByFuneralGroup(funeralId);
 
-      if (tokens.length === 0) {
-        // await transaction.rollback();
-        logger.warn(`장례식장 그룹의 활성 FCM 토큰이 없습니다: 장례식장 ${funeralId}`);
-        return { success: false, reason: 'No active tokens' };
-      }
-
-      // 5. 각 사용자별로 알림 이력 저장
+      // 5. 각 사용자별로 알림 이력 저장 (FCM 토큰이 없어도 이력은 저장)
       const notificationPromises = groupUsers.map((user) =>
         notificationHistoryDao.createNotification(
           {
@@ -176,7 +170,21 @@ const fcmService = {
 
       const notifications = await Promise.all(notificationPromises);
 
-      // 6. FCM 전송
+      // 6. FCM 토큰이 없는 경우 알림 이력만 저장하고 종료
+      if (tokens.length === 0) {
+        await transaction.commit();
+        logger.warn(
+          `장례식장 그룹의 활성 FCM 토큰이 없습니다: 장례식장 ${funeralId} (알림 이력은 저장됨)`,
+        );
+        return {
+          success: false,
+          reason: 'No active tokens',
+          notificationIds: notifications.map((n) => n.notificationId),
+          targetUsers: groupUsers.length,
+        };
+      }
+
+      // 7. FCM 전송
       const fcmTokens = tokens.map((token) => token.fcmToken);
       const message = {
         notification: { title, body },
@@ -190,7 +198,7 @@ const fcmService = {
 
       const response = await admin.messaging().sendEachForMulticast(message);
 
-      // 7. 실패한 토큰 처리
+      // 8. 실패한 토큰 처리
       if (response.failureCount > 0) {
         await this.handleFailedTokens(response.responses, tokens, { transaction });
       }
