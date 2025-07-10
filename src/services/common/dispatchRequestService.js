@@ -90,17 +90,14 @@ class DispatchRequestService {
 
       // 6. 트랜잭션 커밋 후 장례식장에게 알림 전송
       try {
-        await fcmService.sendNotificationToUser({
-          receiverId: params.funeralId,
-          receiverType: 'funeral',
+        await fcmService.sendNotificationToFuneralGroup({
+          funeralId: params.funeralId,
           notificationType: 'dispatch_requested',
           data: {
             dispatchRequestId: dispatchRequest.dispatchRequestId,
             managerFormId: params.managerFormId,
             managerFormBidId: params.managerFormBidId,
             chiefMournerName: managerFormStatus.chiefMournerName,
-            funeralDate: managerFormStatus.funeralDate,
-            funeralLocation: managerFormStatus.funeralLocation,
           },
           senderId: params.managerId,
           senderType: 'manager',
@@ -152,6 +149,8 @@ class DispatchRequestService {
         dispatchRequestId,
         { transaction },
       );
+
+      console.log('🚀 ~ cancelDispatchRequest ~ getDispatchRequest:', getDispatchRequest);
 
       if (!getDispatchRequest) {
         throw new Error('실패: 존재하지 않는 출동 신청 내역');
@@ -245,15 +244,14 @@ class DispatchRequestService {
 
       // 5. 트랜잭션 커밋 후 장례식장에게 출동 취소 알림 전송
       try {
-        await fcmService.sendNotificationToUser({
-          receiverId: getDispatchRequest.funeralId,
-          receiverType: 'funeral',
+        await fcmService.sendNotificationToFuneralGroup({
+          funeralId: getDispatchRequest.funeralId,
           notificationType: 'dispatch_cancelled',
           data: {
             dispatchRequestId: dispatchRequestId,
             managerFormId: getDispatchRequest.managerFormId,
             managerFormBidId: getDispatchRequest.managerFormBidId,
-            chiefMournerName: getDispatchRequest.chiefMournerName || '상조팀장',
+            chiefMournerName: getDispatchRequest.managerForm.chiefMournerName || '상조팀장',
           },
           senderId: getDispatchRequest.managerId,
           senderType: 'manager',
@@ -283,6 +281,8 @@ class DispatchRequestService {
         dispatchRequestId,
         { transaction },
       );
+
+      console.log('🚀 ~ approveDispatchRequest ~ getDispatchRequest:', getDispatchRequest);
 
       if (!getDispatchRequest) {
         throw new Error('실패: 존재하지 않는 출동 신청 내역');
@@ -376,7 +376,7 @@ class DispatchRequestService {
             dispatchRequestId: dispatchRequestId,
             managerFormId: getDispatchRequest.managerFormId,
             managerFormBidId: getDispatchRequest.managerFormBidId,
-            funeralName: getDispatchRequest.funeralName || '장례식장',
+            funeralName: getDispatchRequest.funeral.funeralName || '장례식장',
           },
           senderId: getDispatchRequest.funeralId,
           senderType: 'funeral',
@@ -533,19 +533,33 @@ class DispatchRequestService {
       // 알림 전송 (비동기로 처리하여 거래 로직에 영향 없음)
       setTimeout(async () => {
         try {
-          await fcmService.sendNotificationToUser({
-            receiverId: counterpartId,
-            receiverType: counterpartType,
-            notificationType: 'transaction_completed_requested',
-            data: {
-              dispatchRequestId: dispatchRequestId,
-              requesterType: userType,
-              requesterName: userType === 'manager' ? '상조팀장' : '장례식장',
-            },
-            senderId:
-              userType === 'manager' ? dispatchRequest.managerId : dispatchRequest.funeralId,
-            senderType: userType,
-          });
+          if (counterpartType === 'funeral') {
+            await fcmService.sendNotificationToFuneralGroup({
+              funeralId: counterpartId,
+              notificationType: 'transaction_completed_requested',
+              data: {
+                dispatchRequestId: dispatchRequestId,
+                requesterType: userType,
+                requesterName: userType === 'manager' ? '상조팀장' : '장례식장',
+              },
+              senderId: dispatchRequest.managerId,
+              senderType: 'manager',
+            });
+          } else {
+            await fcmService.sendNotificationToUser({
+              receiverId: counterpartId,
+              receiverType: counterpartType,
+              notificationType: 'transaction_completed_requested',
+              data: {
+                dispatchRequestId: dispatchRequestId,
+                requesterType: userType,
+                requesterName: userType === 'manager' ? '상조팀장' : '장례식장',
+              },
+              senderId: dispatchRequest.funeralId,
+              senderType: 'funeral',
+            });
+          }
+
           logger.info(`거래완료 요청 알림 전송 성공: ${counterpartType} ${counterpartId}`);
         } catch (notificationError) {
           logger.error(
@@ -708,20 +722,19 @@ class DispatchRequestService {
           notificationType: 'transaction_completed',
           data: {
             dispatchRequestId: dispatchRequest.dispatchRequestId,
-            amount: managerCashAmount,
+            amount: `적립: ${managerCashAmount}캐시`,
             transactionId: transactionId,
           },
           senderType: 'system',
         });
 
         // 장례식장에게 거래 완료 알림
-        await fcmService.sendNotificationToUser({
-          receiverId: dispatchRequest.funeralId,
-          receiverType: 'funeral',
+        await fcmService.sendNotificationToFuneralGroup({
+          funeralId: dispatchRequest.funeralId,
           notificationType: 'transaction_completed',
           data: {
             dispatchRequestId: dispatchRequest.dispatchRequestId,
-            amount: totalAmount,
+            amount: `출금: ${totalAmount}캐시`,
             transactionId: transactionId,
           },
           senderType: 'system',

@@ -67,24 +67,28 @@ export const requestCashRefund = async ({ funeralId, amountCash }) => {
 
     // 관리자에게 환급 요청 알림 전송
     try {
-      // 관리자 계정 ID는 환경변수나 고정값으로 설정
-      const adminId = process.env.ADMIN_USER_ID || 'admin';
+      const adminUserDao = await import('../../daos/admin/adminUserDao.js');
+      const adminUser = await adminUserDao.findById();
 
-      await fcmService.sendNotificationToUser({
-        receiverId: adminId,
-        receiverType: 'admin',
-        notificationType: 'cash_refund_requested',
-        data: {
-          requestId: refundRequest.id,
-          funeralId: funeralId,
-          funeralName: funeral.funeralName,
-          amount: amountCash,
-          requestType: 'funeral',
-        },
-        senderId: funeralId,
-        senderType: 'funeral',
-      });
-      logger.info(`장례식장 환급 요청 알림 전송 성공: 관리자 ${adminId}`);
+      if (!adminUser) {
+        logger.warn('관리자 계정을 찾을 수 없어 알림 전송을 건너뜁니다.');
+      } else {
+        await fcmService.sendNotificationToUser({
+          receiverId: adminUser.adminId,
+          receiverType: 'admin',
+          notificationType: 'cash_refund_requested',
+          data: {
+            requestId: refundRequest.id,
+            funeralId: funeralId,
+            funeralName: funeral.funeralName,
+            amount: amountCash,
+            requestType: 'funeral',
+          },
+          senderId: funeralId,
+          senderType: 'funeral',
+        });
+        logger.info(`장례식장 환급 요청 알림 전송 성공: 관리자 ${adminUser.adminId}`);
+      }
     } catch (notificationError) {
       logger.error('장례식장 환급 요청 알림 전송 실패', notificationError);
       // 알림 전송 실패해도 환급 요청 자체는 성공으로 처리

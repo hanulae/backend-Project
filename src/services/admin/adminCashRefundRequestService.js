@@ -60,6 +60,11 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
   const notificationType = action === 'approve' ? 'cash_refund_approved' : 'cash_refund_rejected';
 
   try {
+    // 관리자 정보 조회
+    const adminUserDao = await import('../../daos/admin/adminUserDao.js');
+    const adminUser = await adminUserDao.findById();
+    const adminId = adminUser ? adminUser.adminId : 'admin';
+
     await fcmService.sendNotificationToUser({
       receiverId: receiverId,
       receiverType: receiverType,
@@ -70,7 +75,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
         reason: reason,
         processedAt: new Date().toISOString(),
       },
-      senderId: 'admin',
+      senderId: adminId,
       senderType: 'admin',
     });
 

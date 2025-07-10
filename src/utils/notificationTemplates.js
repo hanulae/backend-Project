@@ -17,7 +17,7 @@ export const NOTIFICATION_TEMPLATES = {
   // 출동 관련
   dispatch_requested: {
     title: '출동 신청',
-    body: (data) => `${data.managerName || '상조팀장'}님이 출동을 신청했습니다.`,
+    body: (data) => `${data.chiefMournerName || '고객'}님이 출동을 신청했습니다.`,
     icon: 'dispatch',
   },
   dispatch_approved: {
@@ -39,7 +39,7 @@ export const NOTIFICATION_TEMPLATES = {
   // 거래 관련
   transaction_completed_requested: {
     title: '거래 완료 요청',
-    body: (data) => `${data.requesterName || '상대방'}이 거래 완료를 요청했습니다.`,
+    body: (data) => `${data.requesterName || '상대방'}님이 거래 완료를 요청했습니다.`,
     icon: 'request',
   },
   transaction_completed: {

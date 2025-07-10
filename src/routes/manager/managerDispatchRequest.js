@@ -43,8 +43,6 @@ router.post(
         managerId,
       };
 
-      console.log('params', params);
-
       const dispatchRequest = await dispatchRequestService.createDispatchRequest(params);
 
       res.status(201).json({

@@ -63,8 +63,10 @@ export const requestCashRefund = async (params) => {
 
     // 3. 관리자에게 환급 요청 알림 전송
     try {
-      // 관리자 계정 ID는 환경변수나 고정값으로 설정
-      const adminId = process.env.ADMIN_USER_ID || 'admin';
+      // 관리자 정보 조회
+      const adminUserDao = await import('../../daos/admin/adminUserDao.js');
+      const adminUser = await adminUserDao.findById();
+      const adminId = adminUser ? adminUser.adminId : 'admin';
 
       await fcmService.sendNotificationToUser({
         receiverId: adminId,

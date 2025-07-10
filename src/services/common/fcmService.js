@@ -130,8 +130,8 @@ const fcmService = {
     funeralId,
     notificationType,
     data = {},
-    senderId = null,
-    senderType = 'system',
+    senderId,
+    senderType,
   }) {
     const transaction = await sequelize.transaction();
     try {
