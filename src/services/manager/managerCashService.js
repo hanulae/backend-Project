@@ -1,7 +1,7 @@
 import * as managerCashDao from '../../daos/manager/managerCashDao.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as cashRefundRequestDao from '../../daos/manager/managerCashRefundRequestDao.js';
-import * as adminUserDao from '../../daos/admin/adminUserDao.js';
+// import * as adminUserDao from '../../daos/admin/adminUserDao.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
 
@@ -62,15 +62,15 @@ export const requestCashRefund = async (params) => {
       status: 'pending', // 대기중 상태
     });
 
-    await managerCashDao.updateManagerCash(managerId, manager.managerCash - amountCash);
-
-    //3. 관리자에게 환급 요청 알림 전송
+    // 3. 관리자에게 환급 요청 알림 전송
     try {
+      // 관리자 정보 조회
+      const adminUserDao = await import('../../daos/admin/adminUserDao.js');
       const adminUser = await adminUserDao.findById();
-      // 관리자 계정 ID는 환경변수나 고정값으로 설정
-      console.log('🚀 ~ requestCashRefund ~ adminUser:', adminUser.dataValues.adminId);
+      const adminId = adminUser ? adminUser.adminId : 'admin';
+
       await fcmService.sendNotificationToUser({
-        receiverId: adminUser.adminId,
+        receiverId: adminId,
         receiverType: 'admin',
         notificationType: 'cash_refund_requested',
         data: {
