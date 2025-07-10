@@ -37,7 +37,9 @@ router.get('/requests/file/:managerId', async (req, res) => {
 router.patch('/requests/approve/:managerId', async (req, res) => {
   try {
     const { managerId } = req.params;
+    console.log('🚀 ~ router.patch ~ managerId:', managerId);
     const { isApproved, message } = req.body;
+    console.log('🚀 ~ router.patch ~ isApproved, message:', isApproved, message);
 
     if (typeof isApproved !== 'boolean') {
       return res.status(400).json({ message: 'isApproved는 true 또는 false여야 합니다.' });
@@ -52,7 +54,7 @@ router.patch('/requests/approve/:managerId', async (req, res) => {
     if (!isApproved) {
       // Send rejection SMS
       const manager = await managerApprovalService.getManagerById(managerId); // Assuming this function exists
-      const phoneNumber = manager.phoneNumber; // Assuming manager object has a phoneNumber field
+      const phoneNumber = manager.managerPhoneNumber; // Assuming manager object has a phoneNumber field
       await managerApprovalService.sendRejectionSMS(phoneNumber, message);
     }
 

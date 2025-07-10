@@ -42,7 +42,9 @@ router.post('/topup', async (req, res) => {
 router.post('/refund', authMiddleware, async (req, res) => {
   try {
     const managerId = req.user.managerId;
+    console.log('🚀 ~ router.post ~ managerId:', managerId);
     const { amountCash } = req.body;
+    console.log('🚀 ~ router.post ~ amountCash:', amountCash);
 
     const params = { managerId, amountCash };
 

@@ -78,3 +78,20 @@ export const getCurrentCash = async (funeralId) => {
 
   return funeral.funeralCash;
 };
+
+export const updateCashHistoryStatus = async (
+  funeralId,
+  transactionType,
+  oldStatus,
+  newStatus,
+  options = {},
+) => {
+  try {
+    return await db.FuneralCashHistory.update(
+      { status: newStatus },
+      { where: { funeralId, transactionType, status: oldStatus }, ...options },
+    );
+  } catch (error) {
+    throw new Error('장례식장 캐시 히스토리 상태 업데이트 오류: ' + error.message);
+  }
+};
