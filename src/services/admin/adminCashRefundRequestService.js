@@ -88,13 +88,14 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
             transaction,
           });
 
-          // 캐시 히스토리 상태를 'cancelled'로 업데이트 (rejected → cancelled)
+          // 캐시 히스토리 상태를 'cancelled'로 업데이트하고 잔액도 원래대로 되돌림
           await managerCashDao.updateCashHistoryStatus(
             refundRequest.managerId,
             'withdraw_cash',
             'pending',
             'cancelled', // 수정: rejected → cancelled
             { transaction },
+            newBalance, // 추가: 잔액 업데이트
           );
         } catch (managerError) {
           console.error('매니저 캐시 환급 처리 중 오류:', managerError.message);
@@ -127,6 +128,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
             'pending',
             'cancelled', // 수정: rejected → cancelled
             { transaction },
+            newBalance, // 추가: 잔액 업데이트
           );
         } catch (funeralError) {
           console.error('장례식장 캐시 환급 처리 중 오류:', funeralError.message);

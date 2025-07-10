@@ -117,10 +117,12 @@ export const updateCashHistoryStatus = async (
   oldStatus,
   newStatus,
   options = {},
+  newBalance = null,
 ) => {
   try {
+    console.log('🚀 ~ updateCashHistoryStatus ~ newBalance:', newBalance);
     return await db.ManagerCashHistory.update(
-      { status: newStatus },
+      { status: newStatus, managerCashBalanceAfter: newBalance },
       {
         where: {
           managerId,

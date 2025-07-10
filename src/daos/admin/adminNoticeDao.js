@@ -9,7 +9,7 @@ export const createNotice = async ({ title, content, isVisible, userType }) => {
   });
 };
 
-export const updateNotice = async (noticeId, { title, content, isVisible }) => {
+export const updateNotice = async (noticeId, { title, content, isVisible, userType }) => {
   try {
     const notice = await db.Notice.findByPk(noticeId);
     if (!notice) return null;
@@ -18,6 +18,7 @@ export const updateNotice = async (noticeId, { title, content, isVisible }) => {
       title: title ?? notice.title,
       content: content ?? notice.content,
       isVisible: isVisible ?? notice.isVisible,
+      userType: userType ?? notice.userType,
     });
 
     return notice;

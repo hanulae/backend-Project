@@ -36,12 +36,13 @@ router.post('/add/create', async (req, res) => {
 router.patch('/update/:noticeId', async (req, res) => {
   try {
     const { noticeId } = req.params;
-    const { title, content, isVisible } = req.body;
+    const { title, content, isVisible, userType } = req.body;
 
     const updated = await adminNoticeService.updateNotice(noticeId, {
       title,
       content,
       isVisible,
+      userType,
     });
 
     if (!updated) {
