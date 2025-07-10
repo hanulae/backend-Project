@@ -136,6 +136,7 @@ export const recordManagerCashHistory = async (managerId, amount, transactionTyp
 export const recordFuneralCashHistory = async (funeralId, amount, transactionType, transaction) => {
   try {
     const funeral = await db.Funeral.findByPk(funeralId, { transaction });
+    console.log('🚀 ~ recordFuneralCashHistory ~ funeral:', funeral);
     if (!funeral) {
       throw new Error('장례식장을 찾을 수 없습니다.');
     }

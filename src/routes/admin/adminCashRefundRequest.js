@@ -20,6 +20,7 @@ router.get('/all/refund', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 // 승인/거절 처리
 router.patch('/:type/:requestId', async (req, res) => {
   try {

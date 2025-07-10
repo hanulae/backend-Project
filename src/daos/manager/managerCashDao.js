@@ -109,3 +109,28 @@ export const getCurrentCash = async (managerId) => {
 
   return manager.managerCash;
 };
+
+// 캐시 히스토리 상태 업데이트
+export const updateCashHistoryStatus = async (
+  managerId,
+  transactionType,
+  oldStatus,
+  newStatus,
+  options = {},
+) => {
+  try {
+    return await db.ManagerCashHistory.update(
+      { status: newStatus },
+      {
+        where: {
+          managerId,
+          transactionType,
+          status: oldStatus,
+        },
+        ...options,
+      },
+    );
+  } catch (error) {
+    throw new Error('캐시 히스토리 상태 업데이트 오류:' + error.message);
+  }
+};

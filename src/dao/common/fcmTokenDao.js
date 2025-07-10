@@ -87,6 +87,7 @@ const fcmTokenDao = {
    */
   async findActiveTokensByUser(userId, userType) {
     try {
+      console.log('🚀 ~ findActiveTokensByUser ~ userId, userType:', userId, userType);
       return await db.FcmToken.findAll({
         where: {
           userId,

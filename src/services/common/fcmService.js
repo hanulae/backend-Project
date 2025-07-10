@@ -63,6 +63,7 @@ const fcmService = {
       // 2. 알림 내용 생성
       const { title, body } = getNotificationContent(notificationType, data);
 
+      console.log('🚀 ~ sendNotificationToUser ~ receiverId:', receiverId);
       // 3. 사용자의 활성 FCM 토큰 조회
       const tokens = await fcmTokenDao.findActiveTokensByUser(receiverId, receiverType);
 

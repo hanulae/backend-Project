@@ -62,7 +62,7 @@ export const setApprovalStatus = async (funeralId, isApproved) => {
       if (funeralListId) {
         // funeral_lists 테이블의 funeralId, FuneralTotalRooms 컬럼 업데이트
         await funeralApprovalDao.updateFuneralList(
-          { funeralId, FuneralTotalRooms: 0 },
+          { funeralId, funeralTotalRooms: 0 }, // 카멜케이스!
           { funeralListId },
         );
       }

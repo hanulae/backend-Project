@@ -50,6 +50,7 @@ router.get('/user/history', adminAuthMiddleware, async (req, res) => {
 router.post('/user/addCash', adminAuthMiddleware, async (req, res) => {
   try {
     const { userId, amount, userType } = req.body; // userType 추가
+    console.log('🚀 ~ router.post ~ userId, amount, userType:', userId, amount, userType);
     if (!['manager', 'funeral'].includes(userType)) {
       return res.status(400).json({ message: '유효하지 않은 사용자 타입입니다.' });
     }

@@ -55,10 +55,10 @@ export const giveCashToUser = async (userId, amount, userType) => {
     let result;
     if (userType === 'manager') {
       result = await adminCashDao.addCashToManager(userId, amount, transaction);
-      await adminCashDao.recordManagerCashHistory(userId, amount, 'charge_cash', transaction);
+      await adminCashDao.recordManagerCashHistory(userId, amount, 'service_cash', transaction);
     } else if (userType === 'funeral') {
       result = await adminCashDao.addCashToFuneral(userId, amount, transaction);
-      await adminCashDao.recordFuneralCashHistory(userId, amount, 'charge_cash', transaction);
+      await adminCashDao.recordFuneralCashHistory(userId, amount, 'service_cash', transaction);
     } else {
       throw new Error('유효하지 않은 사용자 타입입니다.');
     }

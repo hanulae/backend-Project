@@ -3,6 +3,8 @@ import * as managerCashDao from '../../daos/manager/managerCashDao.js';
 import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
+import * as managerUserDao from '../../daos/manager/managerUserDao.js';
+import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js';
 
 export const getGroupedManagerRefundRequests = async () => {
   const all = await cashRefundDao.findManagerRefundRequests();
@@ -30,6 +32,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
   const refundRequest = isManager
     ? await cashRefundDao.findManagerRefundById(requestId)
     : await cashRefundDao.findFuneralRefundById(requestId);
+  console.log('🚀 ~ processRefundApproval ~ refundRequest:', refundRequest);
 
   if (!refundRequest) throw new Error('환급 요청을 찾을 수 없습니다.');
   if (refundRequest.status !== 'requested') throw new Error('이미 처리된 요청입니다.');
@@ -39,17 +42,56 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
   // 상태 업데이트
   await refundRequest.update({ status });
 
-  // 승인 시 → 실제 캐시 차감
   if (action === 'approve') {
+    // 승인 시 → 캐시 히스토리 상태만 'completed'로 변경
     if (isManager) {
-      await managerCashDao.updateManagerCash(
+      await managerCashDao.updateCashHistoryStatus(
         refundRequest.managerId,
-        refundRequest.managerCashBalanceAfter,
+        'withdraw_cash',
+        'pending',
+        'completed',
       );
     } else {
-      await funeralCashDao.updateFuneralCash(
+      await funeralCashDao.updateCashHistoryStatus(
         refundRequest.funeralId,
-        refundRequest.funeralCashBalanceAfter,
+        'withdraw_cash',
+        'pending',
+        'completed',
+      );
+    }
+  } else {
+    // 거절 시 → 캐시 다시 지급
+    if (isManager) {
+      // 현재 매니저 캐시 잔액 조회
+      const manager = await managerUserDao.findById(refundRequest.managerId);
+      if (!manager) throw new Error('매니저를 찾을 수 없습니다.');
+
+      // 캐시 다시 지급
+      const newBalance = manager.managerCash + refundRequest.amount;
+      await managerCashDao.updateManagerCash(refundRequest.managerId, newBalance);
+
+      // 캐시 히스토리 상태를 'rejected'로 업데이트
+      await managerCashDao.updateCashHistoryStatus(
+        refundRequest.managerId,
+        'withdraw_cash',
+        'pending',
+        'rejected',
+      );
+    } else {
+      // 현재 장례식장 캐시 잔액 조회
+      const funeral = await funeralUserDao.findById(refundRequest.funeralId);
+      if (!funeral) throw new Error('장례식장을 찾을 수 없습니다.');
+
+      // 캐시 다시 지급
+      const newBalance = funeral.funeralCash + refundRequest.amount;
+      await funeralCashDao.updateFuneralCash(refundRequest.funeralId, newBalance);
+
+      // 캐시 히스토리 상태를 'rejected'로 업데이트
+      await funeralCashDao.updateCashHistoryStatus(
+        refundRequest.funeralId,
+        'withdraw_cash',
+        'pending',
+        'rejected',
       );
     }
   }

@@ -15,3 +15,11 @@ export const findAllFunerals = async () => {
     throw new Error('장례식장 조회 오류: ' + error.message);
   }
 };
+
+export const findById = async () => {
+  try {
+    return await db.Admin.findAll();
+  } catch (error) {
+    throw new Error('관리자 조회 오류: ' + error.message);
+  }
+};
