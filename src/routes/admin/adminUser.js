@@ -11,6 +11,7 @@ router.get('/userList', async (req, res) => {
   try {
     const { type = 'all' } = req.query;
 
+    console.log('🚀 ~ router.get ~ type:', type);
     const result = await adminUserService.getUsersByType(type);
 
     let message = '전체 유저 목록 조회 성공';

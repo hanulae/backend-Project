@@ -155,3 +155,37 @@ export const recordFuneralCashHistory = async (funeralId, amount, transactionTyp
     throw new Error('장례식장 캐시 히스토리 기록에 실패했습니다.');
   }
 };
+
+export const findAllCashChargeHistory = async () => {
+  try {
+    // 상조팀장 캐시 충전 내역
+    const managerCash = await db.ManagerCashHistory.findAll({
+      where: { transactionType: 'charge_cash' },
+      order: [['transactionDate', 'DESC']],
+      include: [
+        {
+          model: db.Manager,
+          as: 'manager',
+          attributes: ['managerUsername', 'managerId'],
+        },
+      ],
+    });
+
+    // 장례식장 캐시 충전 내역
+    const funeralCash = await db.FuneralCashHistory.findAll({
+      where: { transactionType: 'earn_cash' }, // 충전 내역만
+      order: [['transactionDate', 'DESC']],
+      include: [
+        {
+          model: db.Funeral,
+          as: 'funeral',
+          attributes: ['funeralName', 'funeralId'],
+        },
+      ],
+    });
+
+    return { managerCash, funeralCash };
+  } catch (error) {
+    throw new Error('전체 캐시 충전 내역 조회 실패: ' + error.message);
+  }
+};

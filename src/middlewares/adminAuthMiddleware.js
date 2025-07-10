@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 const adminAuthMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('🚀 ~ adminAuthMiddleware ~ authHeader:', authHeader);
     if (!authHeader) {
       return res.status(401).json({ message: '인증 토큰이 없습니다.' });
     }

@@ -28,6 +28,12 @@ class Notice extends Sequelize.Model {
           allowNull: false,
           comment: '공지사항 공개 여부',
         },
+        userType: {
+          type: DataTypes.ENUM('manager', 'funeral', 'all'),
+          allowNull: false,
+          defaultValue: 'all',
+          comment: '공지사항 대상 유저 타입 (manager: 상조팀장, funeral: 장례식장, all: 전체)',
+        },
       },
       {
         sequelize,

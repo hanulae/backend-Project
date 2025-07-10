@@ -2,6 +2,8 @@ import coolsms from 'coolsms-node-sdk';
 import redis from '../../config/redis.js';
 import * as funeralAuthDao from '../../daos/funeral/funeralAuthDao.js';
 import { generateVerificationCode } from '../../utils/codeGenerator.js';
+import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js'; // 실제 경로에 맞게 import
+import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 
 const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 const EXPIRE_TIME = 300; // 5분
@@ -37,9 +39,18 @@ export const verifyCodeStaff = async (phoneNumber, code) => {
 
 export const sendVerificationSMSFuneral = async (phoneNumber) => {
   try {
+    // 1. 중복 체크
+    const existingManager = await managerUserDao.findByPhone(phoneNumber);
+    const existingFuneral = await funeralUserDao.findByPhone(phoneNumber);
+    if (existingManager || existingFuneral) {
+      throw new Error('이미 등록된 전화번호입니다.');
+    }
+
+    // 2. 인증번호 생성 및 저장
     const code = generateVerificationCode();
     await redis.set(`sms:${phoneNumber}`, code, 'EX', EXPIRE_TIME);
 
+    // 3. SMS 발송
     await client.sendOne({
       to: phoneNumber,
       from: process.env.COOLSMS_SENDER_NUMBER,

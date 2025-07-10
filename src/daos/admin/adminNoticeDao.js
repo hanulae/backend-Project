@@ -1,17 +1,12 @@
 import db from '../../models/index.js';
 
-export const insertNotice = async ({ title, content, isVisible }) => {
-  try {
-    const notice = await db.Notice.create({
-      title,
-      content,
-      isVisible,
-    });
-    return notice;
-  } catch (error) {
-    console.error('공지사항 등록 DAO 오류:', error.message);
-    throw error;
-  }
+export const createNotice = async ({ title, content, isVisible, userType }) => {
+  return await db.Notice.create({
+    title,
+    content,
+    isVisible,
+    userType,
+  });
 };
 
 export const updateNotice = async (noticeId, { title, content, isVisible }) => {
@@ -42,4 +37,16 @@ export const deleteNotice = async (noticeId) => {
     console.error('공지사항 삭제 DAO 오류:', error.message);
     throw error;
   }
+};
+
+export const getNoticeList = async ({ userType, isVisible }) => {
+  const where = {};
+  if (userType) where.userType = userType;
+  if (typeof isVisible !== 'undefined')
+    where.isVisible = isVisible === 'true' || isVisible === true;
+
+  return await db.Notice.findAll({
+    where,
+    order: [['createdAt', 'DESC']],
+  });
 };

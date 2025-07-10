@@ -70,3 +70,11 @@ export const giveCashToUser = async (userId, amount, userType) => {
     throw new Error('캐시 지급에 실패했습니다.');
   }
 };
+
+export const getAllCashChargeHistory = async () => {
+  try {
+    return await adminCashDao.findAllCashChargeHistory();
+  } catch (error) {
+    throw new Error('전체 캐시 충전 내역 서비스 오류: ' + error.message);
+  }
+};

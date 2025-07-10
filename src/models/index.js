@@ -28,6 +28,7 @@ import NotificationHistory from './common/notificationHistory.js';
 
 import Admin from './admin/admin.js';
 import AdminStaff from './admin/adminStaff.js';
+import Notice from './common/Notice.js';
 
 const db = {};
 
@@ -63,6 +64,7 @@ db.NotificationHistory = NotificationHistory;
 
 db.Admin = Admin;
 db.AdminStaff = AdminStaff;
+db.Notice = Notice;
 
 // 모델 초기화
 Object.values(db).forEach((model) => {

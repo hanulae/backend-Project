@@ -9,6 +9,7 @@ import adminStaff from './adminStaff.js';
 import adminCashRouter from './adminCash.js';
 import adminDispatchRequestRouter from './adminDispatchRequest.js';
 import adminFormByFuneralRouter from './adminFormByFuneral.js';
+import adminNoticeRouter from './adminNotice.js';
 const router = express.Router();
 
 router.use('/manager', managerApprovalRouter);
@@ -21,5 +22,5 @@ router.use('/staff', adminStaff);
 router.use('/cash', adminCashRouter);
 router.use('/dispatch', adminDispatchRequestRouter);
 router.use('/form', adminFormByFuneralRouter);
-
+router.use('/notice', adminNoticeRouter);
 export default router;

@@ -82,3 +82,48 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
 
   return refundRequest;
 };
+
+export const getAllRefundRequests = async (type = 'all') => {
+  try {
+    console.log('🚀 ~ getAllRefundRequests ~ type:', type);
+    const managerRefunds = await cashRefundDao.findManagerRefundRequests();
+    console.log('🚀 ~ getAllRefundRequests ~ managerRefunds:', managerRefunds);
+    const funeralRefunds = await cashRefundDao.findFuneralRefundRequests();
+    console.log('🚀 ~ getAllRefundRequests ~ funeralRefunds:', funeralRefunds);
+
+    const managerRefundsWithType = managerRefunds.map((item) => ({
+      ...(item.toJSON ? item.toJSON() : item),
+      userType: 'manager',
+    }));
+    const funeralRefundsWithType = funeralRefunds.map((item) => ({
+      ...(item.toJSON ? item.toJSON() : item),
+      userType: 'funeral',
+    }));
+
+    let combined = [];
+    if (type === 'manager') {
+      combined = managerRefundsWithType;
+    } else if (type === 'funeral') {
+      combined = funeralRefundsWithType;
+    } else {
+      combined = [...managerRefundsWithType, ...funeralRefundsWithType];
+    }
+
+    return {
+      requested: combined.filter((req) => req.status === 'requested'),
+      approved: combined.filter((req) => req.status === 'approved'),
+      rejected: combined.filter((req) => req.status === 'rejected'),
+    };
+  } catch (error) {
+    throw new Error('전체 환급 요청 목록 조회 실패: ' + error.message);
+  }
+};
+
+export const getCashRefundHistory = async (type = 'all') => {
+  const managerHistory = await cashRefundDao.getManagerCashRefundHistory();
+  const funeralHistory = await cashRefundDao.getFuneralCashRefundHistory();
+
+  if (type === 'manager') return managerHistory;
+  if (type === 'funeral') return funeralHistory;
+  return [...managerHistory, ...funeralHistory];
+};

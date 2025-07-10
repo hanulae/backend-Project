@@ -61,4 +61,14 @@ router.post('/user/addCash', adminAuthMiddleware, async (req, res) => {
   }
 });
 
+// 전체 회원 캐시 충전 내역 조회
+router.get('/all/History', async (req, res) => {
+  try {
+    const result = await adminCashService.getAllCashChargeHistory();
+    res.status(200).json({ message: '전체 캐시 충전 내역 조회 성공', data: result });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;
