@@ -19,9 +19,13 @@ const uploadFuneralFile = multer({
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const isAllowed = allowedTypes.test(file.mimetype);
-    if (isAllowed) cb(null, true);
+    console.log('🚀 ~ file:', file);
+    const allowedExt = /\.(jpeg|jpg|png|pdf)$/i;
+    const allowedMime = /jpeg|jpg|png|pdf/;
+    const isMimeAllowed = allowedMime.test(file.mimetype);
+    const isExtAllowed = allowedExt.test(file.originalname);
+
+    if (isMimeAllowed || isExtAllowed) cb(null, true);
     else cb(new Error('Only PDF, JPG, JPEG, PNG files are allowed.'));
   },
 });
