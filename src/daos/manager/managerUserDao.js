@@ -13,7 +13,12 @@ export const insert = async (managerData, options = {}) => {
 
 export const findByUsername = async (managerUsername) => {
   try {
-    return await db.Manager.findOne({ where: { managerUsername } });
+    return await db.Manager.findOne({
+      where: {
+        managerUsername,
+      },
+      paranoid: false, // 소프트 삭제된 레코드도 포함하여 조회하되, where 조건으로 필터링
+    });
   } catch (error) {
     console.error('🔴 아이디 중복 확인 DAO 오류:', error.message);
     throw error;
