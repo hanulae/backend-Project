@@ -1,5 +1,6 @@
 import DispatchRequest from '../../models/common/dispatchRequest.js';
 import ManagerForm from '../../models/manager/managerForm.js';
+import Funeral from '../../models/funeral/funeral.js';
 import { Op } from 'sequelize';
 
 const dispatchRequestDao = {
@@ -64,7 +65,24 @@ const dispatchRequestDao = {
    * @returns {Promise<DispatchRequest>}
    */
   async getDispatchRequestDetail(dispatchRequestId, options = {}) {
-    const dispatchRequestDetail = await DispatchRequest.findByPk(dispatchRequestId, options);
+    const dispatchRequestDetail = await DispatchRequest.findOne({
+      where: {
+        dispatchRequestId: dispatchRequestId,
+      },
+      include: [
+        {
+          model: ManagerForm,
+          as: 'managerForm',
+          attributes: ['chiefMournerName'],
+        },
+        {
+          model: Funeral,
+          as: 'funeral',
+          attributes: ['funeralName'],
+        },
+      ],
+      ...options,
+    });
     return dispatchRequestDetail;
   },
 

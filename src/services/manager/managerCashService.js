@@ -67,8 +67,7 @@ export const requestCashRefund = async (params) => {
     //3. 관리자에게 환급 요청 알림 전송
     try {
       const adminUser = await adminUserDao.findById();
-      // 관리자 계정 ID는 환경변수나 고정값으로 설정
-      console.log('🚀 ~ requestCashRefund ~ adminUser:', adminUser.dataValues.adminId);
+
       await fcmService.sendNotificationToUser({
         receiverId: adminUser.adminId,
         receiverType: 'admin',

@@ -10,6 +10,7 @@ import funeralListRoutes from './managerFuneralList.js';
 import pointRoutes from './managerPoint.js';
 import cashRoutes from './managerCash.js';
 import smsRoutes from './managerSMS.js';
+import withdrawalRoutes from './managerWithdrawal.js';
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use('/funeral', funeralListRoutes);
 router.use('/point', pointRoutes);
 router.use('/cash', cashRoutes);
 router.use('/sms', smsRoutes);
+router.use('/withdrawal', withdrawalRoutes);
 
 export default router;

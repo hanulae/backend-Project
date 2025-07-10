@@ -36,6 +36,11 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
 
       // 상조팀장에게 포인트/캐시 지급 알림 전송
       try {
+        // 관리자 정보 조회
+        const adminUserDao = await import('../../daos/admin/adminUserDao.js');
+        const adminUser = await adminUserDao.findById();
+        const adminId = adminUser ? adminUser.adminId : 'admin';
+
         await fcmService.sendNotificationToUser({
           receiverId: targetId,
           receiverType: 'manager',
@@ -45,7 +50,7 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
             balance: balance,
             type: type,
           },
-          senderId: 'admin',
+          senderId: adminId,
           senderType: 'admin',
         });
         logger.info(`${type} 지급 알림 전송 성공: 상조팀장 ${targetId}`);
@@ -81,6 +86,11 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
 
       // 장례식장에게 포인트/캐시 지급 알림 전송
       try {
+        // 관리자 정보 조회
+        const adminUserDao = await import('../../daos/admin/adminUserDao.js');
+        const adminUser = await adminUserDao.findById();
+        const adminId = adminUser ? adminUser.adminId : 'admin';
+
         await fcmService.sendNotificationToUser({
           receiverId: targetId,
           receiverType: 'funeral',
@@ -90,7 +100,7 @@ export const grantReward = async ({ targetType, targetId, type, amount }) => {
             balance: balance,
             type: type,
           },
-          senderId: 'admin',
+          senderId: adminId,
           senderType: 'admin',
         });
         logger.info(`${type} 지급 알림 전송 성공: 장례식장 ${targetId}`);

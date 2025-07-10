@@ -40,6 +40,7 @@ const managerFormService = {
           .filter((item) => item.funeralId) // 회원가입한 장례식장만 알림 전송
           .map(async (item) => {
             try {
+              // 장례식장funeral + 장례식장에 등록된 직원들 funeralStaff에게 알림을 전송
               await fcmService.sendNotificationToFuneralGroup({
                 funeralId: item.funeralId,
                 notificationType: 'manager_form_created',

@@ -92,7 +92,7 @@ export const deleteStaff = async (funeralStaffId) => {
 export const getStaffListByFuneral = async (funeralId) => {
   try {
     const staffList = await funeralStaffDao.findByFuneralStaffWithPermissions(funeralId);
-    console.log('🚀 ~ getStaffListByFuneral ~ staffList:', staffList);
+
     return staffList;
   } catch (error) {
     throw new Error('직원 목록 조회 실패: ' + error.message);
@@ -123,35 +123,25 @@ export async function getStaffPermissions(staffId) {
 }
 
 export async function loginStaff({ funeralStaffPhoneNumber, funeralStaffPassword }) {
-  console.log(
-    '🚀 ~ loginStaff ~ funeralStaffPhoneNumber, funeralStaffPassword:',
-    funeralStaffPhoneNumber,
-    funeralStaffPassword,
-  );
   const staff = await funeralStaffDao.findByPhoneNumber(funeralStaffPhoneNumber);
-  console.log('🚀 ~ loginStaff ~ staff:', staff);
 
   if (!staff || staff.funeralStaffPassword !== funeralStaffPassword) {
     return null; // 로그인 실패
   }
 
-  console.log('🚀 ~ loginStaff ~ staff.funeralStaffPassword:', staff.funeralStaffPassword);
   // 토큰 생성
   const accessToken = generateToken({
     funeralId: staff.funeralId,
     funeralStaffId: staff.funeralStaffId,
   });
-  console.log('🚀 ~ loginStaff ~ accessToken:', accessToken);
 
   const refreshToken = generateRefreshToken({
     funeralId: staff.funeralId,
     funeralStaffId: staff.funeralStaffId,
   });
-  console.log('🚀 ~ loginStaff ~ refreshToken:', refreshToken);
 
   // 직원 권한 가져오기
   const permissions = await getStaffPermissions(staff.funeralStaffId);
-  console.log('🚀 ~ loginStaff ~ permissions:', permissions);
 
   return {
     accessToken,
@@ -162,11 +152,6 @@ export async function loginStaff({ funeralStaffPhoneNumber, funeralStaffPassword
 }
 
 export async function updateStaffPassword(funeralStaffId, newPassword) {
-  console.log(
-    '🚀 ~ updateStaffPassword ~ funeralStaffId, newPassword:',
-    funeralStaffId,
-    newPassword,
-  );
   try {
     // 1. 기존 비밀번호 조회
     const staff = await funeralStaffDao.findById(funeralStaffId);

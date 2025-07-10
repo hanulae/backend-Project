@@ -88,7 +88,10 @@ const fcmService = {
         return { success: false, reason: 'No active tokens' };
       }
 
-      // 5. FCM 전송
+      // 5. 배지 카운트 조회 (알림 전송 후 읽지 않은 알림 개수)
+      const badgeCount = await notificationHistoryDao.countUnreadByUser(receiverId, receiverType);
+
+      // 6. FCM 전송
       const fcmTokens = tokens.map((token) => token.fcmToken);
       const message = {
         notification: { title, body },
@@ -97,6 +100,20 @@ const fcmService = {
           notificationType,
           receiverType,
           ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])),
+        },
+        // iOS 배지 설정
+        apns: {
+          payload: {
+            aps: {
+              badge: badgeCount + 1, // 현재 알림 포함하여 배지 카운트 설정
+            },
+          },
+        },
+        // Android 배지 설정 (일부 런처에서 지원)
+        android: {
+          notification: {
+            notificationCount: badgeCount + 1,
+          },
         },
         tokens: fcmTokens,
       };
@@ -131,8 +148,8 @@ const fcmService = {
     funeralId,
     notificationType,
     data = {},
-    senderId = null,
-    senderType = 'system',
+    senderId,
+    senderType,
   }) {
     const transaction = await sequelize.transaction();
     try {
@@ -152,13 +169,7 @@ const fcmService = {
       // 4. 장례식장 그룹의 활성 FCM 토큰 조회
       const tokens = await fcmTokenDao.findActiveTokensByFuneralGroup(funeralId);
 
-      if (tokens.length === 0) {
-        // await transaction.rollback();
-        logger.warn(`장례식장 그룹의 활성 FCM 토큰이 없습니다: 장례식장 ${funeralId}`);
-        return { success: false, reason: 'No active tokens' };
-      }
-
-      // 5. 각 사용자별로 알림 이력 저장
+      // 5. 각 사용자별로 알림 이력 저장 (FCM 토큰이 없어도 이력은 저장)
       const notificationPromises = groupUsers.map((user) =>
         notificationHistoryDao.createNotification(
           {
@@ -177,21 +188,101 @@ const fcmService = {
 
       const notifications = await Promise.all(notificationPromises);
 
-      // 6. FCM 전송
-      const fcmTokens = tokens.map((token) => token.fcmToken);
-      const message = {
-        notification: { title, body },
-        data: {
-          notificationType,
-          funeralId: String(funeralId),
-          ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])),
-        },
-        tokens: fcmTokens,
+      // 6. FCM 토큰이 없는 경우 알림 이력만 저장하고 종료
+      if (tokens.length === 0) {
+        await transaction.commit();
+        logger.warn(
+          `장례식장 그룹의 활성 FCM 토큰이 없습니다: 장례식장 ${funeralId} (알림 이력은 저장됨)`,
+        );
+        return {
+          success: false,
+          reason: 'No active tokens',
+          notificationIds: notifications.map((n) => n.notificationId),
+          targetUsers: groupUsers.length,
+        };
+      }
+
+      // 7. 각 사용자별 배지 카운트 계산 및 개별 FCM 전송
+      const messagePromises = [];
+      const userTokenMap = new Map();
+
+      // 토큰을 사용자별로 그룹핑
+      tokens.forEach((token) => {
+        const userKey = `${token.userId}_${token.userType}`;
+        if (!userTokenMap.has(userKey)) {
+          userTokenMap.set(userKey, {
+            userId: token.userId,
+            userType: token.userType,
+            tokens: [],
+          });
+        }
+        userTokenMap.get(userKey).tokens.push(token.fcmToken);
+      });
+
+      // 각 사용자별로 배지 카운트 계산하고 메시지 전송
+      for (const [, userInfo] of userTokenMap) {
+        const badgeCount = await notificationHistoryDao.countUnreadByUser(
+          userInfo.userId,
+          userInfo.userType,
+        );
+
+        const userMessage = {
+          notification: { title, body },
+          data: {
+            notificationType,
+            funeralId: String(funeralId),
+            ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)])),
+          },
+          // iOS 배지 설정
+          apns: {
+            payload: {
+              aps: {
+                badge: badgeCount + 1, // 현재 알림 포함하여 배지 카운트 설정
+              },
+            },
+          },
+          // Android 배지 설정 (일부 런처에서 지원)
+          android: {
+            notification: {
+              notificationCount: badgeCount + 1,
+            },
+          },
+          tokens: userInfo.tokens,
+        };
+
+        messagePromises.push(admin.messaging().sendEachForMulticast(userMessage));
+      }
+
+      // 모든 메시지 전송 결과 수집
+      const responses = await Promise.allSettled(messagePromises);
+
+      // 성공/실패 카운트 집계
+      let totalSuccessCount = 0;
+      let totalFailureCount = 0;
+      const allResponses = [];
+
+      responses.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          const response = result.value;
+          totalSuccessCount += response.successCount;
+          totalFailureCount += response.failureCount;
+          allResponses.push(...response.responses);
+        } else {
+          logger.error(`장례식장 그룹 FCM 전송 실패 (사용자 ${index}):`, result.reason);
+          // 실패한 경우 모든 토큰을 실패로 처리
+          const userTokens = Array.from(userTokenMap.values())[index].tokens;
+          totalFailureCount += userTokens.length;
+          allResponses.push(...userTokens.map(() => ({ success: false, error: result.reason })));
+        }
+      });
+
+      const response = {
+        successCount: totalSuccessCount,
+        failureCount: totalFailureCount,
+        responses: allResponses,
       };
 
-      const response = await admin.messaging().sendEachForMulticast(message);
-
-      // 7. 실패한 토큰 처리
+      // 8. 실패한 토큰 처리
       if (response.failureCount > 0) {
         await this.handleFailedTokens(response.responses, tokens, { transaction });
       }
