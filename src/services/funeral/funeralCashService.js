@@ -1,24 +1,24 @@
-import { getPortOneToken, verifyPortOnePayment } from '../../utils/portone.js';
+//import { getPortOneToken, verifyPortOnePayment } from '../../utils/portone.js';
 import * as funeralCashHistoryDao from '../../daos/funeral/funeralCashHistoryDao.js';
 import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
 import db from '../../models/index.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
 
-export const topupCash = async ({ imp_uid, amount, funeralId }) => {
+export const topupCash = async ({ amountCash, funeralId }) => {
   const transaction = await db.sequelize.transaction();
   try {
-    const token = await getPortOneToken();
-    const paymentData = await verifyPortOnePayment(token, imp_uid);
+    //const token = await getPortOneToken();
+    // const paymentData = await verifyPortOnePayment(token, imp_uid);
 
-    if (paymentData.amount !== amount) {
-      throw new Error('결제 금액이 일치하지 않습니다.');
-    }
+    // if (paymentData.amount !== amountCash) {
+    //   throw new Error('결제 금액이 일치하지 않습니다.');
+    // }
 
     const funeral = await db.Funeral.findByPk(funeralId, { transaction });
     if (!funeral) throw new Error('장례식장 정보가 존재하지 않습니다.');
 
-    const newBalance = funeral.funeralCash + amount;
+    const newBalance = funeral.funeralCash + amountCash;
 
     await db.Funeral.update({ funeralCash: newBalance }, { where: { funeralId }, transaction });
 
@@ -26,7 +26,7 @@ export const topupCash = async ({ imp_uid, amount, funeralId }) => {
       {
         funeralId,
         transactionType: 'earn_cash',
-        funeralCashAmount: amount,
+        funeralCashAmount: amountCash,
         funeralCashBalanceAfter: newBalance,
         status: 'completed',
       },
