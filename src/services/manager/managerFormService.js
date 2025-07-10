@@ -120,8 +120,8 @@ const managerFormService = {
         return {
           managerFormBidId: plain.managerFormBidId,
           bidStatus: plain.bid_status,
-          funeralName: plain.funeralList.funeral_name,
-          funeralAddress: plain.funeralList.funeral_address,
+          funeralName: plain.funeralList.funeralName,
+          funeralAddress: plain.funeralList.funeralAddress,
         };
       });
 
@@ -160,7 +160,7 @@ const managerFormService = {
       managerFormBidId: managerFormBid.managerFormBidId,
       managerFormId: managerFormBid.managerFormId,
       funeralId: managerFormBid.funeralId,
-      funeralName: managerFormBid.funeralList.funeral_name,
+      funeralName: managerFormBid.funeralList.funeralName,
       funeralHallName: managerFormBid.funeralHallName,
       funeralHallSize: managerFormBid.funeralHallSize,
       funeralHallNumberOfMourners: managerFormBid.funeralHallNumberOfMourners,

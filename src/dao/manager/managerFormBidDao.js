@@ -1,6 +1,7 @@
 import ManagerFormBid from '../../models/manager/managerFormBid.js';
 import funeralList from '../../models/funeral/funeralList.js';
 import managerForm from '../../models/manager/managerForm.js';
+import funeral from '../../models/funeral/funeral.js';
 import { Op, fn, col } from 'sequelize';
 
 // 상태별 업데이트 데이터 준비 함수 (중앙화)
@@ -114,7 +115,7 @@ const managerFormBidDao = {
         {
           model: funeralList,
           as: 'funeralList',
-          attributes: ['funeral_name', 'funeral_address'],
+          attributes: ['funeralName', 'funeralAddress'], // 모델 필드명 사용
         },
       ],
       order: [['updatedAt', 'DESC']],
@@ -187,10 +188,16 @@ const managerFormBidDao = {
           {
             model: funeralList,
             as: 'funeralList',
-            attributes: ['funeral_name'],
+            attributes: ['funeralName'], // 모델 필드명 사용
+          },
+          {
+            model: funeral,
+            as: 'funeral',
+            attributes: ['funeralName'],
           },
         ],
       });
+
       return bid;
     }
   },
