@@ -122,6 +122,7 @@ export const NOTIFICATION_PERMISSIONS = {
   funeral: [
     'manager_form_created',
     'dispatch_requested',
+    'dispatch_cancelled',
     'transaction_completed_requested',
     'transaction_completed',
     'cash_refund_approved',
@@ -133,6 +134,7 @@ export const NOTIFICATION_PERMISSIONS = {
   funeralStaff: [
     'manager_form_created',
     'dispatch_requested',
+    'dispatch_cancelled',
     'transaction_completed_requested',
     'transaction_completed',
   ],
