@@ -12,7 +12,6 @@ router.get('/all/refund', async (req, res) => {
   try {
     // type이 없으면 기본값을 'all'로 설정
     const type = req.query.type || 'all';
-    console.log('🚀 ~ router.get ~ type:', type);
 
     const result = await adminCashRefundRequestService.getAllRefundRequests(type);
     res.status(200).json({ message: '환급 요청 조회 성공', data: result });
@@ -53,6 +52,77 @@ router.get('/refund/history', async (req, res) => {
     const result = await adminCashRefundRequestService.getCashRefundHistory(type);
     res.status(200).json({ message: '캐시 환급 내역 조회 성공', data: result });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// [GET] 특정 유저의 환급 신청 내역 조회
+router.get('/list/refund/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { type } = req.query;
+
+    if (!type) {
+      return res.status(400).json({
+        message: 'type 파라미터가 필요합니다. (manager 또는 funeral)',
+      });
+    }
+
+    if (!['manager', 'funeral'].includes(type)) {
+      return res.status(400).json({
+        message: '유효하지 않은 타입입니다. (manager 또는 funeral)',
+      });
+    }
+
+    const result = await adminCashRefundRequestService.getRefundRequestsByUserId(userId, type);
+
+    let message = '환급 신청 내역 조회 성공';
+    if (type === 'manager') message = '상조팀장 환급 신청 내역 조회 성공';
+    if (type === 'funeral') message = '장례식장 환급 신청 내역 조회 성공';
+
+    res.status(200).json({
+      message,
+      data: result,
+    });
+  } catch (error) {
+    console.error('특정 유저 환급 신청 내역 조회 오류:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// [GET] 특정 유저의 승인된 환급 신청 내역 조회
+router.get('/approved/list/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { type } = req.query;
+
+    if (!type) {
+      return res.status(400).json({
+        message: 'type 파라미터가 필요합니다. (manager 또는 funeral)',
+      });
+    }
+
+    if (!['manager', 'funeral'].includes(type)) {
+      return res.status(400).json({
+        message: '유효하지 않은 타입입니다. (manager 또는 funeral)',
+      });
+    }
+
+    const result = await adminCashRefundRequestService.getApprovedRefundRequestsByUserId(
+      userId,
+      type,
+    );
+
+    let message = '승인된 환급 신청 내역 조회 성공';
+    if (type === 'manager') message = '상조팀장 승인된 환급 신청 내역 조회 성공';
+    if (type === 'funeral') message = '장례식장 승인된 환급 신청 내역 조회 성공';
+
+    res.status(200).json({
+      message,
+      data: result,
+    });
+  } catch (error) {
+    console.error('특정 유저 승인된 환급 신청 내역 조회 오류:', error.message);
     res.status(500).json({ message: error.message });
   }
 });

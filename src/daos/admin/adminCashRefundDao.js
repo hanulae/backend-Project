@@ -13,7 +13,6 @@ export const findManagerRefundRequests = async () => {
       order: [['createdAt', 'DESC']],
     });
   } catch (error) {
-    console.log('🚀 ~ findManagerRefundRequests ~ error:', error);
     throw new Error('상조팀장 환급 요청 DAO 오류: ' + error.message);
   }
 };
@@ -80,4 +79,40 @@ export const getFuneralCashRefundHistory = async () => {
       },
     ],
   });
+};
+
+export const findManagerRefundsByUserId = async (managerId) => {
+  try {
+    return await db.ManagerCashRefundRequest.findAll({
+      where: { managerId },
+      include: [
+        {
+          model: db.Manager,
+          as: 'manager', // 관계 설정 시 사용한 별칭
+          attributes: { exclude: ['managerPassword'] }, // 비밀번호 제외
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+  } catch (error) {
+    throw new Error('상조팀장 환급 신청 내역 조회 오류: ' + error.message);
+  }
+};
+
+export const findFuneralRefundsByUserId = async (funeralId) => {
+  try {
+    return await db.FuneralCashRefundRequest.findAll({
+      where: { funeralId },
+      include: [
+        {
+          model: db.Funeral,
+          as: 'funeral', // 관계 설정 시 사용한 별칭
+          attributes: { exclude: ['funeralPassword'] }, // 비밀번호 제외
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+  } catch (error) {
+    throw new Error('장례식장 환급 신청 내역 조회 오류: ' + error.message);
+  }
 };

@@ -40,12 +40,12 @@ export const getFuneralCashChargeHistoryById = async (funeralId) => {
   }
 };
 
-// 특정 상조팀장 캐시 충전 내역 조회
-export const getManagerCashChargeHistoryById = async (managerId) => {
+// 특정 유저 캐시 충전 내역 조회
+export const getUserCashChargeHistoryById = async (userId, type) => {
   try {
-    return await adminCashDao.findManagerCashChargeHistoryById(managerId);
+    return await adminCashDao.findUserCashChargeHistoryById(userId, type);
   } catch (error) {
-    throw new Error('상조팀장 캐시 충전 내역 조회 실패: ' + error.message);
+    throw new Error('유저 캐시 충전 내역 조회 실패: ' + error.message);
   }
 };
 

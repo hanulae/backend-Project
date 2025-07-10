@@ -8,16 +8,9 @@ const router = express.Router();
 router.use(adminAuthMiddleware);
 
 // [POST] 공지사항 등록
-router.post('/create', async (req, res) => {
+router.post('/add/create', async (req, res) => {
   try {
     const { title, content, isVisible, userType } = req.body;
-    console.log(
-      '🚀 ~ router.post ~ title, content, isVisible, userType:',
-      title,
-      content,
-      isVisible,
-      userType,
-    );
 
     if (!title || !content) {
       return res.status(400).json({ message: '제목과 내용을 모두 입력해주세요.' });

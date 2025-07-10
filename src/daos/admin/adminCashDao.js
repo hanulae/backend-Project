@@ -136,7 +136,6 @@ export const recordManagerCashHistory = async (managerId, amount, transactionTyp
 export const recordFuneralCashHistory = async (funeralId, amount, transactionType, transaction) => {
   try {
     const funeral = await db.Funeral.findByPk(funeralId, { transaction });
-    console.log('🚀 ~ recordFuneralCashHistory ~ funeral:', funeral);
     if (!funeral) {
       throw new Error('장례식장을 찾을 수 없습니다.');
     }
@@ -188,5 +187,19 @@ export const findAllCashChargeHistory = async () => {
     return { managerCash, funeralCash };
   } catch (error) {
     throw new Error('전체 캐시 충전 내역 조회 실패: ' + error.message);
+  }
+};
+
+export const findUserCashChargeHistoryById = async (userId, type) => {
+  try {
+    if (type === 'manager') {
+      return await db.ManagerCashHistory.findAll({ where: { managerId: userId } });
+    } else if (type === 'funeral') {
+      return await db.FuneralCashHistory.findAll({ where: { funeralId: userId } });
+    } else {
+      throw new Error('유효하지 않은 타입입니다. manager, funeral 중 하나를 선택하세요.');
+    }
+  } catch (error) {
+    throw new Error('유저 캐시 충전 내역 조회 실패: ' + error.message);
   }
 };

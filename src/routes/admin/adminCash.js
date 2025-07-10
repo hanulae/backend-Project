@@ -28,6 +28,25 @@ router.get('/manager/history/:managerId', adminAuthMiddleware, async (req, res) 
   }
 });
 
+// 특정 유저 캐시 충전 내역 조회
+router.get('/history/:userId', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { type } = req.query;
+
+    if (!['manager', 'funeral'].includes(type)) {
+      return res
+        .status(400)
+        .json({ message: '유효하지 않은 타입입니다. manager, funeral 중 하나를 선택하세요.' });
+    }
+
+    const history = await adminCashService.getUserCashChargeHistoryById(userId, type);
+    res.status(200).json({ message: '유저 캐시 충전 내역 조회 성공', data: history });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // 전체유저 캐시 충전 내역 조회
 router.get('/user/history', adminAuthMiddleware, async (req, res) => {
   try {
@@ -50,7 +69,6 @@ router.get('/user/history', adminAuthMiddleware, async (req, res) => {
 router.post('/user/addCash', adminAuthMiddleware, async (req, res) => {
   try {
     const { userId, amount, userType } = req.body; // userType 추가
-    console.log('🚀 ~ router.post ~ userId, amount, userType:', userId, amount, userType);
     if (!['manager', 'funeral'].includes(userType)) {
       return res.status(400).json({ message: '유효하지 않은 사용자 타입입니다.' });
     }

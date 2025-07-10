@@ -15,7 +15,7 @@ const router = express.Router();
 router.use('/manager', managerApprovalRouter);
 router.use('/funeral', funeralApprovalRouter);
 router.use('/grant', grantRouter);
-router.use('/cash', adminCashRefundRequestRouter);
+router.use('/refund', adminCashRefundRequestRouter);
 router.use('/user', adminUserRouter);
 router.use('/auth', adminAuthRouter);
 router.use('/staff', adminStaff);
