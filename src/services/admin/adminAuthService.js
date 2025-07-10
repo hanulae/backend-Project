@@ -34,7 +34,7 @@ export const loginAdmin = async ({ adminEmail, adminPassword }) => {
       admin,
     };
   } catch (error) {
-    console.error('🔴 관리자 로그인 실패:', error.message);
+    console.error('관리자 로그인 실패:', error.message);
     throw new Error('관리자 로그인 실패: ' + error.message);
   }
 };

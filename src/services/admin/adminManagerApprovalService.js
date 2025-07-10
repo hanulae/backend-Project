@@ -26,6 +26,7 @@ export const setApprovalStatus = async (managerId, isApproved) => {
 };
 
 export const sendRejectionSMS = async (phoneNumber, message) => {
+  console.log('🚀 ~ sendRejectionSMS ~ phoneNumber, message:', phoneNumber, message);
   try {
     await client.sendOne({
       to: phoneNumber,

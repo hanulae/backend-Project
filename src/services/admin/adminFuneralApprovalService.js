@@ -1,13 +1,44 @@
 import * as funeralApprovalDao from '../../daos/admin/adminFuneralApprovalDao.js';
 import * as funeralUserDao from '../../daos/funeral/funeralUserDao.js';
+import * as funeralAddDocumentDao from '../../daos/admin/funeralAddDocumentDao.js';
 import coolsms from 'coolsms-node-sdk';
 
 const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 export const getGroupedFuneralList = async () => {
   const approved = await funeralApprovalDao.findByApprovalStatus(true);
+
+  // 각 funeral에 funeralAddDocument 배열을 비동기로 할당
+  const approvedWithDocs = await Promise.all(
+    approved.map(async (funeral) => {
+      const funeralId = funeral.funeralId;
+      // 여러 개의 문서를 배열로 가져온다고 가정
+      const funeralAddDocuments = await funeralAddDocumentDao.findAllByFuneralId(funeralId);
+      // toJSON()이 있다면 plain object로 변환
+      return {
+        ...(funeral.toJSON ? funeral.toJSON() : funeral),
+        fileUrl: funeralAddDocuments.map((doc) => doc.funeralDocPath), // ✅
+      };
+    }),
+  );
+
   const requests = await funeralApprovalDao.findByApprovalStatus(false);
-  return { approved, requests };
+
+  // 각 funeral에 funeralAddDocument 배열을 비동기로 할당
+  const requestsWithDocs = await Promise.all(
+    requests.map(async (funeral) => {
+      const funeralId = funeral.funeralId;
+      // 여러 개의 문서를 배열로 가져온다고 가정
+      const funeralAddDocuments = await funeralAddDocumentDao.findAllByFuneralId(funeralId);
+      // toJSON()이 있다면 plain object로 변환
+      return {
+        ...(funeral.toJSON ? funeral.toJSON() : funeral),
+        fileUrl: funeralAddDocuments.map((doc) => doc.funeralDocPath), // ✅
+      };
+    }),
+  );
+
+  return { approved: approvedWithDocs, requests: requestsWithDocs };
 };
 
 export const getPendingFunerals = async () => {
@@ -19,27 +50,33 @@ export const getFuneralDocument = async (funeralId) => {
 };
 
 export const setApprovalStatus = async (funeralId, isApproved) => {
-  const funeral = await funeralApprovalDao.findByFuneralId(funeralId);
-  if (!funeral) return null;
+  try {
+    const funeral = await funeralApprovalDao.findByFuneralId(funeralId);
+    console.log('🚀 ~ setApprovalStatus ~ funeral:', funeral);
+    if (!funeral) return null;
 
-  // 승인 처리
-  if (isApproved) {
-    // funeralHome 컬럼에 funeralListId가 들어있다고 가정
-    const funeralListId = funeral.funeralHome;
-    if (funeralListId) {
-      // funeral_lists 테이블의 funeralId, FuneralTotalRooms 컬럼 업데이트
-      await funeralApprovalDao.updateFuneralList(
-        { funeralId, FuneralTotalRooms: 0 },
-        { funeralListId },
-      );
+    // 승인 처리
+    if (isApproved) {
+      // funeralHome 컬럼에 funeralListId가 들어있다고 가정
+      const funeralListId = funeral.funeralHome;
+      if (funeralListId) {
+        // funeral_lists 테이블의 funeralId, FuneralTotalRooms 컬럼 업데이트
+        await funeralApprovalDao.updateFuneralList(
+          { funeralId, funeralTotalRooms: 0 }, // 카멜케이스!
+          { funeralListId },
+        );
+      }
     }
+
+    // funeral의 isApproved 필드 등 업데이트
+    funeral.isApproved = isApproved;
+    await funeral.save();
+
+    return funeral;
+  } catch (error) {
+    console.log('🚀 ~ setApprovalStatus ~ error:', error);
+    throw new Error('장례식장 승인/거절 처리 중 오류가 발생했습니다: ' + error.message);
   }
-
-  // funeral의 isApproved 필드 등 업데이트
-  funeral.isApproved = isApproved;
-  await funeral.save();
-
-  return funeral;
 };
 
 export const sendRejectionSMS = async (phoneNumber, message) => {

@@ -31,3 +31,27 @@ export const findById = async () => {
     throw new Error('관리자 조회 오류: ' + error.message);
   }
 };
+
+export const findManagerById = async (managerId) => {
+  try {
+    return await db.Manager.findByPk(managerId, {
+      attributes: {
+        exclude: ['managerPassword'], // 비밀번호 제외
+      },
+    });
+  } catch (error) {
+    throw new Error('상조팀장 조회 오류: ' + error.message);
+  }
+};
+
+export const findFuneralById = async (funeralId) => {
+  try {
+    return await db.Funeral.findByPk(funeralId, {
+      attributes: {
+        exclude: ['funeralPassword'], // 비밀번호 제외
+      },
+    });
+  } catch (error) {
+    throw new Error('장례식장 조회 오류: ' + error.message);
+  }
+};

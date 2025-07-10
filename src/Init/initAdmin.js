@@ -1,8 +1,9 @@
 import db from '../models/index.js';
+import 'dotenv/config';
 
 export const createDefaultAdmin = async () => {
-  const adminEmail = 'admin@hanulae.com';
-  const adminPassword = 'Admin1234!'; // 운영 시 .env 사용 권장
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD; // 운영 시 .env 사용 권장
 
   try {
     const exists = await db.Admin.findOne({ where: { adminEmail } });

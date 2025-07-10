@@ -87,24 +87,14 @@ const fcmTokenDao = {
    */
   async findActiveTokensByUser(userId, userType) {
     try {
-      if (userType === 'admin') {
-        return await db.FcmToken.findAll({
-          where: {
-            userType: 'admin',
-            deviceId: '1234567890',
-            isActive: true,
-          },
-        });
-      } else {
-        return await db.FcmToken.findAll({
-          where: {
-            userId,
-            userType,
-            isActive: true,
-          },
-          order: [['lastUsedAt', 'DESC']],
-        });
-      }
+      return await db.FcmToken.findAll({
+        where: {
+          userId,
+          userType,
+          isActive: true,
+        },
+        order: [['lastUsedAt', 'DESC']],
+      });
     } catch (error) {
       logger.error('활성 FCM 토큰 조회 DAO 오류:', error);
       throw error;

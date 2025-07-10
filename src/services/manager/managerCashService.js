@@ -1,6 +1,7 @@
 import * as managerCashDao from '../../daos/manager/managerCashDao.js';
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
 import * as cashRefundRequestDao from '../../daos/manager/managerCashRefundRequestDao.js';
+import * as adminUserDao from '../../daos/admin/adminUserDao.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
 
@@ -57,19 +58,18 @@ export const requestCashRefund = async (params) => {
       managerId,
       transactionType: 'withdraw_cash',
       managerCashAmount: amountCash,
-      managerCashBalanceAfter: manager.managerCash - amountCash,
-      status: 'pending',
+      managerCashBalanceAfter: manager.managerCash - amountCash, // 현재 잔액 (아직 차감 전)
+      status: 'pending', // 대기중 상태
     });
 
-    // 3. 관리자에게 환급 요청 알림 전송
+    await managerCashDao.updateManagerCash(managerId, manager.managerCash - amountCash);
+
+    //3. 관리자에게 환급 요청 알림 전송
     try {
-      // 관리자 정보 조회
-      const adminUserDao = await import('../../daos/admin/adminUserDao.js');
       const adminUser = await adminUserDao.findById();
-      const adminId = adminUser ? adminUser.adminId : 'admin';
 
       await fcmService.sendNotificationToUser({
-        receiverId: adminId,
+        receiverId: adminUser.adminId,
         receiverType: 'admin',
         notificationType: 'cash_refund_requested',
         data: {
@@ -82,7 +82,7 @@ export const requestCashRefund = async (params) => {
         senderId: managerId,
         senderType: 'manager',
       });
-      logger.info(`상조팀장 환급 요청 알림 전송 성공: 관리자 ${adminId}`);
+      logger.info(`상조팀장 환급 요청 알림 전송 성공: 관리자 ${adminUser.adminId}`);
     } catch (notificationError) {
       logger.error('상조팀장 환급 요청 알림 전송 실패', notificationError);
       // 알림 전송 실패해도 환급 요청 자체는 성공으로 처리

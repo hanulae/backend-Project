@@ -42,9 +42,9 @@ export const updateApproval = async (funeralId, isApproved) => {
 
 export const findByFuneralId = async (funeralId) => {
   try {
-    return await db.FuneralAddDocument.findOne({
+    return await db.Funeral.findOne({
       where: { funeralId },
-      attributes: ['fileUrl', 'createdAt'],
+      attributes: { exclude: ['funeralPassword', 'funeralCash'] }, // 비밀번호 컬럼 제외
     });
   } catch (error) {
     throw new Error('장례식장 파일 조회 오류: ' + error.message);
