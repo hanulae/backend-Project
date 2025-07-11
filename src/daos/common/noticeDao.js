@@ -5,8 +5,8 @@ export const findAllVisible = async (type) => {
   try {
     const whereCondition = { isVisible: true };
 
-    // type이 'all'이 아닌 경우에만 userType 조건 추가
-    if (type !== 'all') {
+    // type이 'all'이 아니고, 정의된 경우에만 userType 조건 추가
+    if (type && type !== 'all') {
       whereCondition.userType = type;
     }
 

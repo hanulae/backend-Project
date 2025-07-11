@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/list', async (req, res) => {
   try {
     const { type = 'all' } = req.query;
+    console.log('🚀 ~ router.get ~ type:', type);
 
     if (!['manager', 'funeral', 'all'].includes(type)) {
       return res.status(400).json({
