@@ -1,10 +1,17 @@
 // daos/common/noticeDao.js
 import db from '../../models/index.js';
 
-export const findAllVisible = async () => {
+export const findAllVisible = async (type) => {
   try {
+    const whereCondition = { isVisible: true };
+
+    // type이 'all'이 아니고, 정의된 경우에만 userType 조건 추가
+    if (type && type !== 'all') {
+      whereCondition.userType = type;
+    }
+
     return await db.Notice.findAll({
-      where: { isVisible: true },
+      where: whereCondition,
       order: [['createdAt', 'DESC']],
       attributes: ['noticeId', 'title', 'createdAt'],
     });
