@@ -83,6 +83,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
 
           // 캐시 다시 지급
           const newBalance = currentCash + refundAmount;
+          logger.log('🚀 ~ processRefundApproval ~ newBalance:', newBalance);
 
           await managerCashDao.updateManagerCash(refundRequest.managerId, newBalance, {
             transaction,
