@@ -22,6 +22,7 @@ app.use(
       'https://wooricenter.co.kr', // 실제 배포 도메인
       'https://www.wooricenter.co.kr', // 실제 배포 도메인
       'http://192.168.219.100:8081',
+      'https://hanulaeadmin.vercel.app/', // 어드민 홈페이지
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
