@@ -44,6 +44,7 @@ export const findByFuneralId = async (funeralId) => {
   try {
     return await db.Funeral.findOne({
       where: { funeralId },
+      attributes: { exclude: ['funeralPassword', 'funeralCash'] }, // 비밀번호 컬럼 제외
     });
   } catch (error) {
     throw new Error('장례식장 파일 조회 오류: ' + error.message);

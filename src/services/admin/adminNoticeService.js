@@ -1,12 +1,18 @@
 import * as adminNoticeDao from '../../daos/admin/adminNoticeDao.js';
 
-export const createNotice = async (params) => {
-  try {
-    return await adminNoticeDao.insertNotice(params);
-  } catch (error) {
-    console.error('공지사항 등록 서비스 오류:', error.message);
-    throw error;
+export const createNotice = async ({ title, content, isVisible, userType }) => {
+  // userType 값 검증 (옵션)
+  const validTypes = ['manager', 'funeral', 'all'];
+  if (!validTypes.includes(userType)) {
+    throw new Error('userType은 manager, funeral, all 중 하나여야 합니다.');
   }
+
+  return await adminNoticeDao.createNotice({
+    title,
+    content,
+    isVisible,
+    userType,
+  });
 };
 
 export const updateNotice = async (noticeId, updateData) => {
@@ -25,4 +31,8 @@ export const deleteNotice = async (noticeId) => {
     console.error('공지사항 삭제 서비스 오류:', error.message);
     throw error;
   }
+};
+
+export const getNoticeList = async ({ userType, isVisible }) => {
+  return await adminNoticeDao.getNoticeList({ userType, isVisible });
 };

@@ -15,7 +15,6 @@ const funeralListService = {
 
     // 이미지 데이터를 가져옵니다.
     const images = await funeralListDao.findImagesByFuneralListId(funeralListId);
-    console.log('🚀 ~ getFuneralDetail ~ images:', images);
 
     return {
       funeralDetail,

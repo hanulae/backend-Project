@@ -9,6 +9,7 @@ const notificationHistoryDao = {
    */
   async createNotification(notificationData, options = {}) {
     try {
+      console.log('🚀 ~ createNotification ~ notificationData:', notificationData);
       return await db.NotificationHistory.create(
         {
           receiverId: notificationData.receiverId,

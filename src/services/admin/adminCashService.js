@@ -40,12 +40,12 @@ export const getFuneralCashChargeHistoryById = async (funeralId) => {
   }
 };
 
-// 특정 상조팀장 캐시 충전 내역 조회
-export const getManagerCashChargeHistoryById = async (managerId) => {
+// 특정 유저 캐시 충전 내역 조회
+export const getUserCashChargeHistoryById = async (userId, type) => {
   try {
-    return await adminCashDao.findManagerCashChargeHistoryById(managerId);
+    return await adminCashDao.findUserCashChargeHistoryById(userId, type);
   } catch (error) {
-    throw new Error('상조팀장 캐시 충전 내역 조회 실패: ' + error.message);
+    throw new Error('유저 캐시 충전 내역 조회 실패: ' + error.message);
   }
 };
 
@@ -55,10 +55,10 @@ export const giveCashToUser = async (userId, amount, userType) => {
     let result;
     if (userType === 'manager') {
       result = await adminCashDao.addCashToManager(userId, amount, transaction);
-      await adminCashDao.recordManagerCashHistory(userId, amount, 'charge_cash', transaction);
+      await adminCashDao.recordManagerCashHistory(userId, amount, 'service_cash', transaction);
     } else if (userType === 'funeral') {
       result = await adminCashDao.addCashToFuneral(userId, amount, transaction);
-      await adminCashDao.recordFuneralCashHistory(userId, amount, 'charge_cash', transaction);
+      await adminCashDao.recordFuneralCashHistory(userId, amount, 'service_cash', transaction);
     } else {
       throw new Error('유효하지 않은 사용자 타입입니다.');
     }
@@ -68,5 +68,13 @@ export const giveCashToUser = async (userId, amount, userType) => {
     await transaction.rollback();
     console.error('캐시 지급 오류:', error.message);
     throw new Error('캐시 지급에 실패했습니다.');
+  }
+};
+
+export const getAllCashChargeHistory = async () => {
+  try {
+    return await adminCashDao.findAllCashChargeHistory();
+  } catch (error) {
+    throw new Error('전체 캐시 충전 내역 서비스 오류: ' + error.message);
   }
 };

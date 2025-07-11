@@ -32,3 +32,24 @@ export const findById = async (noticeId) => {
     throw error;
   }
 };
+
+export const findNoticesByType = async (userType) => {
+  try {
+    return await db.Notice.findAll({
+      where: { userType },
+      order: [['createdAt', 'DESC']],
+    });
+  } catch (error) {
+    throw new Error('공지사항 조회 오류: ' + error.message);
+  }
+};
+
+export const findAllNotices = async () => {
+  try {
+    return await db.Notice.findAll({
+      order: [['createdAt', 'DESC']],
+    });
+  } catch (error) {
+    throw new Error('전체 공지사항 조회 오류: ' + error.message);
+  }
+};

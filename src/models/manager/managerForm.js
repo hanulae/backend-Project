@@ -67,7 +67,7 @@ class ManagerForm extends Sequelize.Model {
         tableName: 'manager_forms',
         underscored: true,
         timestamps: true,
-        // paranoid: true,
+        paranoid: true,
         comment: '상조팀장 견적 신청서 관리 테이블',
       },
     );

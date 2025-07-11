@@ -17,7 +17,7 @@ router.get('/requests', async (req, res) => {
   }
 });
 
-router.get('/requests/file/:funeralId/file', async (req, res) => {
+router.get('/requests/file/:funeralId', async (req, res) => {
   try {
     const { funeralId } = req.params;
     const file = await funeralApprovalService.getFuneralDocument(funeralId);
@@ -36,18 +36,21 @@ router.get('/requests/file/:funeralId/file', async (req, res) => {
 router.patch('/requests/approve/:funeralId', async (req, res) => {
   try {
     const { funeralId } = req.params;
-    const { isApproved, message } = req.body; // message 추가
+    console.log('🚀 ~ router.patch ~ funeralId:', funeralId);
+    const { isApproved, message } = req.body;
+    console.log('🚀 ~ router.patch ~ isApproved, message:', isApproved, message);
 
     if (typeof isApproved !== 'boolean') {
       return res.status(400).json({ message: 'isApproved는 true 또는 false여야 합니다.' });
     }
 
-    if (!isApproved && !message) {
-      // 거절 메시지 요구
+    // 거절일 때만 message가 필수
+    if (isApproved === false && !message) {
       return res.status(400).json({ message: '거절 메시지가 필요합니다.' });
     }
 
     const result = await funeralApprovalService.setApprovalStatus(funeralId, isApproved);
+    console.log('🚀 ~ router.patch ~ result:', result);
 
     if (result === 'invalid_uuid') {
       return res.status(400).json({ message: '유효하지 않은 UUID 형식입니다.' });
@@ -59,8 +62,8 @@ router.patch('/requests/approve/:funeralId', async (req, res) => {
 
     if (!isApproved) {
       // Send rejection SMS
-      const funeral = await funeralApprovalService.getFuneralById(funeralId); // Assuming this function exists
-      const phoneNumber = funeral.phoneNumber; // Assuming funeral object has a phoneNumber field
+      const funeral = await funeralApprovalService.getFuneralById(funeralId);
+      const phoneNumber = funeral.funeralPhoneNumber;
       await funeralApprovalService.sendRejectionSMS(phoneNumber, message);
     }
 

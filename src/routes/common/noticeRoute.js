@@ -8,14 +8,15 @@ const router = express.Router();
 router.get('/list', async (req, res) => {
   try {
     const { type = 'all' } = req.query;
-    console.log('🚀 ~ router.get ~ type:', type);
 
     if (!['manager', 'funeral', 'all'].includes(type)) {
       return res.status(400).json({
         message: '유효하지 않은 타입입니다. (manager, funeral, all 중 하나)',
       });
     }
-    const list = await noticeService.getNoticeList(type);
+
+    const list = await noticeService.getNoticeListByType(type);
+
     res.status(200).json({ message: '공지사항 목록 조회 성공', data: list });
   } catch (error) {
     res.status(500).json({ message: error.message });
