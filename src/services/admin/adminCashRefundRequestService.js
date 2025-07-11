@@ -49,7 +49,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
     if (action === 'approve') {
       // 승인 시 → 캐시 히스토리 상태만 'completed'로 변경
       if (isManager) {
-        await managerCashDao.updateCashHistoryStatus(
+        await managerCashDao.updateCashHistoryStatusApprove(
           refundRequest.managerId,
           'withdraw_cash',
           'pending',
@@ -57,7 +57,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           { transaction },
         );
       } else {
-        await funeralCashDao.updateCashHistoryStatus(
+        await funeralCashDao.updateCashHistoryStatusApprove(
           refundRequest.funeralId,
           'withdraw_cash',
           'pending',
@@ -90,7 +90,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           });
 
           // 캐시 히스토리 상태를 'cancelled'로 업데이트하고 잔액도 원래대로 되돌림
-          await managerCashDao.updateCashHistoryStatus(
+          await managerCashDao.updateCashHistoryStatusReject(
             refundRequest.managerId,
             'withdraw_cash',
             'pending',
@@ -123,7 +123,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           });
 
           // 캐시 히스토리 상태를 'cancelled'로 업데이트 (rejected → cancelled)
-          await funeralCashDao.updateCashHistoryStatus(
+          await funeralCashDao.updateCashHistoryStatusReject(
             refundRequest.funeralId,
             'withdraw_cash',
             'pending',
