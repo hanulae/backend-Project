@@ -93,6 +93,20 @@ export const sendRejectionSMS = async (phoneNumber, message) => {
   }
 };
 
+export const sendApprovalSMS = async (phoneNumber, message) => {
+  try {
+    await client.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: message,
+    });
+    console.log('승인 SMS 전송 성공');
+  } catch (error) {
+    console.error('승인 SMS 전송 실패:', error);
+    throw new Error('승인 SMS 전송에 실패했습니다');
+  }
+};
+
 export const getFuneralById = async (funeralId) => {
   try {
     const funeral = await funeralUserDao.findById(funeralId);

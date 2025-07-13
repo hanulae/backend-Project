@@ -49,21 +49,14 @@ router.patch('/requests/approve/:managerId', async (req, res) => {
       return res.status(400).json({ message: '거절 메시지가 필요합니다.' });
     }
 
+    const result = await managerApprovalService.setApprovalStatus(managerId, isApproved);
+
     if (isApproved) {
       // Send approval SMS
       const manager = await managerApprovalService.getManagerById(managerId); // Assuming this function exists
       const phoneNumber = manager.managerPhoneNumber; // Assuming manager object has a phoneNumber field
       await managerApprovalService.sendApprovalSMS(phoneNumber, message);
     } else {
-      // Send rejection SMS
-      const manager = await managerApprovalService.getManagerById(managerId); // Assuming this function exists
-      const phoneNumber = manager.managerPhoneNumber; // Assuming manager object has a phoneNumber field
-      await managerApprovalService.sendRejectionSMS(phoneNumber, message);
-    }
-
-    const result = await managerApprovalService.setApprovalStatus(managerId, isApproved);
-
-    if (!isApproved) {
       // Send rejection SMS
       const manager = await managerApprovalService.getManagerById(managerId); // Assuming this function exists
       const phoneNumber = manager.managerPhoneNumber; // Assuming manager object has a phoneNumber field

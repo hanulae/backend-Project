@@ -60,7 +60,12 @@ router.patch('/requests/approve/:funeralId', async (req, res) => {
       return res.status(404).json({ message: '존재하지 않는 장례식장 ID입니다.' });
     }
 
-    if (!isApproved) {
+    if (isApproved) {
+      // Send approval SMS
+      const funeral = await funeralApprovalService.getFuneralById(funeralId);
+      const phoneNumber = funeral.funeralPhoneNumber;
+      await funeralApprovalService.sendApprovalSMS(phoneNumber, message);
+    } else {
       // Send rejection SMS
       const funeral = await funeralApprovalService.getFuneralById(funeralId);
       const phoneNumber = funeral.funeralPhoneNumber;

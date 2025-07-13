@@ -36,6 +36,23 @@ router.patch('/:type/:requestId', async (req, res) => {
       action,
     });
 
+    //send sms
+    if (action === 'approve') {
+      const refundRequest = await adminCashRefundRequestService.getRefundRequestById(requestId); // Assuming this function exists
+      const phoneNumber = refundRequest.phoneNumber; // Assuming refundRequest object has a phoneNumber field
+      await adminCashRefundRequestService.sendApprovalSMS(
+        phoneNumber,
+        '환급 요청이 승인되었습니다.',
+      ); // Assuming this function exists
+    } else if (action === 'reject') {
+      const refundRequest = await adminCashRefundRequestService.getRefundRequestById(requestId); // Assuming this function exists
+      const phoneNumber = refundRequest.phoneNumber; // Assuming refundRequest object has a phoneNumber field
+      await adminCashRefundRequestService.sendRejectionSMS(
+        phoneNumber,
+        '환급 요청이 거절되었습니다.',
+      ); // Assuming this function exists
+    }
+
     res.status(200).json({
       message: `환급 요청이 ${action === 'approve' ? '승인' : '거절'}되었습니다.`,
       data: result,

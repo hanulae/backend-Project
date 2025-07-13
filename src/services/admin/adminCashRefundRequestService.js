@@ -7,6 +7,7 @@ import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
 import fcmService from '../common/fcmService.js';
 import logger from '../../config/logger.js';
 import * as adminUserDao from '../../daos/admin/adminUserDao.js';
+import client from '../../config/smsConfig.js';
 
 export const getGroupedManagerRefundRequests = async () => {
   const all = await cashRefundDao.findManagerRefundRequests();
@@ -264,5 +265,29 @@ export const getApprovedRefundRequestsByUserId = async (userId, type) => {
   } catch (error) {
     console.error('특정 유저 승인된 환급 신청 내역 조회 오류:', error.message);
     throw new Error(`승인된 환급 신청 내역 조회 실패: ${error.message}`);
+  }
+};
+
+export const sendApprovalSMS = async (phoneNumber, message) => {
+  try {
+    await client.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: message,
+    });
+  } catch (error) {
+    console.error('승인 SMS 전송 실패:', error);
+  }
+};
+
+export const sendRejectionSMS = async (phoneNumber, message) => {
+  try {
+    await client.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: message,
+    });
+  } catch (error) {
+    console.error('거절 SMS 전송 실패:', error);
   }
 };
