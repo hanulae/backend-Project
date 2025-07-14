@@ -38,19 +38,37 @@ router.patch('/:type/:requestId', async (req, res) => {
 
     //send sms
     if (action === 'approve') {
-      const refundRequest = await adminCashRefundRequestService.getRefundRequestById(requestId); // Assuming this function exists
-      const phoneNumber = refundRequest.phoneNumber; // Assuming refundRequest object has a phoneNumber field
-      await adminCashRefundRequestService.sendApprovalSMS(
-        phoneNumber,
-        '환급 요청이 승인되었습니다.',
-      ); // Assuming this function exists
+      if (type === 'manager') {
+        const manager = await adminCashRefundRequestService.getRefundRequestById(requestId, type);
+        const phoneNumber = manager.managerPhoneNumber; // Assuming refundRequest object has a phoneNumber field
+        await adminCashRefundRequestService.sendApprovalSMS(
+          phoneNumber,
+          '환급 요청이 승인되었습니다.',
+        ); // Assuming this function exists
+      } else if (type === 'funeral') {
+        const funeral = await adminCashRefundRequestService.getRefundRequestById(requestId, type);
+        const phoneNumber = funeral.funeralPhoneNumber; // Assuming refundRequest object has a phoneNumber field
+        await adminCashRefundRequestService.sendApprovalSMS(
+          phoneNumber,
+          '환급 요청이 승인되었습니다.',
+        ); // Assuming this function exists
+      }
     } else if (action === 'reject') {
-      const refundRequest = await adminCashRefundRequestService.getRefundRequestById(requestId); // Assuming this function exists
-      const phoneNumber = refundRequest.phoneNumber; // Assuming refundRequest object has a phoneNumber field
-      await adminCashRefundRequestService.sendRejectionSMS(
-        phoneNumber,
-        '환급 요청이 거절되었습니다.',
-      ); // Assuming this function exists
+      if (type === 'manager') {
+        const manager = await adminCashRefundRequestService.getRefundRequestById(requestId, type);
+        const phoneNumber = manager.managerPhoneNumber; // Assuming refundRequest object has a phoneNumber field
+        await adminCashRefundRequestService.sendRejectionSMS(
+          phoneNumber,
+          '환급 요청이 거절되었습니다.',
+        ); // Assuming this function exists
+      } else if (type === 'funeral') {
+        const funeral = await adminCashRefundRequestService.getRefundRequestById(requestId, type);
+        const phoneNumber = funeral.funeralPhoneNumber; // Assuming refundRequest object has a phoneNumber field
+        await adminCashRefundRequestService.sendRejectionSMS(
+          phoneNumber,
+          '환급 요청이 거절되었습니다.',
+        ); // Assuming this function exists
+      }
     }
 
     res.status(200).json({

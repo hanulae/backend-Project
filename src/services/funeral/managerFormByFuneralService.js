@@ -3,6 +3,10 @@ import managerFormDao from '../../dao/manager/managerFormDao.js';
 import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
+import funeralListDao from '../../dao/funeral/funeralListDao.js';
+import coolsms from 'coolsms-node-sdk';
+
+const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 const managerFormByFuneralService = {
   /**
@@ -107,6 +111,17 @@ const managerFormByFuneralService = {
           senderId: params.funeralId,
           senderType: 'funeral',
         });
+
+        // 상조팀장에게 문자 전송
+        const manager = await funeralListDao.getManagerPhoneNumber(
+          existingBid.managerForm.managerId,
+        );
+        await client.sendOne({
+          to: manager.dataValues.managerPhoneNumber,
+          from: process.env.COOLSMS_SENDER_NUMBER,
+          text: '장례식장님이 입찰 제안 하였습니다. 입찰 확인을 해주세요.',
+        });
+
         logger.info(`입찰 제안 알림 전송 성공: 상조팀장 ${existingBid.managerId}`);
       } catch (notificationError) {
         logger.error(

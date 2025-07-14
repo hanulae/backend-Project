@@ -84,7 +84,7 @@ export const sendRejectionSMS = async (phoneNumber, message) => {
     await client.sendOne({
       to: phoneNumber,
       from: process.env.COOLSMS_SENDER_NUMBER,
-      text: message,
+      text: '가입승인이 거절되었습니다. 거절 사유: ' + message,
     });
     console.log('거절 SMS 전송 성공');
   } catch (error) {
@@ -94,11 +94,13 @@ export const sendRejectionSMS = async (phoneNumber, message) => {
 };
 
 export const sendApprovalSMS = async (phoneNumber, message) => {
+  console.log('🚀 ~ sendApprovalSMS ~ message:', message);
+  console.log('🚀 ~ sendApprovalSMS ~ phoneNumber:', phoneNumber);
   try {
     await client.sendOne({
       to: phoneNumber,
       from: process.env.COOLSMS_SENDER_NUMBER,
-      text: message,
+      text: '가입승인이 완료되었습니다. \n 로그인 하여 서비스를 이용할 수 있습니다.',
     });
     console.log('승인 SMS 전송 성공');
   } catch (error) {

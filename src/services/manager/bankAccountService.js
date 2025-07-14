@@ -21,16 +21,19 @@ export const verifyAccountOwner = async ({ bankCode, bankNumber, name }) => {
         Authorization: `Bearer ${token}`, // Bearer 꼭 필요
       },
     });
-    console.log('🚀 ~ verifyAccountOwner ~ data:', data);
 
     // 3. 오류 처리
     if (data.code !== 0) {
       throw new Error(`계좌 인증 실패: ${data.message}`);
     }
-
+    console.log('🚀 ~ verifyAccountOwner ~ data:', data.response.bank_holder);
+    console.log('🚀 ~ verifyAccountOwner ~ name:', name);
     // 4. 예금주 이름 확인
-    const bankHolder = data.response.bank_holder;
-    if (bankHolder !== name) {
+    const bankHolder = data.response.bank_holder.trim();
+    const normalizedBankHolder = bankHolder.normalize('NFC');
+    const normalizedName = name.trim().normalize('NFC');
+
+    if (normalizedBankHolder !== normalizedName) {
       throw new Error('예금주가 다릅니다.');
     }
 

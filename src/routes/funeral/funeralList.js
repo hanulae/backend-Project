@@ -30,6 +30,7 @@ router.put('/update/funeralList', authMiddleware, uploadFuneralRoomFile, async (
   try {
     const { funeralId } = req.user;
     const updateData = req.body;
+    console.log('🚀 ~ router.put ~ updateData:', updateData);
 
     console.log('🚀 ~ router.put ~ req.files:', req.files);
     // 파일 경로 추가
