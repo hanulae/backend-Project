@@ -85,10 +85,11 @@ export const updateCashHistoryStatus = async (
   oldStatus,
   newStatus,
   options = {},
+  newBalance = null,
 ) => {
   try {
     return await db.FuneralCashHistory.update(
-      { status: newStatus },
+      { status: newStatus, funeralCashBalanceAfter: newBalance },
       { where: { funeralId, transactionType, status: oldStatus }, ...options },
     );
   } catch (error) {

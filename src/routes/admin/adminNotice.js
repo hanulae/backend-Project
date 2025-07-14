@@ -37,6 +37,13 @@ router.patch('/update/:noticeId', async (req, res) => {
   try {
     const { noticeId } = req.params;
     const { title, content, isVisible, userType } = req.body;
+    console.log(
+      '🚀 ~ router.patch ~ title, content, isVisible, userType:',
+      title,
+      content,
+      isVisible,
+      userType,
+    );
 
     const updated = await adminNoticeService.updateNotice(noticeId, {
       title,

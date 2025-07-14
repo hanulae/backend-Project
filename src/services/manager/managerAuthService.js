@@ -224,6 +224,7 @@ export const verifyCode = async (managerPhoneNumber, inputCode) => {
     if (!manager) {
       throw new Error('해당 휴대폰 번호로 등록된 아이디가 없습니다.');
     }
+    console.log('🚀 ~ verifyCode ~ manager:', manager);
 
     return manager.managerUsername;
   } catch (error) {
