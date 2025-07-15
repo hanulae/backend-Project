@@ -67,6 +67,20 @@ router.put(
     try {
       const { funeralId } = req.user;
 
+      // 0. 장례식장 입찰 시도 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단.
+      const checkAboutCashAmount =
+        await managerFormByFuneralService.checkAboutCashAmount(funeralId);
+
+      if (checkAboutCashAmount.success === false) {
+        logger.info(`입찰 가능여부 확인: ${funeralId}`);
+        logger.info(`입찰 실패: ${checkAboutCashAmount.message}`);
+        return res.status(400).json({
+          success: false,
+          message: checkAboutCashAmount.message,
+          errorCode: 'INSUFFICIENT_CASH',
+        });
+      }
+
       // 1. 제안가 유효성 검사
       if (isNaN(Number(req.body.proponentMoney)) || Number(req.body.proponentMoney) <= 0) {
         return res.status(400).json({
