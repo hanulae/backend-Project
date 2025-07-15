@@ -14,6 +14,7 @@ export const getFuneralList = async (funeralId) => {
 };
 
 export const updateFuneralById = async (funeralId, updateData) => {
+  console.log('🚀 ~ updateFuneralById ~ updateData:', updateData);
   try {
     // Sequelize 모델이 FuneralList라고 가정합니다.
     const [updated] = await db.FuneralList.update(updateData, {

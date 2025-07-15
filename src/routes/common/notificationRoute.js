@@ -59,12 +59,13 @@ router.post('/fcm/deactivate', authMiddleware, async (req, res) => {
 router.get('/list', authMiddleware, async (req, res) => {
   try {
     const { userId, userType } = req.user;
-    const { page = 1, limit = 20, type } = req.query;
+    const { page = 1, limit = 20, type, unreadOnly } = req.query;
 
     const result = await notificationHistoryDao.findNotificationsByUser(userId, userType, {
       page: parseInt(page),
       limit: parseInt(limit),
       type: type || null,
+      unreadOnly: unreadOnly === 'true',
     });
 
     res.status(200).json({

@@ -35,11 +35,20 @@ export const findFuneralRefundRequests = async () => {
 };
 
 // 단건 조회
-export const findManagerRefundById = async (id) => {
+export const findManagerRefundById = async (requestId) => {
   try {
-    return await db.ManagerCashRefundRequest.findByPk(id);
+    return await db.ManagerCashRefundRequest.findByPk(requestId);
   } catch (error) {
     throw new Error('상조팀장 환급 요청 조회 오류: ' + error.message);
+  }
+};
+
+//매니저 조회
+export const findManagerById = async (managerId) => {
+  try {
+    return await db.Manager.findByPk(managerId);
+  } catch (error) {
+    throw new Error('상조팀장 조회 오류: ' + error.message);
   }
 };
 

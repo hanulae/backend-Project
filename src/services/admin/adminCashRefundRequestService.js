@@ -7,6 +7,9 @@ import * as funeralCashDao from '../../daos/funeral/funeralCashDao.js';
 import fcmService from '../common/fcmService.js';
 import logger from '../../config/logger.js';
 import * as adminUserDao from '../../daos/admin/adminUserDao.js';
+import coolsms from 'coolsms-node-sdk';
+
+const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 export const getGroupedManagerRefundRequests = async () => {
   const all = await cashRefundDao.findManagerRefundRequests();
@@ -45,24 +48,37 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
 
     // 상태 업데이트
     await refundRequest.update({ status }, { transaction });
+    console.log('🚀 ~ processRefundApproval ~ refundRequest:', refundRequest);
 
     if (action === 'approve') {
       // 승인 시 → 캐시 히스토리 상태만 'completed'로 변경
       if (isManager) {
-        await managerCashDao.updateCashHistoryStatusApprove(
+
+        const manager = await managerUserDao.findById(refundRequest.managerId);
+        const currentCash = Number(manager.managerCash) || 0;
+        const newBalance = currentCash;
+        await managerCashDao.updateCashHistoryStatus(
+
           refundRequest.managerId,
           'withdraw_cash',
           'pending',
           'completed',
           { transaction },
+          newBalance,
         );
       } else {
-        await funeralCashDao.updateCashHistoryStatusApprove(
+
+        const funeral = await funeralUserDao.findById(refundRequest.funeralId);
+        const currentCash = Number(funeral.funeralCash) || 0;
+        const newBalance = currentCash;
+        await funeralCashDao.updateCashHistoryStatus(
+
           refundRequest.funeralId,
           'withdraw_cash',
           'pending',
           'completed',
           { transaction },
+          newBalance,
         );
       }
     } else {
@@ -265,5 +281,43 @@ export const getApprovedRefundRequestsByUserId = async (userId, type) => {
   } catch (error) {
     console.error('특정 유저 승인된 환급 신청 내역 조회 오류:', error.message);
     throw new Error(`승인된 환급 신청 내역 조회 실패: ${error.message}`);
+  }
+};
+
+export const sendApprovalSMS = async (phoneNumber, message) => {
+  try {
+    await client.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: message,
+    });
+  } catch (error) {
+    console.error('승인 SMS 전송 실패:', error);
+  }
+};
+
+export const sendRejectionSMS = async (phoneNumber, message) => {
+  try {
+    await client.sendOne({
+      to: phoneNumber,
+      from: process.env.COOLSMS_SENDER_NUMBER,
+      text: message,
+    });
+  } catch (error) {
+    console.error('거절 SMS 전송 실패:', error);
+  }
+};
+
+export const getRefundRequestById = async (requestId, type) => {
+  const refundRequest = await cashRefundDao.findManagerRefundById(requestId);
+  console.log('🚀 ~ getRefundRequestById ~ refundRequest:', refundRequest);
+  if (type === 'manager') {
+    const manager = await cashRefundDao.findManagerById(refundRequest.managerId);
+    console.log('🚀 ~ getRefundRequestById ~ manager:', manager);
+    return manager;
+  } else if (type === 'funeral') {
+    const funeral = await cashRefundDao.findFuneralById(refundRequest.funeralId);
+    console.log('🚀 ~ getRefundRequestById ~ funeral:', funeral);
+    return funeral;
   }
 };

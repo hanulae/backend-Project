@@ -3,6 +3,11 @@ import managerFormDao from '../../dao/manager/managerFormDao.js';
 import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
+import funeralListDao from '../../dao/funeral/funeralListDao.js';
+import coolsms from 'coolsms-node-sdk';
+// import { getCurrentCash } from '../../daos/funeral/funeralCashDao.js';
+
+const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 const managerFormByFuneralService = {
   /**
@@ -13,6 +18,23 @@ const managerFormByFuneralService = {
       // 1. 장례식장 별 상조 팀장의 모든 견적 신청서 조회
       const getAllManagerFormByFuneralId =
         await managerFormBidDao.getAllManagerFormByFuneralId(funeralId);
+
+      return {
+        success: true,
+        data: getAllManagerFormByFuneralId,
+      };
+    } catch (error) {
+      throw new Error('견적 신청서 조회 실패', error);
+    }
+  },
+
+  /**
+   * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   */
+  async getManagerFormByFuneralId(funeralId) {
+    try {
+      const getAllManagerFormByFuneralId =
+        await managerFormBidDao.getAdminManagerFormByFuneralId(funeralId);
 
       return {
         success: true,
@@ -107,6 +129,17 @@ const managerFormByFuneralService = {
           senderId: params.funeralId,
           senderType: 'funeral',
         });
+
+        // 상조팀장에게 문자 전송
+        const manager = await funeralListDao.getManagerPhoneNumber(
+          existingBid.managerForm.managerId,
+        );
+        await client.sendOne({
+          to: manager.dataValues.managerPhoneNumber,
+          from: process.env.COOLSMS_SENDER_NUMBER,
+          text: '장례식장님이 입찰 제안 하였습니다. 입찰 확인을 해주세요.',
+        });
+
         logger.info(`입찰 제안 알림 전송 성공: 상조팀장 ${existingBid.managerId}`);
       } catch (notificationError) {
         logger.error(
@@ -136,6 +169,36 @@ const managerFormByFuneralService = {
 
     return managerFormBidDetail;
   },
+
+  // 장례식장 입찰 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단.
+  // async checkAboutCashAmount(funeralId) {
+  //   // 1. 입찰 하려는 장례식장의 현재 보유 캐시 조회
+  //   const cashAmount = await getCurrentCash(funeralId);
+
+  //   // 1-1. 입찰 최소 캐시보다 적을 경우 처리
+  //   if (cashAmount < process.env.TOTAL_AMOUNT) {
+  //     return {
+  //       success: false,
+  //       message: '입찰을 위한 캐시가 부족합니다.',
+  //     };
+  //   }
+
+  //   // 2. 입찰 하려는 장례식장의 현재 입찰 내역 조회 ( 입찰 제출 및 거래 진행중인 내역만 조회 )
+  //   // 현재 입찰 제출 ( bid_submitted ), 상조팀장 입찰 선택 및 출동 신청 (bid_selected), 출동승인 및 거래중 ( bid_progress )
+  //   // 현재 보유 캐시 - managerFormBid 갯수 x TOTAL_AMOUNT가 0 미만일경우 입찰 불가
+  //   const getBids = await managerFormBidDao.getManagerFormBidSpecificStatus(funeralId);
+
+  //   const bidsCount = getBids.length;
+
+  //   if (cashAmount - bidsCount * process.env.TOTAL_AMOUNT < process.env.TOTAL_AMOUNT) {
+  //     return {
+  //       success: false,
+  //       message: '입찰 갯수에 대비해 캐시가 부족합니다.',
+  //     };
+  //   }
+
+  //   return true;
+  // },
 };
 
 export default managerFormByFuneralService;

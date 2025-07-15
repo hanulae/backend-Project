@@ -4,6 +4,9 @@ import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
 import fcmService from '../common/fcmService.js';
+import coolsms from 'coolsms-node-sdk';
+
+const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 const managerFormService = {
   /**
@@ -51,6 +54,28 @@ const managerFormService = {
                 senderId: managerFormData.managerId,
                 senderType: 'manager',
               });
+
+              // 직원 전화번호 목록 가져오기
+              const funeral = await funeralListDao.getFuneralById(item.funeralId);
+              const staffPhoneNumbers = await funeralListDao.getStaffPhoneNumbersByFuneralId(
+                item.funeralId,
+              );
+
+              // 장례식장에 문자 보내기
+              await client.sendOne({
+                to: funeral.funeralPhoneNumber,
+                from: process.env.COOLSMS_SENDER_NUMBER,
+                text: '상조팀장님이 견적 신청을 하였습니다.',
+              });
+
+              // 각 직원에게 문자 보내기
+              for (const staff of staffPhoneNumbers) {
+                await client.sendOne({
+                  to: staff.dataValues.funeralStaffPhoneNumber,
+                  from: process.env.COOLSMS_SENDER_NUMBER,
+                  text: '상조팀장님이 견적 신청을 하였습니다.',
+                });
+              }
               logger.info(`견적 신청 그룹 알림 전송 성공: 장례식장 ${item.funeralId}`);
             } catch (notificationError) {
               logger.error(
