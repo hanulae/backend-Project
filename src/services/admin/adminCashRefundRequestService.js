@@ -53,12 +53,10 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
     if (action === 'approve') {
       // 승인 시 → 캐시 히스토리 상태만 'completed'로 변경
       if (isManager) {
-
         const manager = await managerUserDao.findById(refundRequest.managerId);
         const currentCash = Number(manager.managerCash) || 0;
         const newBalance = currentCash;
-        await managerCashDao.updateCashHistoryStatus(
-
+        await managerCashDao.updateCashHistoryStatusApprove(
           refundRequest.managerId,
           'withdraw_cash',
           'pending',
@@ -67,12 +65,10 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           newBalance,
         );
       } else {
-
         const funeral = await funeralUserDao.findById(refundRequest.funeralId);
         const currentCash = Number(funeral.funeralCash) || 0;
         const newBalance = currentCash;
-        await funeralCashDao.updateCashHistoryStatus(
-
+        await funeralCashDao.updateCashHistoryStatusApprove(
           refundRequest.funeralId,
           'withdraw_cash',
           'pending',
