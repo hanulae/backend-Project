@@ -96,3 +96,54 @@ export const updateCashHistoryStatus = async (
     throw new Error('장례식장 캐시 히스토리 상태 업데이트 오류: ' + error.message);
   }
 };
+
+// 캐시 거절 히스토리 상태 업데이트
+export const updateCashHistoryStatusReject = async (
+  funeralId,
+  transactionType,
+  oldStatus,
+  newStatus,
+  options = {},
+  newBalance = null,
+) => {
+  try {
+    return await db.FuneralCashHistory.update(
+      { status: newStatus, funeralCashBalanceAfter: newBalance },
+      {
+        where: {
+          funeralId,
+          transactionType,
+          status: oldStatus,
+        },
+        ...options,
+      },
+    );
+  } catch (error) {
+    throw new Error('캐시 히스토리 상태 업데이트 오류:' + error.message);
+  }
+};
+
+// 캐시 승인 히스토리 상태 업데이트
+export const updateCashHistoryStatusApprove = async (
+  funeralId,
+  transactionType,
+  oldStatus,
+  newStatus,
+  options = {},
+) => {
+  try {
+    return await db.FuneralCashHistory.update(
+      { status: newStatus },
+      {
+        where: {
+          funeralId,
+          transactionType,
+          status: oldStatus,
+        },
+        ...options,
+      },
+    );
+  } catch (error) {
+    throw new Error('캐시 히스토리 상태 업데이트 오류:' + error.message);
+  }
+};
