@@ -147,6 +147,27 @@ const managerFormBidDao = {
   },
 
   /**
+   * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   */
+  async getAdminManagerFormByFuneralId(funeralId) {
+    const result = await ManagerFormBid.findAll({
+      where: {
+        funeralId: funeralId,
+      },
+      include: [
+        {
+          model: managerForm,
+          as: 'managerForm',
+          attributes: ['chiefMournerName'],
+        },
+      ],
+      order: [['managerFormCreatedAt', 'DESC']],
+    });
+
+    return result;
+  },
+
+  /**
    * managerFormBidId를 기반으로 managerFormId 조회
    */
   async getManagerFormIdByManagerFormBidId(managerFormBidId) {
