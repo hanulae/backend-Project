@@ -18,7 +18,7 @@ router.get('/list', adminAuthMiddleware, async (req, res) => {
       });
     }
 
-    const result = await managerFormByFuneralService.getManagerForm(funeralId);
+    const result = await managerFormByFuneralService.getManagerFormByFuneralId(funeralId);
 
     return res.status(200).json(result);
   } catch (error) {

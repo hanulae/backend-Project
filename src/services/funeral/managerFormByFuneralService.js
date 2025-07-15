@@ -29,6 +29,23 @@ const managerFormByFuneralService = {
   },
 
   /**
+   * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   */
+  async getManagerFormByFuneralId(funeralId) {
+    try {
+      const getAllManagerFormByFuneralId =
+        await managerFormBidDao.getAdminManagerFormByFuneralId(funeralId);
+
+      return {
+        success: true,
+        data: getAllManagerFormByFuneralId,
+      };
+    } catch (error) {
+      throw new Error('견적 신청서 조회 실패', error);
+    }
+  },
+
+  /**
    * 견적서 별 상세 내용 조회
    */
   async getManagerFormDetail(managerFormBidId) {
