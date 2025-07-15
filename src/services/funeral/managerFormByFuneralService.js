@@ -5,7 +5,7 @@ import logger from '../../config/logger.js';
 import fcmService from '../common/fcmService.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
 import coolsms from 'coolsms-node-sdk';
-import { getCurrentCash } from '../../daos/funeral/funeralCashDao.js';
+// import { getCurrentCash } from '../../daos/funeral/funeralCashDao.js';
 
 const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
@@ -171,34 +171,34 @@ const managerFormByFuneralService = {
   },
 
   // 장례식장 입찰 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단.
-  async checkAboutCashAmount(funeralId) {
-    // 1. 입찰 하려는 장례식장의 현재 보유 캐시 조회
-    const cashAmount = await getCurrentCash(funeralId);
+  // async checkAboutCashAmount(funeralId) {
+  //   // 1. 입찰 하려는 장례식장의 현재 보유 캐시 조회
+  //   const cashAmount = await getCurrentCash(funeralId);
 
-    // 1-1. 입찰 최소 캐시보다 적을 경우 처리
-    if (cashAmount < process.env.TOTAL_AMOUNT) {
-      return {
-        success: false,
-        message: '입찰을 위한 캐시가 부족합니다.',
-      };
-    }
+  //   // 1-1. 입찰 최소 캐시보다 적을 경우 처리
+  //   if (cashAmount < process.env.TOTAL_AMOUNT) {
+  //     return {
+  //       success: false,
+  //       message: '입찰을 위한 캐시가 부족합니다.',
+  //     };
+  //   }
 
-    // 2. 입찰 하려는 장례식장의 현재 입찰 내역 조회 ( 입찰 제출 및 거래 진행중인 내역만 조회 )
-    // 현재 입찰 제출 ( bid_submitted ), 상조팀장 입찰 선택 및 출동 신청 (bid_selected), 출동승인 및 거래중 ( bid_progress )
-    // 현재 보유 캐시 - managerFormBid 갯수 x TOTAL_AMOUNT가 0 미만일경우 입찰 불가
-    const getBids = await managerFormBidDao.getManagerFormBidSpecificStatus(funeralId);
+  //   // 2. 입찰 하려는 장례식장의 현재 입찰 내역 조회 ( 입찰 제출 및 거래 진행중인 내역만 조회 )
+  //   // 현재 입찰 제출 ( bid_submitted ), 상조팀장 입찰 선택 및 출동 신청 (bid_selected), 출동승인 및 거래중 ( bid_progress )
+  //   // 현재 보유 캐시 - managerFormBid 갯수 x TOTAL_AMOUNT가 0 미만일경우 입찰 불가
+  //   const getBids = await managerFormBidDao.getManagerFormBidSpecificStatus(funeralId);
 
-    const bidsCount = getBids.length;
+  //   const bidsCount = getBids.length;
 
-    if (cashAmount - bidsCount * process.env.TOTAL_AMOUNT < process.env.TOTAL_AMOUNT) {
-      return {
-        success: false,
-        message: '입찰 갯수에 대비해 캐시가 부족합니다.',
-      };
-    }
+  //   if (cashAmount - bidsCount * process.env.TOTAL_AMOUNT < process.env.TOTAL_AMOUNT) {
+  //     return {
+  //       success: false,
+  //       message: '입찰 갯수에 대비해 캐시가 부족합니다.',
+  //     };
+  //   }
 
-    return true;
-  },
+  //   return true;
+  // },
 };
 
 export default managerFormByFuneralService;
