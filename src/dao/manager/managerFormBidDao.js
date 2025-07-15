@@ -147,23 +147,23 @@ const managerFormBidDao = {
   },
 
   /**
-     * 장례식장 ID를 기반으로 해당 장례식장의 입찰 내역 조회
-     * 조건: 'bid_submitted', // 장례식장이 입찰 제출
-     *      'bid_selected', // 상조팀장이 입찰 선택 및 출동 신청
-     *      'bid_progress' // 장례식장 + 상조팀장 출동요청 및 출동 승인 후 거래 진행중 상태
-     */
-    async getManagerFormBidSpecificStatus(funeralId) {
-      const result = await ManagerFormBid.findAll({
-        where: {
-          funeralId: funeralId,
-          bidStatus: {
-            [Op.in]: ['bid_submitted', 'bid_selected', 'bid_progress'],
-          },
+   * 장례식장 ID를 기반으로 해당 장례식장의 입찰 내역 조회
+   * 조건: 'bid_submitted', // 장례식장이 입찰 제출
+   *      'bid_selected', // 상조팀장이 입찰 선택 및 출동 신청
+   *      'bid_progress' // 장례식장 + 상조팀장 출동요청 및 출동 승인 후 거래 진행중 상태
+   */
+  async getManagerFormBidSpecificStatus(funeralId) {
+    const result = await ManagerFormBid.findAll({
+      where: {
+        funeralId: funeralId,
+        bidStatus: {
+          [Op.in]: ['bid_submitted', 'bid_selected', 'bid_progress'],
         },
-      });
+      },
+    });
 
-      return result;
-   },
+    return result;
+  },
 
   /**
    * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
