@@ -15,7 +15,7 @@ router.get('/list', async (req, res) => {
       });
     }
 
-    const list = await noticeService.getNoticeListByType(type);
+    const list = await noticeService.getNoticeList(type);
 
     res.status(200).json({ message: '공지사항 목록 조회 성공', data: list });
   } catch (error) {

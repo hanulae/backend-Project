@@ -53,10 +53,12 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
     if (action === 'approve') {
       // 승인 시 → 캐시 히스토리 상태만 'completed'로 변경
       if (isManager) {
+
         const manager = await managerUserDao.findById(refundRequest.managerId);
         const currentCash = Number(manager.managerCash) || 0;
         const newBalance = currentCash;
         await managerCashDao.updateCashHistoryStatus(
+
           refundRequest.managerId,
           'withdraw_cash',
           'pending',
@@ -65,10 +67,12 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           newBalance,
         );
       } else {
+
         const funeral = await funeralUserDao.findById(refundRequest.funeralId);
         const currentCash = Number(funeral.funeralCash) || 0;
         const newBalance = currentCash;
         await funeralCashDao.updateCashHistoryStatus(
+
           refundRequest.funeralId,
           'withdraw_cash',
           'pending',
@@ -95,13 +99,14 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
 
           // 캐시 다시 지급
           const newBalance = currentCash + refundAmount;
+          logger.log('🚀 ~ processRefundApproval ~ newBalance:', newBalance);
 
           await managerCashDao.updateManagerCash(refundRequest.managerId, newBalance, {
             transaction,
           });
 
           // 캐시 히스토리 상태를 'cancelled'로 업데이트하고 잔액도 원래대로 되돌림
-          await managerCashDao.updateCashHistoryStatus(
+          await managerCashDao.updateCashHistoryStatusReject(
             refundRequest.managerId,
             'withdraw_cash',
             'pending',
@@ -134,7 +139,7 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
           });
 
           // 캐시 히스토리 상태를 'cancelled'로 업데이트 (rejected → cancelled)
-          await funeralCashDao.updateCashHistoryStatus(
+          await funeralCashDao.updateCashHistoryStatusReject(
             refundRequest.funeralId,
             'withdraw_cash',
             'pending',
