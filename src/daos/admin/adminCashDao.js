@@ -195,7 +195,18 @@ export const findUserCashChargeHistoryById = async (userId, type) => {
     if (type === 'manager') {
       return await db.ManagerCashHistory.findAll({ where: { managerId: userId } });
     } else if (type === 'funeral') {
-      return await db.FuneralCashHistory.findAll({ where: { funeralId: userId } });
+      //const funeralPayment = await db.FuneralPayment.findAll({ where: { funeralId: userId } });
+      const funeralCashHistory = await db.FuneralCashHistory.findAll({
+        where: { funeralId: userId },
+        include: [
+          {
+            model: db.FuneralPayment,
+            as: 'funeralPayment',
+            attributes: ['merchantUid'],
+          },
+        ],
+      });
+      return { funeralCashHistory };
     } else {
       throw new Error('유효하지 않은 타입입니다. manager, funeral 중 하나를 선택하세요.');
     }

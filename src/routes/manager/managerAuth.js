@@ -63,7 +63,6 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
 router.patch('/update/password/lost', async (req, res) => {
   try {
     const { phoneNumber, newPassword } = req.body;
-    console.log('🚀 ~ router.patch ~ phoneNumber, newPassword:', phoneNumber, newPassword);
 
     const params = { phoneNumber, newPassword };
 

@@ -16,6 +16,16 @@ class FuneralCashHistory extends Sequelize.Model {
           allowNull: false,
           comment: '장례식장 고유 ID (FK)',
         },
+        funeralPaymentId: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          comment: '장례식장 결제 고유 ID (FK)',
+        },
+        merchantUid: {
+          type: DataTypes.STRING,
+          allowNull: true,
+          comment: '외부 결제 시스템에서 발급하는 거래 고유번호 저장',
+        },
         transactionType: {
           type: DataTypes.ENUM(
             'earn_cash', // 캐시 충전
@@ -89,6 +99,20 @@ class FuneralCashHistory extends Sequelize.Model {
     this.belongsTo(models.Funeral, {
       foreignKey: 'funeralId',
       as: 'funeral',
+    });
+
+    // 기본 관계 (primary key 참조)
+    this.belongsTo(models.FuneralPayment, {
+      foreignKey: 'funeralPaymentId', // FuneralCashHistory 테이블의 컬럼
+      // targetKey는 기본값 'id' (FuneralPayment의 primary key)
+      as: 'funeralPayment',
+    });
+
+    // 다른 키로 참조하는 관계
+    this.belongsTo(models.FuneralPayment, {
+      foreignKey: 'merchantUid', // FuneralCashHistory 테이블의 컬럼
+      targetKey: 'merchantUid', // FuneralPayment 테이블의 컬럼
+      as: 'funeralPaymentByMerchant',
     });
 
     // 상조팀장 테이블과의 관계 생성
