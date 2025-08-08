@@ -191,6 +191,7 @@ export const findAllCashChargeHistory = async () => {
 };
 
 export const findUserCashChargeHistoryById = async (userId, type) => {
+  console.log('🚀 ~ findUserCashChargeHistoryById ~ userId, type:', userId, type);
   try {
     if (type === 'manager') {
       return await db.ManagerCashHistory.findAll({ where: { managerId: userId } });
@@ -198,13 +199,13 @@ export const findUserCashChargeHistoryById = async (userId, type) => {
       //const funeralPayment = await db.FuneralPayment.findAll({ where: { funeralId: userId } });
       const funeralCashHistory = await db.FuneralCashHistory.findAll({
         where: { funeralId: userId },
-        include: [
-          {
-            model: db.FuneralPayment,
-            as: 'funeralPayment',
-            attributes: ['merchantUid'],
-          },
-        ],
+        // include: [
+        //   {
+        //     model: db.FuneralPayment,
+        //     as: 'funeralPayment',
+        //     attributes: ['merchantUid', 'impUid'],
+        //   },
+        // ],
       });
       return { funeralCashHistory };
     } else {

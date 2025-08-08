@@ -17,7 +17,7 @@ class FuneralCashHistory extends Sequelize.Model {
           comment: '장례식장 고유 ID (FK)',
         },
         funeralPaymentId: {
-          type: DataTypes.UUID,
+          type: DataTypes.STRING, // UUID에서 STRING으로 변경
           allowNull: true,
           comment: '장례식장 결제 고유 ID (FK)',
         },

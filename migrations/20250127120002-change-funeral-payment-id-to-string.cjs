@@ -1,0 +1,40 @@
+'use strict';
+
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    // 1. 외래키 제약조건 제거
+    await queryInterface.removeConstraint(
+      'funeral_cash_histories', 
+      'funeral_cash_histories_funeral_payment_id_fkey'
+    );
+
+    // 2. 컬럼 타입 변경
+    await queryInterface.changeColumn('funeral_cash_histories', 'funeral_payment_id', {
+      type: Sequelize.STRING,
+      allowNull: true,
+      comment: '장례식장 결제 고유 ID (FK)'
+    });
+
+    // 3. 새로운 외래키 제약조건 추가 (선택사항)
+    // 만약 FuneralPayment 테이블의 funeralPaymentId도 STRING으로 변경했다면:
+    // await queryInterface.addConstraint('funeral_cash_histories', {
+    //   fields: ['funeral_payment_id'],
+    //   type: 'foreign key',
+    //   references: {
+    //     table: 'funeral_payments',
+    //     field: 'funeral_payment_id'
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'SET NULL'
+    // });
+  },
+
+  async down(queryInterface, Sequelize) {
+    // 롤백: UUID로 되돌리기
+    await queryInterface.changeColumn('funeral_cash_histories', 'funeral_payment_id', {
+      type: Sequelize.UUID,
+      allowNull: true,
+      comment: '장례식장 결제 고유 ID (FK)'
+    });
+  }
+}; 

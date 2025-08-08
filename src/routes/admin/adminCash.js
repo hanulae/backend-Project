@@ -34,6 +34,8 @@ router.get('/history/:userId', adminAuthMiddleware, async (req, res) => {
     const { userId } = req.params;
     const { type } = req.query;
 
+    console.log('🚀 ~ router.get ~ userId, type:', userId, type);
+
     if (!['manager', 'funeral'].includes(type)) {
       return res
         .status(400)
