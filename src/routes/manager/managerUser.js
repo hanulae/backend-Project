@@ -1,3 +1,8 @@
+/**
+ * 상조팀장 사용자 관리 라우터
+ * - 회원가입(파일 업로드 포함), 아이디 중복 확인, 내 프로필 조회 API 제공
+ * - 회원가입은 파일 업로드 미들웨어 사용(S3 업로드), 프로필 조회는 인증 필요
+ */
 import express from 'express';
 import uploadManagerFile from '../../middlewares/uploadManagerFile.js';
 import authMiddleware from '../../middlewares/authMiddleware.js';
@@ -6,6 +11,29 @@ import { deleteS3Object } from '../../config/s3.js'; // AWS S3 연결 모듈
 
 const router = express.Router();
 
+/**
+ * [POST] /manager/user/signup
+ * 상조팀장 회원가입 (파일 업로드 지원)
+ *
+ * 미들웨어:
+ * - uploadManagerFile: 제출 파일 업로드(S3)
+ *
+ * Body(Form-Data):
+ * - managerUsername: string (필수)
+ * - managerPassword: string (필수)
+ * - managerName: string (필수)
+ * - managerPhone: string (필수)
+ * - managerBankName: string (필수)
+ * - managerBankNumber: string (필수)
+ * - files?: File[] (선택)
+ *
+ * 동작:
+ * - 업로드된 파일 정보는 `req.files`로 전달되며, 오류 시 업로드된 S3 객체를 정리 시도합니다.
+ *
+ * Response:
+ * - 201 Created: { message: '상조팀장 회원가입이 완료되었습니다.', manager: Object }
+ * - 500 Internal Server Error
+ */
 router.post('/signup', uploadManagerFile, async (req, res) => {
   try {
     const params = {
@@ -39,6 +67,17 @@ router.post('/signup', uploadManagerFile, async (req, res) => {
   }
 });
 
+/**
+ * [GET] /manager/user/checkUsername
+ * 아이디 중복 확인 (공개)
+ *
+ * Query:
+ * - username: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: string, available: boolean }
+ * - 500 Internal Server Error
+ */
 // 아이디 중복 확인
 router.get('/checkUsername', async (req, res) => {
   try {
@@ -55,6 +94,18 @@ router.get('/checkUsername', async (req, res) => {
   }
 });
 
+/**
+ * [GET] /manager/user/profile
+ * 내 프로필 조회 (인증 필요)
+ *
+ * Headers:
+ * - Authorization: Bearer <JWT>
+ *
+ * Response:
+ * - 200 OK: { message: '프로필 조회 성공', data: Object }
+ * - 404 Not Found: 프로필 없음
+ * - 500 Internal Server Error
+ */
 // 내 프로필 조회
 router.get('/profile', authMiddleware, async (req, res) => {
   try {

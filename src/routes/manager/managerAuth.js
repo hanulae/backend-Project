@@ -1,3 +1,8 @@
+/**
+ * 상조팀장 인증/계정 관리 라우터
+ * - 로그인/로그아웃, 비밀번호/휴대폰/계좌 정보 변경, 아이디 찾기(SMS 인증) 기능 제공
+ * - 일부 엔드포인트는 인증 미들웨어가 필요합니다.
+ */
 import express from 'express';
 import * as managerAuthService from '../../services/manager/managerAuthService.js';
 import authMiddleware from '../../middlewares/authMiddleware.js';
@@ -5,6 +10,18 @@ import fcmService from '../../services/common/fcmService.js';
 
 const router = express.Router();
 
+/**
+ * [POST] /manager/auth/login
+ * 로그인
+ *
+ * Body:
+ * - managerUsername: string (필수)
+ * - managerPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '로그인 성공', ...result } // 토큰, 사용자 정보 등 포함
+ * - 401 Unauthorized: 인증 실패
+ */
 // 로그인
 router.post('/login', async (req, res) => {
   try {
@@ -16,6 +33,21 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * [POST] /manager/auth/logout
+ * 로그아웃 (인증 필요)
+ *
+ * Body:
+ * - deviceId?: string (선택, 제공 시 해당 기기만 로그아웃)
+ *
+ * 동작:
+ * - FCM 토큰 비활성화 시도(오류가 나도 로그아웃은 지속)
+ * - accessToken/refreshToken 쿠키 삭제
+ *
+ * Response:
+ * - 200 OK: { message: '로그아웃 성공' }
+ * - 500 Internal Server Error
+ */
 // 로그아웃
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
@@ -42,6 +74,17 @@ router.post('/logout', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /manager/auth/update/password
+ * 비밀번호 변경 (인증 필요)
+ *
+ * Body:
+ * - newPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '비밀번호 변경 완료' }
+ * - 400 Bad Request
+ */
 // 비밀번호 변경
 router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
@@ -59,6 +102,18 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /manager/auth/update/password/lost
+ * 비밀번호 분실 시 비밀번호 변경
+ *
+ * Body:
+ * - phoneNumber: string (필수)
+ * - newPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '비밀번호 변경 완료' }
+ * - 400 Bad Request
+ */
 // 비밀번호 분실 시 비밀번호 변경
 router.patch('/update/password/lost', async (req, res) => {
   try {
@@ -75,6 +130,18 @@ router.patch('/update/password/lost', async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /manager/auth/update/phone
+ * 휴대폰 번호 변경 (인증 필요)
+ *
+ * Body:
+ * - currentPhone: string (필수)
+ * - newPhone: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '휴대폰 번호 변경 완료', manager: Object }
+ * - 400 Bad Request
+ */
 // 휴대폰 번호 변경
 router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
@@ -93,6 +160,19 @@ router.patch('/update/phone', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /manager/auth/update/bank-number
+ * 계좌 정보 변경 (인증 필요)
+ *
+ * Body:
+ * - managerBankName: string (필수)
+ * - managerBankNumber: string (필수, 숫자만 허용)
+ * - managerBankHolder: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '계좌 정보 변경 완료', data: Object }
+ * - 400 Bad Request: 형식 오류 등
+ */
 // 계좌 정보 변경
 router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   try {
@@ -116,6 +196,17 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [POST] /manager/auth/find/username/send
+ * 아이디 찾기용 SMS 인증코드 전송 (공개)
+ *
+ * Body:
+ * - managerPhoneNumber: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '인증 코드가 전송되었습니다.' }
+ * - 400 Bad Request
+ */
 // SMS 인증코드 전송
 router.post('/find/username/send', async (req, res) => {
   try {
@@ -131,6 +222,19 @@ router.post('/find/username/send', async (req, res) => {
   }
 });
 
+/**
+ * [POST] /manager/auth/find/username/verify
+ * 인증코드 검증 후 아이디 찾기 (공개)
+ *
+ * Body:
+ * - managerPhone: string (필수)
+ * - code: string (필수)
+ * - userType?: string (선택, 서비스 정책에 따라 사용)
+ *
+ * Response:
+ * - 200 OK: { message: '인증 성공', verified: true, username: string }
+ * - 400 Bad Request: { message: '인증 실패', verified: false }
+ */
 // 인증코드 검증 후 아이디 찾기
 router.post('/find/username/verify', async (req, res) => {
   try {

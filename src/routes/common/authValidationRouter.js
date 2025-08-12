@@ -1,3 +1,8 @@
+/**
+ * 공용 인증 검증/갱신 라우터
+ * - 상조팀장/장례식장/관리자에 대한 로그인 유지(토큰 재발급) 엔드포인트 제공
+ * - 각 엔드포인트는 해당하는 인증 미들웨어를 통해 보호됩니다.
+ */
 import express from 'express';
 import authMiddleware from '../../middlewares/authMiddleware.js';
 import adminAuthMiddleware from '../../middlewares/adminAuthMiddleware.js';
@@ -7,6 +12,17 @@ import { getFuneralById } from '../../services/funeral/funeralUserService.js';
 
 const router = express.Router();
 
+/**
+ * [GET] /common/auth/manager
+ * 상조팀장 로그인 유지 및 토큰 재발급
+ *
+ * Headers:
+ * - Authorization: Bearer <JWT>
+ *
+ * Response:
+ * - 200 OK: { success: true, message: '상조팀장 로그인 유지', manager: Object, accessToken: string, refreshToken: string }
+ * - 500 Internal Server Error
+ */
 router.get('/manager', authMiddleware, async (req, res) => {
   try {
     const managerId = req.user.managerId; // 상조팀장 아이디
@@ -37,6 +53,17 @@ router.get('/manager', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [GET] /common/auth/funeral
+ * 장례식장 로그인 유지 및 토큰 재발급
+ *
+ * Headers:
+ * - Authorization: Bearer <JWT>
+ *
+ * Response:
+ * - 200 OK: { success: true, message: '장례식장 로그인 유지', funeral: Object, accessToken: string, refreshToken: string }
+ * - 500 Internal Server Error
+ */
 router.get('/funeral', authMiddleware, async (req, res) => {
   try {
     const funeralId = req.user.funeralId; // 장례식장 아이디
@@ -67,6 +94,16 @@ router.get('/funeral', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [GET] /common/auth/admin
+ * 관리자 로그인 유지 확인 (토큰 검증)
+ *
+ * Headers:
+ * - Authorization: Bearer <JWT>
+ *
+ * Response:
+ * - 200 OK: { success: true, message: '관리자 로그인 유지', user: { userId: string, userType: 'admin', userName: string } }
+ */
 router.get('/admin', adminAuthMiddleware, (req, res) => {
   res.status(200).json({
     success: true,
