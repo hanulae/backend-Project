@@ -24,6 +24,7 @@ const router = express.Router();
  * - 500 Internal Server Error
  */
 // 장례식장 캐시 충전
+// 포트원으로 변경.(개발 테스트 api)
 router.post('/charge', authMiddleware, async (req, res) => {
   try {
     // const { imp_uid, amount, funeralId } = req.body;
