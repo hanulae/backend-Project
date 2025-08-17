@@ -6,7 +6,21 @@ import adminAuthMiddleware from '../../middlewares/adminAuthMiddleware.js';
 
 const router = express.Router();
 
-// 견적 내역 리스트 불러오기
+/**
+ * [GET] /admin/form/list
+ * 장례식장별 견적(입찰) 내역 리스트 조회 (인증 필요)
+ *
+ * Query:
+ * - funeralId: string (필수) — 조회 대상 장례식장 ID
+ *
+ * 동작:
+ * - funeralId 필수 검증 후, 해당 장례식장의 입찰 목록을 조회합니다.
+ *
+ * Response:
+ * - 200 OK: result(Array | Object) — 서비스에서 반환하는 원본 결과를 그대로 반환
+ * - 400 Bad Request: funeralId 누락
+ * - 500 Internal Server Error
+ */
 router.get('/list', adminAuthMiddleware, async (req, res) => {
   try {
     const { funeralId } = req.query;
@@ -29,7 +43,21 @@ router.get('/list', adminAuthMiddleware, async (req, res) => {
   }
 });
 
-// 견적 상세 불러오기
+/**
+ * [GET] /admin/form/detail
+ * 입찰 상세 조회 (검증 미들웨어 적용, 인증 미적용)
+ *
+ * Query:
+ * - managerFormBidId: string (필수, UUID)
+ *
+ * 미들웨어:
+ * - validateUUID('managerFormBidId', 'query'): UUID 형식 검증
+ * - validateRequiredFields('managerFormBidId', 'query'): 필수값 존재 검증
+ *
+ * Response:
+ * - 200 OK: 상세 결과 객체
+ * - 500 Internal Server Error
+ */
 router.get(
   '/detail',
   validateUUID('managerFormBidId', 'query'),
@@ -50,7 +78,29 @@ router.get(
   },
 );
 
-// 입찰 신청
+/**
+ * [PUT] /admin/form/bid
+ * 입찰 신청/갱신 (검증 미들웨어 적용, 인증 미적용)
+ *
+ * Body:
+ * - managerFormBidId: string (필수)
+ * - funeralHallName: string (필수)
+ * - funeralHallSize: string | number (필수)
+ * - funeralHallNumberOfMourners: string | number (필수)
+ * - funeralHallDetailPrice: string | number (필수)
+ * - funeralHallPrice: string | number (필수)
+ * - proponentMoney: number (필수, 0보다 큰 수)
+ * - discount?: number (선택, 0 이상, 100 이하[%])
+ *
+ * 동작/검증:
+ * - 제안가(proponentMoney) 숫자·양수 검증
+ * - 할인률(discount) 숫자·0이상·100%이하 검증
+ * - 파라미터 구성 후 서비스 계층에 위임하여 업데이트 처리
+ *
+ * Response:
+ * - 200 OK: { success: true, message: '입찰 신청이 완료되었습니다.' }
+ * - 400 Bad Request: 유효성 오류 시 상세 메시지
+ */
 router.put(
   '/bid',
   validateRequiredFields([
@@ -122,6 +172,17 @@ router.put(
   },
 );
 
+/**
+ * [GET] /admin/form/bid/detail
+ * 입찰 상세(비드 상세) 조회 (검증 미들웨어 적용, 인증 미적용)
+ *
+ * Query:
+ * - managerFormBidId: string (필수)
+ *
+ * Response:
+ * - 200 OK: { success: true, data: Object }
+ * - 500 Internal Server Error
+ */
 router.get(
   '/bid/detail',
   validateRequiredFields('managerFormBidId', 'query'),

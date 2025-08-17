@@ -1,0 +1,15 @@
+'use strict';
+
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.addColumn('funeral_cash_histories', 'merchant_uid', {
+      type: Sequelize.STRING,
+      allowNull: true,
+      comment: '외부 결제 시스템에서 발급하는 거래 고유번호 저장'
+    });
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.removeColumn('funeral_cash_histories', 'merchant_uid');
+  }
+}; 

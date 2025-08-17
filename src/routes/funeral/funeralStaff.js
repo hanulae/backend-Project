@@ -1,3 +1,9 @@
+/**
+ * 장례식장 직원(스태프) 관리 라우터
+ * - 직원 생성/수정/비밀번호 변경/삭제/목록 조회/전화번호 중복 확인/로그인/로그아웃 제공
+ * - 대부분의 엔드포인트는 인증 미들웨어가 필요합니다(명시된 경우 제외)
+ * - 로그아웃 시 FCM 토큰 비활성화 시도(오류가 나도 로그아웃은 계속 진행)
+ */
 import express from 'express';
 import * as funeralStaffService from '../../services/funeral/funeralStaffService.js';
 import authMiddleware from '../../middlewares/authMiddleware.js'; // 토큰 인증 미들웨어
@@ -5,6 +11,29 @@ import fcmService from '../../services/common/fcmService.js';
 
 const router = express.Router();
 
+/**
+ * [POST] /funeral/staff/create
+ * 직원 생성 + 권한 등록 (인증 필요)
+ *
+ * Headers:
+ * - Authorization: Bearer <JWT>
+ *
+ * Body:
+ * - funeralStaffPhoneNumber: string (필수)
+ * - funeralStaffName: string (필수)
+ * - funeralStaffRole: string (필수)
+ * - funeralStaffPassword: string (필수)
+ * - funeralPhoneNumber: string (필수, 대표번호)
+ * - permissions: string[] | object (필수, 권한 목록)
+ *
+ * 동작:
+ * - 토큰에서 funeralId 추출 후 직원과 권한을 함께 생성
+ *
+ * Response:
+ * - 201 Created: { message: '직원 생성 완료', data: Object }
+ * - 401 Unauthorized: 유효하지 않은 사용자
+ * - 500 Internal Server Error
+ */
 // 직원 생성 - JWT에서 funeralId 추출
 // 직원 생성 + 권한 등록
 router.post('/create', authMiddleware, async (req, res) => {
@@ -33,6 +62,25 @@ router.post('/create', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/staff/update/:funeralStaffId
+ * 직원 수정 + 권한 수정 (인증 필요)
+ *
+ * Path Params:
+ * - funeralStaffId: string (필수)
+ *
+ * Body:
+ * - funeralStaffPhoneNumber?: string
+ * - funeralStaffName?: string
+ * - funeralStaffRole?: string
+ * - funeralStaffPassword?: string
+ * - funeralPhoneNumber?: string
+ * - permissions?: string[] | object
+ *
+ * Response:
+ * - 200 OK: { message: '직원 수정 완료', data: Object }
+ * - 401 Unauthorized | 500 Internal Server Error
+ */
 // 직원 수정 + 권한 수정
 router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
   try {
@@ -62,6 +110,20 @@ router.patch('/update/:funeralStaffId', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/staff/updatePassword/:funeralStaffId
+ * 직원 비밀번호 수정 (인증 필요)
+ *
+ * Path Params:
+ * - funeralStaffId: string (필수) — 현재 구현은 토큰에서 추출된 ID를 사용
+ *
+ * Body:
+ * - funeralStaffPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '비밀번호가 성공적으로 변경되었습니다.' }
+ * - 400 Bad Request | 500 Internal Server Error
+ */
 // 직원 비밀번호 수정
 router.patch('/updatePassword/:funeralStaffId', authMiddleware, async (req, res) => {
   try {
@@ -81,6 +143,17 @@ router.patch('/updatePassword/:funeralStaffId', authMiddleware, async (req, res)
   }
 });
 
+/**
+ * [DELETE] /funeral/staff/:funeralStaffId
+ * 직원 삭제 (현재 인증 미적용)
+ *
+ * Path Params:
+ * - funeralStaffId: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '직원 삭제 완료' }
+ * - 500 Internal Server Error
+ */
 // 직원 삭제
 router.delete('/:funeralStaffId', async (req, res) => {
   try {
@@ -92,6 +165,14 @@ router.delete('/:funeralStaffId', async (req, res) => {
   }
 });
 
+/**
+ * [GET] /funeral/staff/list
+ * 직원 목록 조회 (인증 필요)
+ *
+ * Response:
+ * - 200 OK: { message: '직원 목록 조회 성공', data: Array }
+ * - 500 Internal Server Error
+ */
 // 직원 목록 조회 (JWT 토큰 기반)
 router.get('/list', authMiddleware, async (req, res) => {
   try {
@@ -103,6 +184,18 @@ router.get('/list', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [POST] /funeral/staff/phoneVerify
+ * 직원 전화번호 중복 확인 (인증 필요)
+ *
+ * Body:
+ * - staffPhoneNumber: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '사용 가능한 전화번호입니다.' }
+ * - 409 Conflict: { message: '이미 사용 중인 전화번호입니다.' }
+ * - 500 Internal Server Error
+ */
 router.post('/phoneVerify', authMiddleware, async (req, res) => {
   try {
     const { funeralId } = req.user;
@@ -123,6 +216,19 @@ router.post('/phoneVerify', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [POST] /funeral/staff/login
+ * 직원 로그인 (공개)
+ *
+ * Body:
+ * - funeralStaffPhoneNumber: string (필수)
+ * - funeralStaffPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '로그인 성공', ...result }
+ * - 401 Unauthorized: 잘못된 자격 증명
+ * - 500 Internal Server Error
+ */
 // 직원 로그인
 router.post('/login', async (req, res) => {
   try {
@@ -146,6 +252,20 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * [POST] /funeral/staff/logout
+ * 직원 로그아웃 (인증 필요)
+ *
+ * Body:
+ * - deviceId?: string (선택, 제공 시 해당 기기만 로그아웃)
+ *
+ * 동작:
+ * - FCM 토큰 비활성화 시도(오류가 나도 로그아웃은 지속)
+ *
+ * Response:
+ * - 200 OK: { message: '로그아웃 성공' }
+ * - 500 Internal Server Error
+ */
 // 직원 로그아웃
 router.post('/logout', authMiddleware, async (req, res) => {
   try {

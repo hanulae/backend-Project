@@ -1,0 +1,120 @@
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('funeral_payments', {
+      funeral_payment_id: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        primaryKey: true,
+        comment: '장례식장 결제 고유 ID',
+      },
+      funeral_id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        comment: '장례식장 고유 ID (FK)',
+        references: {
+          model: 'funerals', // 실제 장례식장 테이블명으로 변경
+          key: 'funeral_id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
+      imp_uid: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: '포트원 결제 고유 번호',
+      },
+      merchant_uid: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        comment: '가맹점 주문 번호',
+      },
+      amount: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        comment: '결제 금액',
+      },
+      status: {
+        type: Sequelize.ENUM(
+          'pending',
+          'paid',
+          'failed',
+          'cancelled',
+          'refunded'
+        ),
+        allowNull: false,
+        defaultValue: 'pending',
+        comment: '결제 상태',
+      },
+      payment_method: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        comment: '결제 수단 (card, bank, etc)',
+      },
+      buyer_name: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+        comment: '구매자 이름',
+      },
+      buyer_email: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+        comment: '구매자 이메일',
+      },
+      buyer_tel: {
+        type: Sequelize.STRING(20),
+        allowNull: true,
+        comment: '구매자 전화번호',
+      },
+      payment_date: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        comment: '결제 완료 일시',
+      },
+      fail_reason: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: '결제 실패 사유',
+      },
+      created_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+      },
+      updated_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+      },
+      deleted_at: {
+        allowNull: true,
+        type: Sequelize.DATE
+      }
+    });
+
+    // 인덱스 추가
+    await queryInterface.addIndex('funeral_payments', ['merchant_uid'], {
+      unique: true
+    });
+
+    await queryInterface.addIndex('funeral_payments', ['funeral_id']);
+    await queryInterface.addIndex('funeral_payments', ['status']);
+    
+    // imp_uid는 null 값이 있을 수 있으므로 별도 처리
+    await queryInterface.addIndex('funeral_payments', ['imp_uid'], {
+      unique: true,
+      where: {
+        imp_uid: {
+          [Sequelize.Op.ne]: null
+        }
+      }
+    });
+  },
+
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('funeral_payments');
+  }
+};

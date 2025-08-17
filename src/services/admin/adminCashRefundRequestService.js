@@ -1,3 +1,8 @@
+/**
+ * 관리자 캐시 환급 요청 서비스
+ * - 환급 요청(상조팀장/장례식장) 목록·히스토리 조회, 승인/거절 처리, 알림/문자 발송을 담당합니다.
+ * - 승인/거절 처리 시 트랜잭션으로 상태 일관성을 보장하며, 처리 완료 후 FCM 알림 및 CoolSMS 문자 발송을 수행합니다.
+ */
 import db from '../../models/index.js';
 import * as cashRefundDao from '../../daos/admin/adminCashRefundDao.js'; // 수정된 파일명
 import * as managerUserDao from '../../daos/manager/managerUserDao.js';
@@ -9,8 +14,15 @@ import logger from '../../config/logger.js';
 import * as adminUserDao from '../../daos/admin/adminUserDao.js';
 import coolsms from 'coolsms-node-sdk';
 
+// CoolSMS 클라이언트 (문자 발송)
 const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
+/**
+ * 상조팀장 환급 요청 목록(상태별 그룹) 조회
+ *
+ * 반환:
+ * - { requested: Refund[], approved: Refund[], rejected: Refund[] }
+ */
 export const getGroupedManagerRefundRequests = async () => {
   const all = await cashRefundDao.findManagerRefundRequests();
 
@@ -31,6 +43,27 @@ export const getGroupedFuneralRefundRequests = async () => {
   };
 };
 
+/**
+ * 환급 요청 승인/거절 처리
+ *
+ * 입력:
+ * - type: 'manager' | 'funeral'
+ * - requestId: string
+ * - action: 'approve' | 'reject'
+ * - reason?: string (거절 사유 등)
+ *
+ * 동작:
+ * - 트랜잭션 시작 → 환급요청 valid 체크 → 상태 갱신
+ * - approve: 캐시 히스토리 상태를 pending → completed로 변경 (잔액 원복 없음)
+ * - reject: 캐시 재지급 및 히스토리 상태를 pending → cancelled로 변경 (잔액 원복)
+ * - 커밋 후 FCM 알림 전송, 필요 시 CoolSMS 문자 발송(상위 레벨에서 호출)
+ *
+ * 반환:
+ * - { success: true, message, refundRequest }
+ *
+ * 오류:
+ * - 처리 불가 상태, 대상 없음, DB 오류 시 예외 throw (롤백)
+ */
 export const processRefundApproval = async ({ type, requestId, action, reason = null }) => {
   const transaction = await db.sequelize.transaction();
 
@@ -196,6 +229,15 @@ export const processRefundApproval = async ({ type, requestId, action, reason = 
   }
 };
 
+/**
+ * 전체 환급 요청 목록(상태별 그룹) 조회
+ *
+ * 입력:
+ * - type: 'manager' | 'funeral' | 'all' (기본값 all)
+ *
+ * 반환:
+ * - { requested, approved, rejected }
+ */
 export const getAllRefundRequests = async (type = 'all') => {
   try {
     const managerRefunds = await cashRefundDao.findManagerRefundRequests();
@@ -229,6 +271,15 @@ export const getAllRefundRequests = async (type = 'all') => {
   }
 };
 
+/**
+ * 캐시 환급 처리 히스토리 조회
+ *
+ * 입력:
+ * - type: 'manager' | 'funeral' | 'all'
+ *
+ * 반환:
+ * - 환급 히스토리 배열
+ */
 export const getCashRefundHistory = async (type = 'all') => {
   const managerHistory = await cashRefundDao.getManagerCashRefundHistory();
   const funeralHistory = await cashRefundDao.getFuneralCashRefundHistory();
@@ -238,7 +289,16 @@ export const getCashRefundHistory = async (type = 'all') => {
   return [...managerHistory, ...funeralHistory];
 };
 
-// 특정 유저의 환급 신청 내역 조회
+/**
+ * 특정 유저의 환급 신청 내역 조회
+ *
+ * 입력:
+ * - userId: string
+ * - type: 'manager' | 'funeral'
+ *
+ * 반환:
+ * - { type, refundRequests }
+ */
 export const getRefundRequestsByUserId = async (userId, type) => {
   try {
     if (type === 'manager') {
@@ -258,7 +318,16 @@ export const getRefundRequestsByUserId = async (userId, type) => {
   }
 };
 
-// 특정 유저의 승인된 환급 신청 내역 조회
+/**
+ * 특정 유저의 승인된 환급 신청 내역 조회
+ *
+ * 입력:
+ * - userId: string
+ * - type: 'manager' | 'funeral'
+ *
+ * 반환:
+ * - { type, refundRequests: approvedOnly[] }
+ */
 export const getApprovedRefundRequestsByUserId = async (userId, type) => {
   try {
     if (type === 'manager') {
@@ -280,6 +349,10 @@ export const getApprovedRefundRequestsByUserId = async (userId, type) => {
   }
 };
 
+/**
+ * 승인 안내 SMS 발송 (CoolSMS)
+ * - 실패 시 에러 로깅만 수행하며 서비스 흐름에 영향 주지 않음
+ */
 export const sendApprovalSMS = async (phoneNumber, message) => {
   try {
     await client.sendOne({
@@ -292,6 +365,10 @@ export const sendApprovalSMS = async (phoneNumber, message) => {
   }
 };
 
+/**
+ * 거절 안내 SMS 발송 (CoolSMS)
+ * - 실패 시 에러 로깅만 수행하며 서비스 흐름에 영향 주지 않음
+ */
 export const sendRejectionSMS = async (phoneNumber, message) => {
   try {
     await client.sendOne({
@@ -304,6 +381,10 @@ export const sendRejectionSMS = async (phoneNumber, message) => {
   }
 };
 
+/**
+ * 환급 요청 ID로 대상 사용자(매니저/장례식장) 정보 조회
+ * - 알림/SMS 발송에 필요한 전화번호 조회 등 보조 기능
+ */
 export const getRefundRequestById = async (requestId, type) => {
   const refundRequest = await cashRefundDao.findManagerRefundById(requestId);
   console.log('🚀 ~ getRefundRequestById ~ refundRequest:', refundRequest);
