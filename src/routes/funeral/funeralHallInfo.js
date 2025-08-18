@@ -1,3 +1,7 @@
+/**
+ * 파일명: funeralHallInfo.js
+ * 설명: 장례식장의 호실 정보 관리 라우터 관리
+ */
 import express from 'express';
 import logger from '../../config/logger.js';
 import funeralHallInfoService from '../../services/funeral/funeralHallInfoService.js';
@@ -6,7 +10,21 @@ import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// 호실 정보 등록
+/**
+ * @route POST /api/funeral/hall-info/create
+ * @desc 호실 정보 등록
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.body
+ * @param {string} req.body.funeralHallName - 호실 이름
+ * @param {number} req.body.funeralHallSize - 호실 크기
+ * @param {number} req.body.funeralHallNumberOfMourners - 호실 조문객 수
+ * @param {number} req.body.funeralHallPrice - 호실 가격
+ * @param {number} req.body.funeralHallDetailPrice - 호실 상세 가격
+ * @returns {Object} 201 { success: true, data: roomInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.post(
   '/create',
   authMiddleware,
@@ -40,7 +58,18 @@ router.post(
   },
 );
 
-// 호실 정보 리스트 조회
+/**
+ * @route GET /api/funeral/hall-info/list
+ * @desc 호실 정보 리스트 조회
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.query
+ * @param {number} req.query.page - 페이지 번호
+ * @param {number} req.query.limit - 페이지 당 항목 수
+ * @returns {Object} 200 { success: true, data: hallInfoList, pageInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get('/list', authMiddleware, async (req, res) => {
   try {
     // JWT 토큰에서 funeralId 가져오기
@@ -66,7 +95,15 @@ router.get('/list', authMiddleware, async (req, res) => {
   }
 });
 
-// 호실 정보 상세 조회
+/**
+ * @route GET /api/funeral/hall-info/detail/:funeralHallId
+ * @desc 호실 정보 상세 조회
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.funeralHallId - 호실 ID
+ * @returns {Object} 200 { success: true, data: hallInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get(
   '/detail/:funeralHallId',
   validateUUID('funeralHallId', 'params'),
@@ -92,7 +129,23 @@ router.get(
   },
 );
 
-// 호실 정보 수정
+/**
+ * @route PUT /api/funeral/hall-info/update
+ * @desc 호실 정보 수정
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.body
+ * @param {string} req.body.funeralHallId - 호실 ID
+ * @param {string} req.body.funeralHallName - 호실 이름
+ * @param {number} req.body.funeralHallSize - 호실 크기
+ * @param {number} req.body.funeralHallNumberOfMourners - 호실 조문객 수
+ * @param {number} req.body.funeralHallPrice - 호실 가격
+ * @param {number} req.body.funeralHallDetailPrice - 호실 상세 가격
+ * @param {number} req.body.version - 호실 버전
+ * @returns {Object} 200 { success: true, data: hallInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.put(
   '/update',
   authMiddleware,
@@ -111,7 +164,6 @@ router.put(
   ),
   async (req, res) => {
     try {
-      console.log('req.body: ', req.body);
       const newHallInfo = {
         funeralId: req.user.funeralId,
         funeralHallId: req.body.funeralHallId,
@@ -122,8 +174,6 @@ router.put(
         funeralHallDetailPrice: req.body.funeralHallDetailPrice,
         version: req.body.version,
       };
-
-      console.log('호실 정보 수정 요청: ', newHallInfo);
 
       logger.info('호실 정보 수정 요청: ', {
         funeralHallId: newHallInfo.funeralHallId,
@@ -188,7 +238,18 @@ router.put(
     }
   },
 );
-// 호실 정보 삭제
+
+/**
+ * @route DELETE /api/funeral/hall-info/delete/:funeralHallId
+ * @desc 호실 정보 삭제
+ * @access Private
+ * @params {Object} req.user
+ * @params {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.params
+ * @param {string} req.params.funeralHallId - 호실 ID
+ * @returns {Object} 200 { success: true, data: hallInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.delete(
   '/delete/:funeralHallId',
   authMiddleware,
@@ -213,8 +274,13 @@ router.delete(
 );
 
 /**
- * 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
- * 이름, 평수, 수용 가능 인원
+ * @route GET /api/funeral/hall-info/summary/:funeralId
+ * @desc 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.funeralId - 장례식장 ID
+ * @returns {Object} 200 { success: true, data: hallInfo } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get('/summary/:funeralId', async (req, res) => {
   try {

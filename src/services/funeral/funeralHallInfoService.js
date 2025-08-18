@@ -1,9 +1,36 @@
+/**
+ * 파일명: funeralHallInfoService.js
+ * 설명: 장례식장 호실 정보 관련 비즈니스 로직 처리 서비스
+ * 역할: 호실 등록, 조회, 수정, 삭제 등의 기능 제공
+ */
 import funeralHallInfoDao from '../../dao/funeral/funeralHallInfoDao.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
 import logger from '../../config/logger.js';
 import { sequelize } from '../../config/database.js';
 
+/**
+ * 장례식장 호실 정보 서비스
+ * 장례식장의 호실 정보를 관리하는 서비스 객체입니다.
+ */
 const funeralHallInfoService = {
+  /**
+   * 호실 정보 등록
+   *
+   * 처리 과정:
+   * 1. 호실 정보 생성
+   * 2. funeralList 테이블의 총 호실 수 증가
+   * 3. 트랜잭션 커밋
+   *
+   * @param {Object} roomInfo - 호실 정보
+   * @param {string} roomInfo.funeralId - 장례식장 ID
+   * @param {string} roomInfo.funeralHallName - 호실 이름
+   * @param {number} roomInfo.funeralHallSize - 호실 평수
+   * @param {number} roomInfo.funeralHallNumberOfMourners - 수용 가능 인원
+   * @param {number} roomInfo.funeralHallPrice - 호실 가격
+   * @param {Object} roomInfo.funeralHallDetailPrice - 호실 상세 가격 정보
+   * @returns {Promise<Object>} 호실 등록 결과
+   * @throws {Error} 호실 등록 실패 시 오류 발생
+   */
   async createFuneralHallInfo(roomInfo) {
     const transaction = await sequelize.transaction();
     try {
@@ -75,8 +102,26 @@ const funeralHallInfoService = {
 
   /**
    * 낙관적 잠금을 사용한 호실 정보 수정
-   * @param {object} newHallInfo - 수정할 호실 정보
-   * @returns {object} 수정 결과
+   *
+   * 처리 과정:
+   * 1. 호실 정보 조회
+   * 2. 호실 존재 여부 확인
+   * 3. 수정 권한 확인
+   * 4. 버전 충돌 확인 (낙관적 잠금)
+   * 5. 수정 실행
+   * 6. 수정 실패 시 원인 파악 및 적절한 오류 메시지 반환
+   *
+   * @param {Object} newHallInfo - 수정할 호실 정보
+   * @param {string} newHallInfo.funeralHallId - 호실 ID
+   * @param {string} newHallInfo.funeralId - 장례식장 ID
+   * @param {number} newHallInfo.version - 클라이언트 버전 (낙관적 잠금용)
+   * @param {string} [newHallInfo.funeralHallName] - 호실 이름
+   * @param {number} [newHallInfo.funeralHallSize] - 호실 평수
+   * @param {number} [newHallInfo.funeralHallNumberOfMourners] - 수용 가능 인원
+   * @param {number} [newHallInfo.funeralHallPrice] - 호실 가격
+   * @param {Object} [newHallInfo.funeralHallDetailPrice] - 호실 상세 가격 정보
+   * @returns {Promise<Object>} 수정 결과
+   * @throws {Error} 수정 실패 시 오류 발생 (NOT_FOUND, UNAUTHORIZED, VERSION_CONFLICT, UPDATE_FAILED 등)
    */
   async updateFuneralHallInfo(newHallInfo) {
     try {
@@ -177,9 +222,17 @@ const funeralHallInfoService = {
 
   /**
    * 호실 정보 삭제
+   *
+   * 처리 과정:
+   * 1. 호실 정보 조회 및 권한 확인
+   * 2. 호실 삭제 (소프트 딜리트)
+   * 3. funeralList 테이블의 총 호실 수 감소
+   * 4. 트랜잭션 커밋
+   *
    * @param {string} funeralHallId - 호실 ID
    * @param {string} funeralId - 장례식장 ID
-   * @returns {object} 삭제 결과
+   * @returns {Promise<Object>} 삭제 결과
+   * @throws {Error} 삭제 실패 시 오류 발생 (권한 없음, 존재하지 않는 호실 등)
    */
   async deleteFuneralHallInfo(funeralHallId, funeralId) {
     const transaction = await sequelize.transaction();
@@ -215,8 +268,13 @@ const funeralHallInfoService = {
   },
 
   /**
-   * 호실 요약 정보 불러오기 (장례식장 상세 페이지에 노출 되는 정보)
-   * 이름, 평수, 수용 가능 인원
+   * 호실 요약 정보 조회
+   *
+   * 장례식장 상세 페이지에 노출되는 호실 요약 정보를 조회합니다.
+   * 이름, 평수, 수용 가능 인원 등의 정보를 포함합니다.
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Array>} 호실 요약 정보 목록
    */
   async getFuneralHallInfoSummary(funeralId) {
     const result = await funeralHallInfoDao.getFuneralHallInfoSummary(funeralId);

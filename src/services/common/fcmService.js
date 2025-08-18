@@ -1,3 +1,8 @@
+/**
+ * 파일명: fcmService.js
+ * 설명: FCM 관련 서비스: 토큰 관리, 알림 전송, 실패 토큰 처리, 알림 목록 조회 등
+ * 역할: FCM 토큰 관리, 알림 전송, 실패 토큰 처리, 알림 목록 조회 등
+ */
 // backend-project/src/services/common/fcmService.js
 import admin from '../../config/firebase.js';
 import logger from '../../config/logger.js';
@@ -8,16 +13,36 @@ import {
   getNotificationContent,
   canReceiveNotification,
 } from '../../utils/notificationTemplates.js';
-// import { validateUserExists } from '../../utils/userHelper.js';
+import { validateUserExists } from '../../utils/userHelper.js';
 
 const fcmService = {
   /**
    * FCM 토큰 등록/업데이트
+   *
+   * 처리 과정:
+   * 1. 사용자 존재 여부 검증
+   * 2. FCM 토큰 등록/업데이트
+   *
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {UserType} params.userType
+   * @param {string} params.fcmToken
+   * @param {string} params.deviceId
+   * @param {DeviceType} params.deviceType - 'ios' | 'android'
+   *
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {Object} data - FCM 토큰 데이터
+   * @returns {string} message - 결과 메시지
+   *
+   * @throws {Error} 사용자 존재 여부 검증 실패 시 오류 발생
+   * @throws {Error} FCM 토큰 등록/업데이트 실패 시 오류 발생
    */
   async registerToken({ userId, userType, fcmToken, deviceId, deviceType }) {
     try {
-      // 1. 사용자 존재 여부 검증 (테스트를 위해 임시로 주석 처리)
-      // await validateUserExists(userId, userType);
+      // 1. 사용자 존재 여부 검증
+      await validateUserExists(userId, userType);
 
       // 2. FCM 토큰 등록/업데이트
       const tokenRecord = await fcmTokenDao.createOrUpdateFcmToken({
@@ -42,6 +67,30 @@ const fcmService = {
 
   /**
    * 단일 사용자에게 푸시 알림 전송
+   *
+   * 처리과정:
+   * 1. 알림 권한 확인
+   * 2. 알림 내용 생성
+   * 3. 사용자의 활성 FCM 토큰 조회
+   * 4. 알림 이력 저장
+   * 5. 배지 카운트 조회
+   * 6. FCM 전송
+   * 7. 실패한 토큰 처리
+   *
+   * @param {Object} params
+   * @param {number} params.receiverId
+   * @param {UserType} params.receiverType
+   * @param {NotificationType} params.notificationType
+   * @param {Record<string, string|number|boolean>} [params.data={}]
+   * @param {number|null} [params.senderId=null]
+   * @param {UserType} [params.senderType='system']
+   *
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {number} successCount - 성공한 토큰 수
+   * @returns {number} failureCount - 실패한 토큰 수
+   * @returns {number} notificationId - 알림 ID
+   * @returns {string} reason - 실패 이유
    */
   async sendNotificationToUser({
     receiverId,
@@ -63,7 +112,6 @@ const fcmService = {
       // 2. 알림 내용 생성
       const { title, body } = getNotificationContent(notificationType, data);
 
-      console.log('🚀 ~ sendNotificationToUser ~ receiverId:', receiverId);
       // 3. 사용자의 활성 FCM 토큰 조회
       const tokens = await fcmTokenDao.findActiveTokensByUser(receiverId, receiverType);
 
@@ -143,6 +191,34 @@ const fcmService = {
 
   /**
    * 장례식장 그룹(대표 + 모든 직원)에게 푸시 알림 전송
+   *
+   * 처리 과정:
+   * 1. 알림 권한 확인
+   * 2. 알림 내용 생성
+   * 3. 장례식장 그룹의 사용자 정보 조회
+   * 4. 장례식장 그룹의 활성 FCM 토큰 조회
+   * 5. 각 사용자별로 알림 이력 저장 (FCM 토큰이 없어도 이력은 저장)
+   * 6. FCM 토큰이 없는 경우 알림 이력만 저장하고 종료
+   * 7. 각 사용자별 배지 카운트 계산 및 개별 FCM 전송
+   * 8. 실패한 토큰 처리
+   * 9. 트랜잭션 커밋
+   * 10. 성공 응답 반환
+   * 11. 실패 시 예외 처리
+   *
+   * @param {Object} params
+   * @param {string} params.funeralId
+   * @param {string} params.notificationType
+   * @param {Object} params.data
+   * @param {string} params.senderId
+   * @param {string} params.senderType
+   *
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {number} successCount - 성공한 토큰 수
+   * @returns {number} failureCount - 실패한 토큰 수
+   * @returns {number[]} notificationIds - 알림 ID 목록
+   * @returns {number} targetUsers - 대상 사용자 수
+   * @returns {string} reason - 실패 이유
    */
   async sendNotificationToFuneralGroup({
     funeralId,
@@ -307,7 +383,16 @@ const fcmService = {
   },
 
   /**
-   * 실패한 토큰들 처리
+   * FCM 전송 응답에서 무효/폐기된 토큰을 비활성화
+   * 기준 에러코드:
+   *  - messaging/registration-token-not-registered
+   *  - messaging/invalid-registration-token
+   * 전제: responses와 tokens의 인덱스가 서로 1:1로 대응한다.
+   *
+   * @param {Array<{success: boolean, error?: {code?: string}}>} responses FCM 개별 전송 응답 배열
+   * @param {Array<{fcmTokenId: number}>} tokens 전송에 사용한 토큰 레코드 배열(응답과 동일 순서)
+   * @param {object} [options] Sequelize 옵션(예: { transaction })
+   * @returns {Promise<void>} 비활성화만 수행(예외 전파는 상위에서 처리)
    */
   async handleFailedTokens(responses, tokens, options = {}) {
     const failedTokenIds = [];
@@ -334,6 +419,31 @@ const fcmService = {
 
   /**
    * 알림 목록 조회
+   *
+   * 처리 과정:
+   * 1. 알림 목록 조회
+   * 2. 읽지 않은 알림 개수 조회
+   * 3. 성공 응답 반환
+   * 4. 실패 시 예외 처리
+   *
+   * @param {string} userId
+   * @param {string} userType
+   * @param {Object} params
+   * @param {number} [params.page=1]
+   * @param {number} [params.limit=20]
+   * @param {boolean} [params.unreadOnly=false]
+   *
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {Object} data - 알림 목록 데이터
+   * @returns {Array} notifications - 알림 목록
+   * @returns {Object} pagination - 페이지네이션 정보
+   * @returns {number} totalCount - 총 알림 개수
+   * @returns {number} currentPage - 현재 페이지
+   * @returns {number} totalPages - 총 페이지 수
+   * @returns {number} unreadCount - 읽지 않은 알림 개수
+   *
+   * @throws {Error} 알림 목록 조회 실패 시 오류 발생
    */
   async getNotifications(userId, userType, { page = 1, limit = 20, unreadOnly = false } = {}) {
     try {
@@ -365,6 +475,21 @@ const fcmService = {
 
   /**
    * 사용자별 모든 FCM 토큰 비활성화 (로그아웃 시)
+   *
+   * 처리 과정:
+   * 1. 사용자 토큰 비활성화
+   * 2. 성공 응답 반환
+   * 3. 실패 시 예외 처리
+   *
+   * @param {string} userId
+   * @param {string} userType
+   * @param {string} deviceId
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {number} deactivatedCount - 비활성화된 토큰 수
+   * @returns {string} message - 결과 메시지
+   *
+   * @throws {Error} FCM 토큰 비활성화 실패 시 오류 발생
    */
   async deactivateUserTokens({ userId, userType, deviceId = null }) {
     try {
@@ -391,6 +516,15 @@ const fcmService = {
 
   /**
    * 특정 기기의 FCM 토큰만 비활성화
+   * @param {string} userId
+   * @param {string} userType
+   * @param {string} deviceId
+   * @returns {Promise<Object>}
+   * @returns {boolean} success - 성공 여부
+   * @returns {number} deactivatedCount - 비활성화된 토큰 수
+   * @returns {string} message - 결과 메시지
+   *
+   * @throws {Error} FCM 토큰 비활성화 실패 시 오류 발생
    */
   async deactivateDeviceToken({ userId, userType, deviceId }) {
     return await this.deactivateUserTokens({ userId, userType, deviceId });
