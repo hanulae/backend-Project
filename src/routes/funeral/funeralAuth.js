@@ -1,3 +1,8 @@
+/**
+ * 장례식장 인증/계정 관리 라우터
+ * - 로그인/로그아웃, 비밀번호/휴대폰/계좌 정보 변경, 아이디 찾기(SMS 인증) 기능 제공
+ * - 일부 엔드포인트는 인증 미들웨어가 필요합니다.
+ */
 import express from 'express';
 import * as funeralAuthService from '../../services/funeral/funeralAuthService.js';
 import authMiddleware from '../../middlewares/authMiddleware.js';
@@ -5,16 +10,43 @@ import fcmService from '../../services/common/fcmService.js';
 
 const router = express.Router();
 
+/**
+ * [POST] /funeral/auth/login
+ * 로그인
+ *
+ * Body:
+ * - funeralUsername: string (필수)
+ * - funeralPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '로그인 성공', ...result }  // 토큰, 사용자 정보 등 포함
+ * - 401 Unauthorized: 인증 실패
+ */
 // 로그인
 router.post('/login', async (req, res) => {
   try {
-    const result = await funeralAuthService.login(req.body);
+    const { funeralUsername, funeralPassword } = req.body;
+    const result = await funeralAuthService.login({ funeralUsername, funeralPassword });
     res.status(200).json({ message: '로그인 성공', ...result });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
 });
 
+/**
+ * [POST] /funeral/auth/logout
+ * 로그아웃 (인증 필요)
+ *
+ * Body:
+ * - deviceId?: string (선택, 제공 시 해당 기기만 로그아웃)
+ *
+ * 동작:
+ * - FCM 토큰 비활성화 시도(오류가 나도 로그아웃은 지속)
+ *
+ * Response:
+ * - 200 OK: { message: '로그아웃 성공' }
+ * - 500 Internal Server Error
+ */
 // 로그아웃
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
@@ -39,6 +71,17 @@ router.post('/logout', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/auth/update/password
+ * 비밀번호 변경 (인증 필요)
+ *
+ * Body:
+ * - newPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '비밀번호 변경 완료' }
+ * - 400 Bad Request
+ */
 // 비밀번호 변경
 router.patch('/update/password', authMiddleware, async (req, res) => {
   try {
@@ -56,6 +99,18 @@ router.patch('/update/password', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/auth/update/password/lost
+ * 비밀번호 분실 시 비밀번호 변경
+ *
+ * Body:
+ * - phoneNumber: string (필수)
+ * - newPassword: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '비밀번호 변경 완료' }
+ * - 400 Bad Request
+ */
 // 비밀번호 분실 시 비밀번호 변경
 router.patch('/update/password/lost', async (req, res) => {
   try {
@@ -73,6 +128,17 @@ router.patch('/update/password/lost', async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/auth/update/phone
+ * 휴대폰 번호 변경 (인증 필요)
+ *
+ * Body:
+ * - newPhone: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '휴대폰 번호 변경 완료', funeral: Object }
+ * - 400 Bad Request
+ */
 // 휴대폰 번호 변경
 router.patch('/update/phone', authMiddleware, async (req, res) => {
   try {
@@ -92,6 +158,19 @@ router.patch('/update/phone', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [PATCH] /funeral/auth/update/bank-number
+ * 계좌 정보 변경 (인증 필요)
+ *
+ * Body:
+ * - funeralBankName: string (필수)
+ * - funeralBankNumber: string (필수, 숫자만 허용)
+ * - funeralBankHolder: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '계좌 정보 변경 완료', data: Object }
+ * - 400 Bad Request: 형식 오류 등
+ */
 // 계좌 정보 변경
 router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   try {
@@ -115,6 +194,17 @@ router.patch('/update/bank-number', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [POST] /funeral/auth/find/username/send
+ * 아이디 찾기용 SMS 인증코드 전송
+ *
+ * Body:
+ * - funeralPhoneNumber: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '인증 코드가 전송되었습니다.' }
+ * - 400 Bad Request
+ */
 // SMS 인증코드 전송
 router.post('/find/username/send', async (req, res) => {
   try {
@@ -130,6 +220,18 @@ router.post('/find/username/send', async (req, res) => {
   }
 });
 
+/**
+ * [POST] /funeral/auth/find/username/verify
+ * 인증코드 검증 후 아이디 찾기
+ *
+ * Body:
+ * - funeralPhoneNumber: string (필수)
+ * - code: string (필수)
+ *
+ * Response:
+ * - 200 OK: { message: '인증 성공', verified: true, username: string }
+ * - 400 Bad Request: { message: '인증 실패', verified: false }
+ */
 // 인증코드 검증 후 아이디 찾기
 router.post('/find/username/verify', async (req, res) => {
   try {
