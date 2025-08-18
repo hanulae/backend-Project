@@ -1,10 +1,22 @@
+/**
+ * 파일명: managerFormBidDao.js
+ * 설명: 상조팀장 견적 입찰 관련 데이터베이스 접근 객체
+ */
+
 import ManagerFormBid from '../../models/manager/managerFormBid.js';
 import funeralList from '../../models/funeral/funeralList.js';
 import managerForm from '../../models/manager/managerForm.js';
 import funeral from '../../models/funeral/funeral.js';
 import { Op, fn, col } from 'sequelize';
 
-// 상태별 업데이트 데이터 준비 함수 (중앙화)
+/**
+ * 상태별 업데이트 데이터 준비 함수 (중앙화)
+ * 입찰 상태에 따라 필요한 업데이트 데이터를 생성합니다.
+ *
+ * @param {string} status - 업데이트할 상태값
+ * @param {Object} additionalData - 추가 데이터 객체
+ * @returns {Object} 업데이트에 사용할 데이터 객체
+ */
 const getBidStatusUpdateData = (status, additionalData = {}) => {
   const statusMap = {
     bid_submitted: {
@@ -44,6 +56,15 @@ const getBidStatusUpdateData = (status, additionalData = {}) => {
 const managerFormBidDao = {
   /**
    * 입찰 신청서 생성
+   *
+   * 상조팀장이 작성한 견적 신청서에 대한 입찰 신청서를 생성합니다.
+   * 다수의 입찰 신청서를 한번에 생성할 수 있습니다(bulkCreate).
+   *
+   * @param {Array<Object>} managerFormBidData - 생성할 입찰 신청서 데이터 객체 배열
+   * @param {Object} options - 추가 옵션 객체
+   *   @param {Transaction} [options.transaction] - Sequelize 트랜잭션 객체
+   * @returns {Promise<Array<ManagerFormBid>>} 생성된 입찰 신청서 객체 배열
+   * @throws {Error} 입찰 신청서 생성 실패 시 발생
    */
   async createManagerFormBid(managerFormBidData, options = {}) {
     const result = await ManagerFormBid.bulkCreate(managerFormBidData, {
@@ -54,6 +75,13 @@ const managerFormBidDao = {
 
   /**
    * 각각의 견적신청서 마다 입찰 신청서 갯수 조회
+   *
+   * 견적신청서 ID 배열을 기반으로 각 견적신청서에 대한 입찰 신청서 갯수를 조회합니다.
+   * 중복된 견적신청서 ID가 있는 경우 중복된 견적신청서 ID는 한번만 계산됩니다.
+   *
+   * @param {Array<string>} managerFormIdArr - 견적신청서 ID 배열
+   * @returns {Object} 견적신청서 ID를 키로 하고 입찰 신청서 갯수를 값으로 하는 객체
+   * @throws {Error} 조회 실패 시 발생
    */
   async getBidCountByFormIds(managerFormIdArr) {
     const result = await ManagerFormBid.findAll({
@@ -76,6 +104,10 @@ const managerFormBidDao = {
   /**
    * managerFormBidId를 기반으로 조회
    * 장례식장 거래 완료 페이지에서 제안한 호실 정보 조회 시 사용을 위한 DAO로 만들어짐
+   *
+   * @param {string} managerFormBidId - 입찰 신청서 ID
+   * @returns {Promise<ManagerFormBid>} 입찰 신청서 객체
+   * @throws {Error} 조회 실패 시 발생
    */
   async getManagerFormBidByManagerFormBidId(managerFormBidId) {
     const result = await ManagerFormBid.findOne({
@@ -104,6 +136,10 @@ const managerFormBidDao = {
   /**
    * 견적신청서 ID를 기반으로 생성된 입찰 리스트 조회
    * 한명의 상주님의 입찰 리스트 조회
+   *
+   * @param {string} managerFormId - 견적신청서 ID
+   * @returns {Promise<Array<ManagerFormBid>>} 입찰 신청서 객체 배열
+   * @throws {Error} 조회 실패 시 발생
    */
   async getManagerFormBidStatusList(managerFormId) {
     const result = await ManagerFormBid.findAll({
@@ -126,6 +162,10 @@ const managerFormBidDao = {
 
   /**
    * 장례식장 ID를 통한 모든 상조팀장의 견적서 리스트 조회
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Array<ManagerFormBid>>} 입찰 신청서 객체 배열
+   * @throws {Error} 조회 실패 시 발생
    */
   async getAllManagerFormByFuneralId(funeralId) {
     const result = await ManagerFormBid.findAll({
@@ -167,6 +207,10 @@ const managerFormBidDao = {
 
   /**
    * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Array<ManagerFormBid>>} 입찰 신청서 객체 배열
+   * @throws {Error} 조회 실패 시 발생
    */
   async getAdminManagerFormByFuneralId(funeralId) {
     const result = await ManagerFormBid.findAll({
@@ -188,6 +232,10 @@ const managerFormBidDao = {
 
   /**
    * managerFormBidId를 기반으로 managerFormId 조회
+   *
+   * @param {string} managerFormBidId - 입찰 신청서 ID
+   * @returns {Promise<string>} 견적신청서 ID
+   * @throws {Error} 조회 실패 시 발생
    */
   async getManagerFormIdByManagerFormBidId(managerFormBidId) {
     const result = await ManagerFormBid.findOne({
@@ -202,6 +250,12 @@ const managerFormBidDao = {
 
   /**
    * managerFormBidId를 기반으로 입찰 신청서 조회
+   *
+   * @param {string} managerFormBidId - 입찰 신청서 ID
+   * @param {string} type - 조회 타입 ('funeral', 'manager')
+   * @param {Object} options - 추가 옵션 객체
+   * @returns {Promise<ManagerFormBid>} 입찰 신청서 객체
+   * @throws {Error} 조회 실패 시 발생
    */
   async getManagerFormBidById(managerFormBidId, type, options = {}) {
     if (type === 'funeral') {
@@ -244,6 +298,12 @@ const managerFormBidDao = {
 
   /**
    * 장례식장 입찰 신청, 상조팀장 출동 신청 시 상태 업데이트
+   *
+   * @param {Object} params - 업데이트할 데이터 객체
+   * @param {string} status - 업데이트할 상태값
+   * @param {Object} options - 추가 옵션 객체
+   * @returns {Promise<[number]>} 영향받은 행 수를 포함하는 배열
+   * @throws {Error} 업데이트 실패 시 발생
    */
   async updateManagerFormBidStatus(params, status, options = {}) {
     const updateData = {
@@ -266,7 +326,8 @@ const managerFormBidDao = {
    * @param {string} managerFormId
    * @param {string} excludeBidId 제외할 입찰제안서 ID
    * @param {Object} options
-   * @returns {Promise<Array>}
+   * @returns {Promise<Array<ManagerFormBid>>} 입찰 신청서 객체 배열
+   * @throws {Error} 조회 실패 시 발생
    */
   async getOtherManagerFormBidByManagerFormId(managerFormId, excludeBidId, options = {}) {
     const bids = await ManagerFormBid.findAll({

@@ -1,3 +1,7 @@
+/**
+ * 파일명: managerForm.js
+ * 설명: 상조팀장의 견적서 관련 라우터 관리
+ */
 import express from 'express';
 import logger from '../../config/logger.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
@@ -7,17 +11,19 @@ import authMiddleware from '../../middlewares/authMiddleware.js';
 const router = express.Router();
 
 /**
- * 상조팀장 견적 신청
- * @body {
- * managerId: string(JWT),
- * chiefMournerName: string, // 상주 이름
- * deceasedName: string, // 고인 이름 (선택)
- * numberOfMourners: number, // 예상 조문객 수
- * roomSize: number, // 평수 (선택)
- * checkInDate: string, // 입실일자
- * checkOutDate: string, // 퇴실일자
- * funeralList: string[], // 장례식장 리스트
- * }
+ * @route POST /api/manager/form/create
+ * @desc 상조팀장 견적 신청
+ * @access Private
+ * @param {Object} req.body
+ * @param {string} req.body.chiefMournerName - 상주 이름
+ * @param {string} req.body.checkInDate - 입실일자
+ * @param {string} req.body.checkOutDate - 퇴실일자
+ * @param {string[]} req.body.funeralList - 장례식장 리스트
+ * @param {number} req.body.numberOfMourners - 예상 조문객 수
+ * @param {number} req.body.roomSize - 평수 (선택)
+ * @returns {Object} 201 - 견적 신청 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post(
   '/create',
@@ -62,9 +68,13 @@ router.post(
 );
 
 /**
- * 모든 견적 신청 내역 리스트 조회
- * 피그마 상의 헤더 견적내역 부분
- * @Token managerId: string(JWT)
+ * @route GET /api/manager/form/list
+ * @desc 모든 견적 신청 내역 리스트 조회
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.managerId - 상조팀장 ID
+ * @returns {Object} 200 - 견적 내역 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
  */
 router.get('/list', authMiddleware, async (req, res) => {
   try {
@@ -83,9 +93,13 @@ router.get('/list', authMiddleware, async (req, res) => {
 });
 
 /**
- * 한명의 상주님 견적 신청 내역 리스트 조회
- * 피그마 헤더 홍길동 상주님 견적 페이지 부분
- * @query managerFormId: string,
+ * @route GET /api/manager/form/bid/list/:managerFormId
+ * @desc 한명의 상주님 견적 신청 내역 리스트 조회
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.managerFormId - 견적 신청 ID
+ * @returns {Object} 200 - 견적 내역 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
  */
 router.get(
   '/bid/list/:managerFormId',
@@ -109,9 +123,13 @@ router.get(
 );
 
 /**
- * 견적서에 대한 입찰 상세 내용 조회
- * 피그마의 입찰 상세 부분
- * @query managerFormBidId: string,
+ * @route GET /api/manager/form/bid/detail/:managerFormBidId
+ * @desc 견적서에 대한 입찰 상세 내용 조회
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.managerFormBidId - 견적 입찰 ID
+ * @returns {Object} 200 - 견적 입찰 상세 내용 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
  */
 router.get(
   '/bid/detail/:managerFormBidId',

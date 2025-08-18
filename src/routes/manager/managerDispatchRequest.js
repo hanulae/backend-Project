@@ -1,3 +1,7 @@
+/**
+ * 파일명: managerDispatchRequest.js
+ * 설명: 상조팀장의 출동 신청 관련 라우터 관리
+ */
 import express from 'express';
 import logger from '../../config/logger.js';
 import { validateRequiredFields, validateUUID } from '../../middleware/validators.js';
@@ -7,18 +11,19 @@ import authMiddleware from '../../middlewares/authMiddleware.js';
 const router = express.Router();
 
 /**
- * 출동 신청
- * @Header {string} managerId(JWT) - 토큰 값
- * @Body {
- *  address: string, // 주소
- *  addressDetail: string, // 상세 주소
- *  famPhoneNumber: string, // 가족 연락처
- *  managerPhoneNumber: string, // 상조 팀장 연락처
- *  emergencyPhoneNumber: string, // 비상 연락처
- *  funeralId: string, // 장례식장 Id
- *  managerFormId: string, // 견적서 Id
- *  managerFormBidId: string, // 입찰서 Id
- * }
+ * @route POST /api/manager/dispatch-request/create
+ * @desc 상조팀장 출동 신청
+ * @access Private
+ * @param {Object} req.body
+ * @param {string} req.body.address - 주소
+ * @param {string} req.body.addressDetail - 상세 주소
+ * @param {string} req.body.managerPhoneNumber - 상조 팀장 연락처
+ * @param {string} req.body.funeralId - 장례식장 Id
+ * @param {string} req.body.managerFormId - 견적서 Id
+ * @param {string} req.body.managerFormBidId - 입찰서 Id
+ * @returns {Object} 201 - 출동 신청 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post(
   '/create',
@@ -63,7 +68,14 @@ router.post(
 );
 
 /**
- * 출동 진행 내역 상세
+ * @route GET /api/manager/dispatch-request/detail/:dispatchRequestId
+ * @desc 출동 진행 내역 상세
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.dispatchRequestId - 출동 신청 ID
+ * @returns {Object} 200 - 출동 신청 내역 상세 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get(
   '/detail/:dispatchRequestId',
@@ -91,8 +103,14 @@ router.get(
 );
 
 /**
- * 거래 흐름 상태 조회
- * 상조팀장 거래 완료 시 버튼 상태 확인을 위한 라우터
+ * @route GET /api/manager/dispatch-request/transaction-detail/:dispatchRequestId
+ * @desc 거래 흐름 상태 조회
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.dispatchRequestId - 출동 신청 ID
+ * @returns {Object} 200 - 거래 흐름 상태 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get(
   '/transaction-detail/:dispatchRequestId',
@@ -127,7 +145,14 @@ router.get(
 );
 
 /**
- * 출동 신청 내역 리스트 조회
+ * @route GET /api/manager/dispatch-request/list
+ * @desc 출동 신청 내역 리스트 조회
+ * @access Private
+ * @params {Object} req.user
+ * @params {string} req.user.managerId - 상조팀장 ID
+ * @returns {Object} 200 - 출동 신청 내역 리스트 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get('/list', authMiddleware, async (req, res) => {
   try {
@@ -149,7 +174,14 @@ router.get('/list', authMiddleware, async (req, res) => {
 });
 
 /**
- * 출동 신청 취소
+ * @route DELETE /api/manager/dispatch-request/cancel/:dispatchRequestId
+ * @desc 출동 신청 취소
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.dispatchRequestId - 출동 신청 ID
+ * @returns {Object} 200 - 출동 신청 취소 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.delete(
   '/cancel/:dispatchRequestId',
@@ -176,7 +208,14 @@ router.delete(
 );
 
 /**
- * 장례식장 전화번호 불러오기
+ * @route GET /api/manager/dispatch-request/funeral-phone-number/:funeralId
+ * @desc 장례식장 전화번호 불러오기
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.funeralId - 장례식장 ID
+ * @returns {Object} 200 - 장례식장 전화번호 불러오기 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get(
   '/funeral-phone-number/:funeralId',
@@ -195,11 +234,14 @@ router.get(
 );
 
 /**
- * 상조 팀장 거래 완료
- * @Header {string} managerId(JWT) - 토큰 값 (추가예정)
- * @Body {
- *  dispatchRequestId: string, // 출동 신청 Id
- * }
+ * @route POST /api/manager/dispatch-request/complete/:dispatchRequestId
+ * @desc 상조 팀장 거래 완료
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.dispatchRequestId - 출동 신청 ID
+ * @returns {Object} 200 - 상조 팀장 거래 완료 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post(
   '/complete/:dispatchRequestId',

@@ -1,3 +1,7 @@
+/**
+ * 파일명: managerWithdrawal.js
+ * 설명: 상조팀장의 탈퇴 관련 라우터 관리
+ */
 import express from 'express';
 import authMiddleware from '../../middlewares/authMiddleware.js';
 import accountDeletionService from '../../services/common/accountDeletionService.js';
@@ -7,8 +11,14 @@ import logger from '../../config/logger.js';
 const router = express.Router();
 
 /**
- * 회원탈퇴 가능 여부 확인
- * GET /api/manager/withdrawal/check
+ * @route GET /api/manager/withdrawal/check
+ * @desc 회원탈퇴 가능 여부 확인
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.managerId - 상조팀장 ID
+ * @returns {Object} 200 - 회원탈퇴 가능 여부 확인 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get('/check', authMiddleware, async (req, res) => {
   try {
@@ -33,8 +43,14 @@ router.get('/check', authMiddleware, async (req, res) => {
 });
 
 /**
- * SMS 인증코드 발송
- * POST /api/manager/withdrawal/send-sms
+ * @route POST /api/manager/withdrawal/send-sms
+ * @desc SMS 인증코드 발송
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.managerId - 상조팀장 ID
+ * @returns {Object} 200 - SMS 인증코드 발송 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post('/send-sms', authMiddleware, async (req, res) => {
   try {
@@ -81,8 +97,15 @@ router.post('/send-sms', authMiddleware, async (req, res) => {
 });
 
 /**
- * 회원탈퇴 실행 (SMS 인증 포함)
- * POST /api/manager/withdrawal/delete
+ * @route POST /api/manager/withdrawal/delete
+ * @desc 회원탈퇴 실행 (SMS 인증 포함)
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.managerId - 상조팀장 ID
+ * @param {string} req.body.smsCode - SMS 인증코드
+ * @returns {Object} 200 - 회원탈퇴 실행 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post('/delete', authMiddleware, async (req, res) => {
   try {
