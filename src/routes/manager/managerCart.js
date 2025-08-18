@@ -1,3 +1,8 @@
+/**
+ * 모듈: managerCart (base: /api/manager/cart)
+ * 목적: 상조팀장의 장바구니 관리 라우터 관리
+ * 정보: 장바구니 추가 기능은 현재 사용하지 않고 있음 서버에 저장이 아닌 AsyncStorage에 저장하는 방식으로 사용중
+ */
 import express from 'express';
 import ManagerCartService from '../../services/manager/managerCartService.js';
 import logger from '../../config/logger.js';
@@ -5,6 +10,13 @@ import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+/**
+ * [POST] /add - 장바구니 추가
+ * 인증: 필요(authMiddleware)
+ * 요청: { funeralListId: string[] }
+ * 응답: 200 { success: true, data: result }
+ * 오류: 400, 401, 500
+ */
 router.post('/add', authMiddleware, async (req, res) => {
   try {
     const { funeralListId } = req.body;
@@ -26,6 +38,13 @@ router.post('/add', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [GET] /list - 장바구니 조회
+ * 인증: 필요(authMiddleware)
+ * 요청: 없음
+ * 응답: 200 { success: true, data: result }
+ * 오류: 400, 401, 500
+ */
 router.get('/list', authMiddleware, async (req, res) => {
   try {
     const managerId = req.user.managerId;
@@ -35,7 +54,7 @@ router.get('/list', authMiddleware, async (req, res) => {
     }
 
     const result = await ManagerCartService.getManagerCart(managerId);
-    console.log('result', result.data.cartList.length);
+
     res.status(200).json(result);
   } catch (error) {
     logger.error('상조팀장 장바구니 조회 실패', error);
@@ -43,6 +62,13 @@ router.get('/list', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * [DELETE] /delete - 장바구니 삭제
+ * 인증: 필요(authMiddleware)
+ * 요청: { managerCartId: string[] }
+ * 응답: 200 { success: true, data: result }
+ * 오류: 400, 401, 500
+ */
 router.delete('/delete', authMiddleware, async (req, res) => {
   try {
     const { managerCartId } = req.body;

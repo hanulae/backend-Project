@@ -1,3 +1,8 @@
+/**
+ * 파일명: managerFormByFuneralService.js
+ * 설명: 장례식장 관점에서의 견적서 관련 비즈니스 로직 처리 서비스
+ * 역할: 장례식장이 상조팀장의 견적 신청을 조회하고 입찰하는 기능 제공
+ */
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import { sequelize } from '../../config/database.js';
@@ -12,6 +17,12 @@ const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOL
 const managerFormByFuneralService = {
   /**
    * 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   *
+   * 특정 장례식장에 요청된 모든 견적 신청서를 조회합니다.
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Object>} 견적 신청서 목록
+   * @throws {Error} 조회 실패 시 오류 발생
    */
   async getManagerForm(funeralId) {
     try {
@@ -29,7 +40,13 @@ const managerFormByFuneralService = {
   },
 
   /**
-   * 관리자 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   * 관리자용 장례식장 별 상조 팀장의 모든 견적 신청서 조회
+   *
+   * 관리자 페이지에서 특정 장례식장에 요청된 모든 견적 신청서를 조회합니다.
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Object>} 견적 신청서 목록
+   * @throws {Error} 조회 실패 시 오류 발생
    */
   async getManagerFormByFuneralId(funeralId) {
     try {
@@ -46,7 +63,13 @@ const managerFormByFuneralService = {
   },
 
   /**
-   * 견적서 별 상세 내용 조회
+   * 견적서 상세 내용 조회
+   *
+   * 특정 입찰 ID에 해당하는 견적서의 상세 내용을 조회합니다.
+   *
+   * @param {string} managerFormBidId - 입찰 ID
+   * @returns {Promise<Object>} 견적서 상세 정보
+   * @throws {Error} 조회 실패 시 오류 발생
    */
   async getManagerFormDetail(managerFormBidId) {
     try {
@@ -68,6 +91,25 @@ const managerFormByFuneralService = {
 
   /**
    * 장례식장 입찰 신청
+   *
+   * 처리 과정:
+   * 1. 기존 입찰 데이터 조회 및 상태 확인
+   * 2. 입찰 신청 처리 및 상태 업데이트
+   * 3. 견적서 상태 업데이트
+   * 4. 상조팀장에게 알림 전송 (FCM, SMS)
+   *
+   * @param {Object} params - 입찰 정보
+   * @param {string} params.managerFormBidId - 입찰 ID
+   * @param {string} params.funeralId - 장례식장 ID
+   * @param {string} params.funeralHallName - 호실 이름
+   * @param {number} params.funeralHallSize - 호실 평수
+   * @param {number} params.funeralHallNumberOfMourners - 수용 가능 인원
+   * @param {number} params.funeralHallPrice - 호실 가격
+   * @param {Object} params.funeralHallDetailPrice - 호실 상세 가격 정보
+   * @param {number} params.proponentMoney - 제안 금액
+   * @param {number} params.discount - 할인율
+   * @returns {Promise<Object>} 입찰 신청 결과
+   * @throws {Error} 입찰 신청 실패 시 오류 발생
    */
   async updateManagerFormBid(params) {
     const transaction = await sequelize.transaction();
@@ -156,7 +198,15 @@ const managerFormByFuneralService = {
     }
   },
 
-  // 장례식장 입찰 상세 내용 조회
+  /**
+   * 장례식장 입찰 상세 내용 조회
+   *
+   * 장례식장 관점에서 특정 입찰의 상세 내용을 조회합니다.
+   *
+   * @param {string} managerFormBidId - 입찰 ID
+   * @returns {Promise<Object>} 입찰 상세 정보
+   * @throws {Error} 입찰 정보를 찾을 수 없을 경우 오류 발생
+   */
   async getManagerFormBidDetail(managerFormBidId) {
     const managerFormBidDetail = await managerFormBidDao.getManagerFormBidById(
       managerFormBidId,
@@ -170,7 +220,13 @@ const managerFormByFuneralService = {
     return managerFormBidDetail;
   },
 
-  // 장례식장 입찰 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단.
+  /**
+   * 장례식장 입찰 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단
+   * (현재 사용하지 않는 주석 처리된 메서드)
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<Object|boolean>} 입찰 가능 여부 및 메시지
+   */
   // async checkAboutCashAmount(funeralId) {
   //   // 1. 입찰 하려는 장례식장의 현재 보유 캐시 조회
   //   const cashAmount = await getCurrentCash(funeralId);

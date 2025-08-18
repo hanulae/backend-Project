@@ -1,3 +1,8 @@
+/**
+ * 파일명: dispatchRequestService.js
+ * 설명: 출동 요청 관련 비즈니스 로직 처리 서비스
+ * 역할: 상조팀장과 장례식장 간의 출동 요청, 승인, 거래 완료 등의 프로세스 관리
+ */
 import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
 import dispatchRequestDao from '../../dao/common/dispatchRequestDao.js';
@@ -24,8 +29,31 @@ import coolsms from 'coolsms-node-sdk';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
 const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
+/**
+ * 출동 요청 관련 서비스 클래스
+ * 상조팀장과 장례식장 간의 출동 요청, 승인, 거래 완료 등의 프로세스를 관리합니다.
+ */
 class DispatchRequestService {
-  // 상조 팀장 출동 신청 생성
+  /**
+   * 상조 팀장 출동 신청 생성
+   *
+   * 처리 과정:
+   * 1. 중복 신청 여부 확인
+   * 2. 문어발식 출동 신청 방지 (이미 다른 장례식에 출동 신청 중인지 확인)
+   * 3. 견적서 상태를 'bid_selected'로 변경
+   * 4. 입찰 상태를 'bid_selected'로 변경
+   * 5. 출동 신청 생성
+   * 6. 장례식장에 알림 전송 (FCM, SMS)
+   *
+   * @param {Object} params - 출동 신청 파라미터
+   * @param {string} params.managerId - 상조팀장 ID
+   * @param {string} params.funeralId - 장례식장 ID
+   * @param {string} params.managerFormId - 견적서 ID
+   * @param {string} params.managerFormBidId - 입찰 ID
+   *
+   * @returns {Promise<Object>} 생성된 출동 신청 정보
+   * @throws {Error} 중복 신청, 이미 다른 장례식에 출동 신청 중인 경우 등 오류 발생
+   */
   static async createDispatchRequest(params) {
     const transaction = await sequelize.transaction();
     try {
@@ -141,7 +169,14 @@ class DispatchRequestService {
     }
   }
 
-  // (공통) manager, funeral 출동 신청 내역 리스트 조회
+  /**
+   * 출동 신청 내역 리스트 조회 (공통)
+   *
+   * 상조팀장 또는 장례식장 ID를 기반으로 출동 신청 내역 목록을 조회합니다.
+   *
+   * @param {string} userId - 사용자 ID (상조팀장 또는 장례식장 ID)
+   * @returns {Promise<Array>} 출동 신청 내역 목록
+   */
   static async getDispatchRequestList(userId) {
     const dispatchRequestList = await dispatchRequestDao.getDispatchRequestList(userId);
 
@@ -158,7 +193,14 @@ class DispatchRequestService {
     });
   }
 
-  // (공통) manager, funeral 출동 신청 내역 상세 조회
+  /**
+   * 출동 신청 상세 내역 조회 (공통)
+   *
+   * 출동 신청 ID를 기반으로 상세 정보를 조회합니다.
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @returns {Promise<Object>} 출동 신청 상세 정보
+   */
   static async getDispatchRequestDetail(dispatchRequestId) {
     const dispatchRequestDetail =
       await dispatchRequestDao.getDispatchRequestDetail(dispatchRequestId);
@@ -166,7 +208,21 @@ class DispatchRequestService {
     return dispatchRequestDetail;
   }
 
-  // 상조 팀장 출동 신청 취소
+  /**
+   * 상조 팀장 출동 신청 취소
+   *
+   * 처리 과정:
+   * 1. 출동 요청서 상태 확인
+   * 2. 출동 요청서 상태를 canceled로 변경 및 softDelete 처리
+   * 3. 견적서 상태를 bid_received로 변경
+   * 4. 입찰 상태를 cancel로 변경
+   * 5. 다른 장례식장들의 입찰 상태를 원래대로 되돌리기
+   * 6. 장례식장에 취소 알림 전송 (FCM, SMS)
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @returns {Promise<boolean>} 취소 성공 여부
+   * @throws {Error} 존재하지 않는 출동 신청, 취소 불가능한 상태 등 오류 발생
+   */
   static async cancelDispatchRequest(dispatchRequestId) {
     const transaction = await sequelize.transaction();
     try {
@@ -176,7 +232,7 @@ class DispatchRequestService {
         { transaction },
       );
 
-      console.log('🚀 ~ cancelDispatchRequest ~ getDispatchRequest:', getDispatchRequest);
+      // 출동 요청서 상태 확인
 
       if (!getDispatchRequest) {
         throw new Error('실패: 존재하지 않는 출동 신청 내역');
@@ -320,7 +376,21 @@ class DispatchRequestService {
     }
   }
 
-  // 장례식장 출동 신청 승인
+  /**
+   * 장례식장 출동 신청 승인
+   *
+   * 처리 과정:
+   * 1. 출동 신청서 상태 확인
+   * 2. 출동 신청서 상태를 approved로 변경
+   * 3. 견적서 상태를 bid_progress로 변경
+   * 4. 입찰 상태를 bid_progress로 변경
+   * 5. 다른 입찰 상태 변경 (입찰 제안한 장례식장: rejected, 입찰 제안을 하지 않은 장례식장: expired)
+   * 6. 상조팀장에게 승인 알림 전송 (FCM, SMS)
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @returns {Promise<boolean>} 승인 성공 여부
+   * @throws {Error} 존재하지 않는 출동 신청, 이미 승인된 출동 신청 등 오류 발생
+   */
   static async approveDispatchRequest(dispatchRequestId) {
     const transaction = await sequelize.transaction();
     try {
@@ -330,7 +400,7 @@ class DispatchRequestService {
         { transaction },
       );
 
-      console.log('🚀 ~ approveDispatchRequest ~ getDispatchRequest:', getDispatchRequest);
+      // 출동 신청서 상태 확인
 
       if (!getDispatchRequest) {
         throw new Error('실패: 존재하지 않는 출동 신청 내역');
@@ -453,14 +523,27 @@ class DispatchRequestService {
     }
   }
 
-  // 장례식장 전화번호 불러오기
+  /**
+   * 장례식장 전화번호 조회
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @returns {Promise<string>} 장례식장 전화번호
+   */
   static async getFuneralPhoneNumber(funeralId) {
     const funeralPhoneNumber = await getFuneralPhoneNumber(funeralId);
 
     return funeralPhoneNumber.funeralPhoneNumber;
   }
 
-  // 장례식장 호실 정보 조회 by managerFormBidId
+  /**
+   * 장례식장 호실 정보 조회
+   *
+   * 입찰 ID를 기반으로 장례식장 호실 정보를 조회합니다.
+   *
+   * @param {string} managerFormBidId - 입찰 ID
+   * @returns {Promise<Object>} 장례식장 호실 정보
+   * @throws {Error} 존재하지 않는 입찰 내역일 경우 오류 발생
+   */
   static async getFuneralHallInfoByBidId(managerFormBidId) {
     // 1. managerFormBid 조회
     const managerFormBid =
@@ -481,7 +564,19 @@ class DispatchRequestService {
     return InfoData;
   }
 
-  // 거래완료 처리 - 메인 메서드
+  /**
+   * 거래완료 처리 - 메인 메서드
+   *
+   * 처리 과정:
+   * 1. 기본 검증 (출동 신청 존재 여부, 상태 확인)
+   * 2. 거래 상태 업데이트
+   * 3. 양쪽 모두 완료 시 최종 처리 (포인트/캐시 처리, 상태 업데이트, 알림 전송)
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @param {string} userType - 사용자 타입 (manager, funeral)
+   * @returns {Promise<Object>} 거래완료 처리 결과
+   * @throws {Error} 거래완료 처리 중 오류 발생
+   */
   static async completeDispatchRequest(dispatchRequestId, userType) {
     const transaction = await sequelize.transaction();
 
@@ -514,7 +609,17 @@ class DispatchRequestService {
     }
   }
 
-  // 1. 기본 검증
+  /**
+   * 출동 신청 기본 검증
+   *
+   * 출동 신청의 존재 여부와 상태를 검증합니다.
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @param {string} userType - 사용자 타입 (manager, funeral)
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<Object>} 검증된 출동 신청 정보
+   * @throws {Error} 존재하지 않는 출동 신청, 거래완료 불가능한 상태 등 오류 발생
+   */
   static async validateDispatchRequest(dispatchRequestId, userType, options = {}) {
     const dispatchRequest = await dispatchRequestDao.getDispatchRequestDetail(
       dispatchRequestId,
@@ -532,7 +637,26 @@ class DispatchRequestService {
     return dispatchRequest;
   }
 
-  // 2. 거래 상태 업데이트
+  /**
+   * 거래 상태 업데이트
+   *
+   * 거래 상태를 업데이트하고 필요한 경우 새로운 거래 기록을 생성합니다.
+   *
+   * 처리 과정:
+   * - 기존 거래 기록이 없는 경우:
+   *   - 장례식장이 먼저 거래완료 시: 포인트/캐시 예약 처리
+   *   - 상조팀장이 먼저 거래완료 시: 기본 거래 기록 생성
+   *   - 상대방에게 알림 전송
+   * - 기존 거래 기록이 있는 경우:
+   *   - 이미 완료한 경우: 오류 메시지 반환
+   *   - 양쪽 모두 완료 시: 최종 처리 진행
+   *
+   * @param {string} dispatchRequestId - 출동 신청 ID
+   * @param {string} userType - 사용자 타입 (manager, funeral)
+   * @param {Object} dispatchRequest - 출동 신청 정보
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<Object>} 거래 상태 업데이트 결과
+   */
   static async updateTransactionStatus(dispatchRequestId, userType, dispatchRequest, options = {}) {
     const now = new Date();
     const totalAmount = parseInt(process.env.TOTAL_AMOUNT);
@@ -699,7 +823,18 @@ class DispatchRequestService {
     }
   }
 
-  // 3. 포인트/캐시 검증 및 처리
+  /**
+   * 포인트/캐시 검증 및 처리
+   *
+   * 장례식장의 포인트와 캐시를 검증하고, 결제 처리에 필요한 정보를 계산합니다.
+   * 포인트를 우선적으로 사용하고, 부족한 금액은 캐시로 처리합니다.
+   *
+   * @param {string} funeralId - 장례식장 ID
+   * @param {number} totalAmount - 총 결제 금액
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<Object>} 결제 처리 정보
+   * @throws {Error} 잔액 부족 시 오류 발생
+   */
   static async validateAndProcessPayment(funeralId, totalAmount, options = {}) {
     // 현재 포인트/캐시 조회
     const { funeralPoint, funeralCash } = await getFuneralPointAndCash(funeralId, options);
@@ -727,7 +862,22 @@ class DispatchRequestService {
     };
   }
 
-  // 4. 최종 거래 완료 처리
+  /**
+   * 최종 거래 완료 처리
+   *
+   * 양쪽 모두 거래완료 처리 시 최종 처리를 수행합니다.
+   *
+   * 처리 과정:
+   * 1. 장례식장이 먼저 완료한 경우: 예약된 포인트/캐시 정보 사용, 히스토리 상태 업데이트
+   * 2. 상조팀장이 먼저 완료한 경우: 포인트/캐시 차감 및 히스토리 생성
+   * 3. 공통 처리: 모든 상태 업데이트, 상조팀장 캐시 증가, 히스토리 생성
+   * 4. 최종 거래 완료 알림 전송
+   *
+   * @param {Object} dispatchRequest - 출동 신청 정보
+   * @param {string} transactionId - 거래 ID
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<void>}
+   */
   static async processCompleteTransaction(dispatchRequest, transactionId, options = {}) {
     const managerCashAmount = parseInt(process.env.AMOUNT_OF_CASH_MANAGER, 10);
 
@@ -867,7 +1017,15 @@ class DispatchRequestService {
     }, 100);
   }
 
-  // 5. 모든 상태를 완료로 업데이트
+  /**
+   * 모든 상태를 완료로 업데이트
+   *
+   * 출동 신청서, 견적서, 입찰서의 상태를 모두 완료 상태로 업데이트합니다.
+   *
+   * @param {Object} dispatchRequest - 출동 신청 정보
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<void>}
+   */
   static async updateAllStatusToCompleted(dispatchRequest, options = {}) {
     // 출동신청서 상태 업데이트
     await dispatchRequestDao.updateDispatchRequestStatus(
@@ -891,7 +1049,18 @@ class DispatchRequestService {
     );
   }
 
-  // 8. 장례식장 선 거래완료 시 포인트/캐시 예약 메서드
+  /**
+   * 장례식장 선 거래완료 시 포인트/캐시 예약
+   *
+   * 장례식장이 먼저 거래완료를 요청한 경우, 포인트와 캐시를 예약(차감)합니다.
+   * 포인트를 우선적으로 사용하고, 부족한 금액은 캐시로 처리합니다.
+   *
+   * @param {Object} dispatchRequest - 출동 신청 정보
+   * @param {number} totalAmount - 총 결제 금액
+   * @param {Object} options - Sequelize 옵션 (트랜잭션 등)
+   * @returns {Promise<Object>} 예약된 포인트 및 캐시 정보
+   * @throws {Error} 잔액 부족 시 오류 발생
+   */
   static async reserveFuneralBalance(dispatchRequest, totalAmount, options = {}) {
     const { funeralPoint, funeralCash } = await getFuneralPointAndCash(
       dispatchRequest.funeralId,

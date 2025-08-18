@@ -1,3 +1,7 @@
+/**
+ * 모듈: managerFuneralList (base: /api/manager/funeral)
+ * 목적: 상조팀장의 장례식장 리스트 관련 라우터 관리
+ */
 import express from 'express';
 import logger from '../../config/logger.js';
 import funeralListService from '../../services/manager/funeralListService.js';
@@ -7,6 +11,19 @@ const router = express.Router();
 
 // 장례식장 리스트 조회 및 검색
 /**
+ * @route GET /api/manager/funeral/search
+ * @desc 장례식장 리스트 조회 및 검색
+ * @access Private
+ * @param {Object} req.query
+ * @param {string} req.query.keyword - 검색어
+ * @param {string} req.query.sido - 시/도
+ * @param {string} req.query.sigungu - 시/군/구
+ * @param {number} req.query.page - 페이지
+ * @param {number} req.query.limit - 페이지 당 항목 수
+ * @returns {Object} 200 - 장례식장 리스트 조회 및 검색 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ * 
  * 전체 리스트 (검색 조건 없음)
  * GET /api/manager/funeral/search?page=1&limit=10
 
@@ -59,7 +76,16 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// 장례식장 상세 조회
+/**
+ * @route GET /api/manager/funeral/detail/:funeralListId
+ * @desc 장례식장 상세 조회
+ * @access Private
+ * @param {Object} req.params
+ * @param {string} req.params.funeralListId - 장례식장 ID
+ * @returns {Object} 200 - 장례식장 상세 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get(
   '/detail/:funeralListId',
   validateUUID(['funeralListId'], 'params'),
@@ -86,7 +112,14 @@ router.get(
   },
 );
 
-// 시/도 목록 조회
+/**
+ * @route GET /api/manager/funeral/regions
+ * @desc 시/도 목록 조회
+ * @access Private
+ * @returns {Object} 200 - 시/도 목록 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get('/regions', async (req, res) => {
   try {
     const result = await funeralListService.getRegions();
@@ -105,7 +138,16 @@ router.get('/regions', async (req, res) => {
   }
 });
 
-// 시/군/구 목록 조회
+/**
+ * @route GET /api/manager/funeral/cities
+ * @desc 시/군/구 목록 조회
+ * @access Private
+ * @param {Object} req.query
+ * @param {string} req.query.region - 시/도
+ * @returns {Object} 200 - 시/군/구 목록 조회 성공
+ * @throws {Error} 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get('/cities', validateRequiredFields(['region'], 'query'), async (req, res) => {
   try {
     const { region } = req.query;

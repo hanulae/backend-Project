@@ -1,3 +1,7 @@
+/**
+ * 파일명: funeralWithdrawal.js
+ * 설명: 장례식장의 탈퇴 관련 라우터 관리
+ */
 import express from 'express';
 import authMiddleware from '../../middlewares/authMiddleware.js';
 import accountDeletionService from '../../services/common/accountDeletionService.js';
@@ -10,8 +14,16 @@ import logger from '../../config/logger.js';
 const router = express.Router();
 
 /**
- * 회원탈퇴 가능 여부 확인
- * GET /api/funeral/withdrawal/check
+ * @route GET /api/funeral/withdrawal/check
+ * @desc 회원탈퇴 가능 여부 확인
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.query
+ * @param {number} req.query.page - 페이지 번호
+ * @param {number} req.query.limit - 페이지 당 항목 수
+ * @returns {Object} 200 { success: true, data: result } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.get('/check', authMiddleware, async (req, res) => {
   try {
@@ -41,8 +53,13 @@ router.get('/check', authMiddleware, async (req, res) => {
 });
 
 /**
- * SMS 인증코드 발송
- * POST /api/funeral/withdrawal/send-sms
+ * @route POST /api/funeral/withdrawal/send-sms
+ * @desc SMS 인증코드 발송
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @returns {Object} 200 { success: true, message: '인증번호가 발송되었습니다.', phoneNumber: string } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post('/send-sms', authMiddleware, async (req, res) => {
   try {
@@ -90,8 +107,15 @@ router.post('/send-sms', authMiddleware, async (req, res) => {
 });
 
 /**
- * 회원탈퇴 실행 (SMS 인증 포함)
- * POST /api/funeral/withdrawal/delete
+ * @route POST /api/funeral/withdrawal/delete
+ * @desc 회원탈퇴 실행 (SMS 인증 포함)
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.body
+ * @param {string} req.body.smsCode - SMS 인증코드
+ * @returns {Object} 200 { success: true, message: '회원탈퇴가 완료되었습니다.', data: result } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
  */
 router.post('/delete', authMiddleware, async (req, res) => {
   try {

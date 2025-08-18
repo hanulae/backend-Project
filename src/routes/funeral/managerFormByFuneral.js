@@ -1,3 +1,7 @@
+/**
+ * 파일명: managerFormByFuneral.js
+ * 설명: 장례식장의 견적 내역 관리 라우터 관리
+ */
 import express from 'express';
 import logger from '../../config/logger.js';
 import managerFormByFuneralService from '../../services/funeral/managerFormByFuneralService.js';
@@ -6,7 +10,15 @@ import authMiddleware from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// 견적 내역 리스트 불러오기
+/**
+ * @route GET /api/funeral/manager-form/list
+ * @desc 견적 내역 리스트 불러오기
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @returns {Object} 200 { success: true, data: result } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get('/list', authMiddleware, async (req, res) => {
   try {
     const { funeralId } = req.user;
@@ -28,7 +40,15 @@ router.get('/list', authMiddleware, async (req, res) => {
   }
 });
 
-// 견적 상세 불러오기
+/**
+ * @route GET /api/funeral/manager-form/detail
+ * @desc 견적 상세 불러오기
+ * @access Private
+ * @param {Object} req.query
+ * @param {string} req.query.managerFormBidId - 견적 내역 ID
+ * @returns {Object} 200 { success: true, data: result } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get(
   '/detail',
   validateUUID('managerFormBidId', 'query'),
@@ -49,7 +69,18 @@ router.get(
   },
 );
 
-// 입찰 신청
+/**
+ * @route PUT /api/funeral/manager-form/bid
+ * @desc 입찰 신청
+ * @access Private
+ * @param {Object} req.user
+ * @param {string} req.user.funeralId - 장례식장 ID
+ * @param {Object} req.body
+ * @param {string} req.body.managerFormBidId - 견적 내역 ID
+ * @param {string} req.body.funeralHallName - 호실 이름
+ * @returns {Object} 200 { success: true, message: '입찰 신청이 완료되었습니다.' } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.put(
   '/bid',
   authMiddleware,
@@ -66,20 +97,6 @@ router.put(
   async (req, res) => {
     try {
       const { funeralId } = req.user;
-
-      // 0. 장례식장 입찰 시도 시 현재 입찰 내역과 캐시 비교 후 입찰 가능여부 판단. (추후 개발로 미뤄짐)
-      // const checkAboutCashAmount =
-      //   await managerFormByFuneralService.checkAboutCashAmount(funeralId);
-
-      // if (checkAboutCashAmount.success === false) {
-      //   logger.info(`입찰 가능여부 확인: ${funeralId}`);
-      //   logger.info(`입찰 실패: ${checkAboutCashAmount.message}`);
-      //   return res.status(400).json({
-      //     success: false,
-      //     message: checkAboutCashAmount.message,
-      //     errorCode: 'INSUFFICIENT_CASH',
-      //   });
-      // }
 
       // 1. 제안가 유효성 검사
       if (isNaN(Number(req.body.proponentMoney)) || Number(req.body.proponentMoney) <= 0) {
@@ -137,6 +154,15 @@ router.put(
   },
 );
 
+/**
+ * @route GET /api/funeral/manager-form/bid/detail
+ * @desc 입찰 상세 불러오기
+ * @access Private
+ * @param {Object} req.query
+ * @param {string} req.query.managerFormBidId - 견적 내역 ID
+ * @returns {Object} 200 { success: true, data: result } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
 router.get(
   '/bid/detail',
   validateRequiredFields('managerFormBidId', 'query'),

@@ -1,3 +1,8 @@
+/**
+ * 파일명: managerFormService.js
+ * 설명: 상조팀장 견적 관련 비즈니스 로직 처리 서비스
+ * 역할: 견적 신청, 조회, 입찰 관련 등의 비즈니스 로직 처리
+ */
 import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
@@ -10,9 +15,32 @@ const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOL
 
 const managerFormService = {
   /**
-   * 견적 신청서 생성
-   * @param {Object} managerFormData {Array} uniqueFuneralListIds
-   * @returns {Promise<ManagerForm>}
+   * 견적 신청서 생성 및 장례식장에 알림 전송
+   *
+   * 처리 과정:
+   * 1. 견적 신청서 생성
+   * 2. 선택된 장례식장 정보 조회
+   * 3. 장례식장별 입찰 데이터 생성
+   * 4. 트랜잭션 커밋
+   * 5. 알림 전송 (FCM, SMS)
+   *    - 회원가입한 장례식장에만 알림 전송
+   *    - 장례식장 및 소속 직원들에게 FCM, SMS 알림 전송
+   *
+   * @param {Object} managerFormData
+   * @param {string} managerFormData.managerId - 상조팀장 ID
+   * @param {string} managerFormData.chiefMournerName - 상주 이름
+   * @param {string} [managerFormData.deceasedName] - 고인 이름 (선택)
+   * @param {number} [managerFormData.numberOfMourners] - 예상 조문객 수
+   * @param {number} [managerFormData.roomSize] - 평수 (선택)
+   * @param {string} managerFormData.checkInDate - 입실일자
+   * @param {string} managerFormData.checkOutDate - 퇴실일자
+   * @param {Array<string>} funeralListIds - 견적을 요청할 장례식장 ID 목록
+   *
+   * @returns {Promise<Object>} 견적 신청 결과
+   * @returns {boolean} success - 성공 여부
+   * @returns {string} message - 결과 메시지
+   *
+   * @throws {Error} 견적 신청서 생성 실패 시 오류 발생
    */
   async createManagerForm(managerFormData, funeralListIds) {
     const transaction = await sequelize.transaction();
@@ -104,6 +132,19 @@ const managerFormService = {
 
   /**
    * 상조팀장 견적 신청서 내역 조회
+   *
+   * 처리 과정:
+   * 1. 상조팀장이 작성한 모든 견적서 조회
+   * 2. 견적서 별 입찰 갯수 조회
+   * 3. 견적서 목록에 입찰 수 정보 추가
+   *
+   * @param {string} managerId - 상조팀장 ID
+   * @returns {Promise<Object>} 견적 신청서 내역 조회 결과
+   * @returns {boolean} success - 성공 여부
+   * @returns {Object} data - 견적 신청서 내역 데이터
+   * @returns {Array} managerFormList - 견적 신청서 목록
+   *
+   * @throws {Error} 견적 신청서 내역 조회 실패 시 오류 발생
    */
   async getManagerFormList(managerId) {
     try {
@@ -134,6 +175,18 @@ const managerFormService = {
 
   /**
    * 한명의 상주님 견적 리스트 조회
+   *
+   * 처리 과정:
+   * 1. 견적 신청서 ID를 기반으로 생성된 입찰 리스트 조회
+   * 2. 데이터 포멧팅
+   *
+   * @param {string} managerFormId - 견적 신청서 ID
+   * @returns {Promise<Object>} 견적 신청서 내역 조회 결과
+   * @returns {boolean} success - 성공 여부
+   * @returns {Object} data - 견적 신청서 내역 데이터
+   * @returns {Array} managerFormDetail - 견적 신청서 목록
+   *
+   * @throws {Error} 견적 신청서 내역 조회 실패 시 오류 발생
    */
   async getManagerFormBidList(managerFormId) {
     try {
@@ -165,6 +218,19 @@ const managerFormService = {
 
   /**
    * 단일 견적서 관련 입찰 상세 내용 조회
+   *
+   * 처리 과정:
+   * 1. managerFormBid 조회
+   * 2. 입찰 상태 확인
+   * 3. 데이터 포멧팅
+   *
+   * @param {string} managerFormBidId - 입찰 ID
+   * @returns {Promise<Object>} 입찰 상세 내역 조회 결과
+   * @returns {boolean} success - 성공 여부
+   * @returns {Object} data - 입찰 상세 내역 데이터
+   * @returns {Array} managerFormBidDetail - 입찰 상세 내역 목록
+   *
+   * @throws {Error} 입찰 상세 내역 조회 실패 시 오류 발생
    */
   async getManagerFormBidDetail(managerFormBidId) {
     // 1. managerFormBid 조회
