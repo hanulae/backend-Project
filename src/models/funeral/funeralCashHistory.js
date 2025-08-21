@@ -143,12 +143,14 @@ class FuneralCashHistory extends Sequelize.Model {
     this.belongsTo(models.FuneralPayment, {
       foreignKey: 'funeralPaymentId',
       as: 'funeralPayment',
+      constraints: false,
     });
 
     this.belongsTo(models.FuneralPayment, {
       foreignKey: 'merchantUid',
       targetKey: 'merchantUid',
       as: 'funeralPaymentByMerchant',
+      constraints: false,
     });
 
     this.belongsTo(models.Manager, {

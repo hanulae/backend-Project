@@ -7,12 +7,10 @@ import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import { sequelize } from '../../config/database.js';
 import logger from '../../config/logger.js';
-import fcmService from '../common/fcmService.js';
+// import fcmService from '../common/fcmService.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
-import coolsms from 'coolsms-node-sdk';
+import { sendNotificationBasedOnSettings } from '../../utils/notificationHelper.js';
 // import { getCurrentCash } from '../../daos/funeral/funeralCashDao.js';
-
-const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 const managerFormByFuneralService = {
   /**
@@ -155,9 +153,15 @@ const managerFormByFuneralService = {
 
       await transaction.commit();
 
-      // 4. 트랜잭션 커밋 후 상조팀장에게 알림 전송
+      // 4. 트랜잭션 커밋 후 상조팀장에게 알림 전송 헬퍼 호출
       try {
-        await fcmService.sendNotificationToUser({
+        // 상조팀장 전화번호 조회
+        const manager = await funeralListDao.getManagerPhoneNumber(
+          existingBid.managerForm.managerId,
+        );
+
+        // 알림 전송 헬퍼 함수 호출
+        await sendNotificationBasedOnSettings({
           receiverId: existingBid.managerForm.managerId,
           receiverType: 'manager',
           notificationType: 'bid_submitted',
@@ -170,19 +174,11 @@ const managerFormByFuneralService = {
           },
           senderId: params.funeralId,
           senderType: 'funeral',
+          smsParams: {
+            phoneNumber: manager.dataValues.managerPhoneNumber,
+            message: `${existingBid.funeralList?.funeral_name || '장례식장'}에서 입찰을 제안했습니다.`,
+          },
         });
-
-        // 상조팀장에게 문자 전송
-        const manager = await funeralListDao.getManagerPhoneNumber(
-          existingBid.managerForm.managerId,
-        );
-        await client.sendOne({
-          to: manager.dataValues.managerPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '장례식장님이 입찰 제안 하였습니다. 입찰 확인을 해주세요.',
-        });
-
-        logger.info(`입찰 제안 알림 전송 성공: 상조팀장 ${existingBid.managerId}`);
       } catch (notificationError) {
         logger.error(
           `입찰 제안 알림 전송 실패: 상조팀장 ${existingBid.managerId}`,

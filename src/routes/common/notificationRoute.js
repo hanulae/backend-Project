@@ -247,4 +247,64 @@ router.get('/stats', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @route PUT /api/common/notification/settings
+ * @desc 알림 설정 업데이트
+ * @access Private
+ * @param {Object} req.body
+ * @param {boolean} [req.body.notificationEnabled] - 앱 알림 허용 여부
+ * @param {boolean} [req.body.smsNotificationEnabled] - SMS 알림 허용 여부
+ * @returns {Object} 200 { message, data } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
+router.put('/settings', authMiddleware, async (req, res) => {
+  try {
+    const { notificationEnabled, smsNotificationEnabled } = req.body;
+    const { userId, userType } = req.user;
+
+    // 두 값 중 하나라도 변동 사항이 있다면 업데이트 진행
+    if (typeof notificationEnabled !== 'boolean' && typeof smsNotificationEnabled !== 'boolean') {
+      return res.status(400).json({
+        message: '적어도 하나의 알림 설정 값은 필수입니다.',
+      });
+    }
+
+    const result = await fcmService.updateNotificationSettings({
+      userId,
+      userType,
+      notificationEnabled,
+      smsNotificationEnabled,
+    });
+
+    return res.status(200).json({
+      message: '알림 설정이 성공적으로 업데이트 되었습니다.',
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * @route GET /api/common/notification/settings
+ * @desc 알림 설정 조회
+ * @access Private
+ * @returns {Object} 200 { message, data } 400 - 잘못된 요청
+ * @throws {Error} 500 - 서버 오류
+ */
+router.get('/setting-info', authMiddleware, async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+
+    const result = await fcmService.getNotificationSettings(userId, userType);
+
+    return res.status(200).json({
+      message: '알림 설정 조회 성공',
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

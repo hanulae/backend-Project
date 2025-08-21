@@ -16,11 +16,11 @@ module.exports = {
         allowNull: false,
         comment: '장례식장 고유 ID (FK)',
         references: {
-          model: 'funerals', // 실제 장례식장 테이블명으로 변경
-          key: 'funeral_id'
+          model: 'funerals',
+          key: 'funeral_id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        onDelete: 'CASCADE',
       },
       imp_uid: {
         type: Sequelize.STRING,
@@ -38,13 +38,7 @@ module.exports = {
         comment: '결제 금액',
       },
       status: {
-        type: Sequelize.ENUM(
-          'pending',
-          'paid',
-          'failed',
-          'cancelled',
-          'refunded'
-        ),
+        type: Sequelize.ENUM('pending', 'paid', 'failed', 'cancelled', 'refunded'),
         allowNull: false,
         defaultValue: 'pending',
         comment: '결제 상태',
@@ -82,39 +76,39 @@ module.exports = {
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
       },
       deleted_at: {
         allowNull: true,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
 
     // 인덱스 추가
     await queryInterface.addIndex('funeral_payments', ['merchant_uid'], {
-      unique: true
+      unique: true,
     });
 
     await queryInterface.addIndex('funeral_payments', ['funeral_id']);
     await queryInterface.addIndex('funeral_payments', ['status']);
-    
+
     // imp_uid는 null 값이 있을 수 있으므로 별도 처리
     await queryInterface.addIndex('funeral_payments', ['imp_uid'], {
       unique: true,
       where: {
         imp_uid: {
-          [Sequelize.Op.ne]: null
-        }
-      }
+          [Sequelize.Op.ne]: null,
+        },
+      },
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('funeral_payments');
-  }
+  },
 };

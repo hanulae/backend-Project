@@ -8,10 +8,11 @@ import logger from '../../config/logger.js';
 import managerFormDao from '../../dao/manager/managerFormDao.js';
 import managerFormBidDao from '../../dao/manager/managerFormBidDao.js';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
-import fcmService from '../common/fcmService.js';
-import coolsms from 'coolsms-node-sdk';
+// import fcmService from '../common/fcmService.js';
+// import coolsms from 'coolsms-node-sdk';
+import { sendNotificationToFuneralGroupBasedOnSettings } from '../../utils/notificationHelper.js';
 
-const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
+// const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 const managerFormService = {
   /**
@@ -72,7 +73,7 @@ const managerFormService = {
           .map(async (item) => {
             try {
               // 장례식장funeral + 장례식장에 등록된 직원들 funeralStaff에게 알림을 전송
-              await fcmService.sendNotificationToFuneralGroup({
+              await sendNotificationToFuneralGroupBasedOnSettings({
                 funeralId: item.funeralId,
                 notificationType: 'manager_form_created',
                 data: {
@@ -81,29 +82,11 @@ const managerFormService = {
                 },
                 senderId: managerFormData.managerId,
                 senderType: 'manager',
+                smsParams: {
+                  message: '상조팀장님이 견적 신청을 하였습니다.',
+                },
               });
 
-              // 직원 전화번호 목록 가져오기
-              const funeral = await funeralListDao.getFuneralById(item.funeralId);
-              const staffPhoneNumbers = await funeralListDao.getStaffPhoneNumbersByFuneralId(
-                item.funeralId,
-              );
-
-              // 장례식장에 문자 보내기
-              await client.sendOne({
-                to: funeral.funeralPhoneNumber,
-                from: process.env.COOLSMS_SENDER_NUMBER,
-                text: '상조팀장님이 견적 신청을 하였습니다.',
-              });
-
-              // 각 직원에게 문자 보내기
-              for (const staff of staffPhoneNumbers) {
-                await client.sendOne({
-                  to: staff.dataValues.funeralStaffPhoneNumber,
-                  from: process.env.COOLSMS_SENDER_NUMBER,
-                  text: '상조팀장님이 견적 신청을 하였습니다.',
-                });
-              }
               logger.info(`견적 신청 그룹 알림 전송 성공: 장례식장 ${item.funeralId}`);
             } catch (notificationError) {
               logger.error(
