@@ -24,10 +24,14 @@ import {
   updateFuneralCashHistoryStatus,
 } from '../../daos/funeral/funeralCashHistoryDao.js';
 import { createManagerCashHistory } from '../../daos/manager/managerCashHistoryDao.js';
-import fcmService from '../common/fcmService.js';
-import coolsms from 'coolsms-node-sdk';
+// import fcmService from '../common/fcmService.js';
+// import coolsms from 'coolsms-node-sdk';
 import funeralListDao from '../../dao/funeral/funeralListDao.js';
-const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
+import {
+  sendNotificationBasedOnSettings,
+  sendNotificationToFuneralGroupBasedOnSettings,
+} from '../../utils/notificationHelper.js';
+// const client = new coolsms.default(process.env.COOLSMS_API_KEY, process.env.COOLSMS_API_SECRET);
 
 /**
  * 출동 요청 관련 서비스 클래스
@@ -121,7 +125,8 @@ class DispatchRequestService {
 
       // 6. 트랜잭션 커밋 후 장례식장에게 알림 전송
       try {
-        await fcmService.sendNotificationToFuneralGroup({
+        // 장례식장 그룹 알림 전송 헬퍼 함수 호출
+        await sendNotificationToFuneralGroupBasedOnSettings({
           funeralId: params.funeralId,
           notificationType: 'dispatch_requested',
           data: {
@@ -132,31 +137,12 @@ class DispatchRequestService {
           },
           senderId: params.managerId,
           senderType: 'manager',
+          smsParams: {
+            message: '상조팀장님이 출동 신청을 하였습니다.',
+          },
         });
 
         logger.info(`출동 신청 알림 전송 성공: 장례식장 ${params.funeralId}`);
-
-        // 장례식장 직원들에게 문자 전송
-        const funeral = await funeralListDao.getFuneralById(params.funeralId);
-        const staffPhoneNumbers = await funeralListDao.getStaffPhoneNumbersByFuneralId(
-          params.funeralId,
-        );
-
-        await client.sendOne({
-          to: funeral.funeralPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '상조팀장님이 출동 신청을 하였습니다.',
-        });
-
-        for (const staff of staffPhoneNumbers) {
-          await client.sendOne({
-            to: staff.dataValues.funeralStaffPhoneNumber,
-            from: process.env.COOLSMS_SENDER_NUMBER,
-            text: '상조팀장님이 출동 신청을 하였습니다.',
-          });
-        }
-
-        logger.info(`출동 신청 문자 전송 성공: 장례식장 ${params.funeralId}`);
       } catch (notificationError) {
         logger.error(`출동 신청 알림 전송 실패: 장례식장 ${params.funeralId}`, notificationError);
         // 알림 전송 실패해도 출동 신청 자체는 성공으로 처리
@@ -326,7 +312,7 @@ class DispatchRequestService {
 
       // 5. 트랜잭션 커밋 후 장례식장에게 출동 취소 알림 전송
       try {
-        await fcmService.sendNotificationToFuneralGroup({
+        await sendNotificationToFuneralGroupBasedOnSettings({
           funeralId: getDispatchRequest.funeralId,
           notificationType: 'dispatch_cancelled',
           data: {
@@ -337,30 +323,12 @@ class DispatchRequestService {
           },
           senderId: getDispatchRequest.managerId,
           senderType: 'manager',
+          smsParams: {
+            message: '상조팀장님이 출동 신청을 취소하였습니다.',
+          },
         });
 
         logger.info(`출동 취소 알림 전송 성공: 장례식장 ${getDispatchRequest.funeralId}`);
-
-        // 장례식장 직원들에게 문자 전송
-        const funeral = await funeralListDao.getFuneralById(getDispatchRequest.funeralId);
-        const staffPhoneNumbers = await funeralListDao.getStaffPhoneNumbersByFuneralId(
-          getDispatchRequest.funeralId,
-        );
-
-        await client.sendOne({
-          to: funeral.funeralPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '상조팀장님이 출동 신청을 취소하였습니다.',
-        });
-
-        for (const staff of staffPhoneNumbers) {
-          await client.sendOne({
-            to: staff.dataValues.funeralStaffPhoneNumber,
-            from: process.env.COOLSMS_SENDER_NUMBER,
-            text: '상조팀장님이 출동 신청을 취소하였습니다.',
-          });
-        }
-        logger.info(`출동 취소 문자 전송 성공: 장례식장 ${getDispatchRequest.funeralId}`);
       } catch (notificationError) {
         logger.error(
           `출동 취소 알림 전송 실패: 장례식장 ${getDispatchRequest.funeralId}`,
@@ -486,7 +454,9 @@ class DispatchRequestService {
 
       // 6. 트랜잭션 커밋 후 상조팀장에게 출동 승인 알림 전송
       try {
-        await fcmService.sendNotificationToUser({
+        const manager = await funeralListDao.getManagerPhoneNumber(getDispatchRequest.managerId);
+
+        await sendNotificationBasedOnSettings({
           receiverId: getDispatchRequest.managerId,
           receiverType: 'manager',
           notificationType: 'dispatch_approved',
@@ -498,15 +468,12 @@ class DispatchRequestService {
           },
           senderId: getDispatchRequest.funeralId,
           senderType: 'funeral',
+          smsParams: {
+            phoneNumber: manager.dataValues.managerPhoneNumber,
+            message: '장례식장님이 출동 신청을 승인하였습니다.',
+          },
         });
 
-        // 상조팀장에게 문자 전송
-        const manager = await funeralListDao.getManagerPhoneNumber(getDispatchRequest.managerId);
-        await client.sendOne({
-          to: manager.dataValues.managerPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '장례식장님이 출동 신청을 승인하였습니다. 출동 확인을 해주세요.',
-        });
         logger.info(`출동 승인 알림 전송 성공: 상조팀장 ${getDispatchRequest.managerId}`);
       } catch (notificationError) {
         logger.error(
@@ -714,7 +681,7 @@ class DispatchRequestService {
       setTimeout(async () => {
         try {
           if (counterpartType === 'funeral') {
-            await fcmService.sendNotificationToFuneralGroup({
+            await sendNotificationToFuneralGroupBasedOnSettings({
               funeralId: counterpartId,
               notificationType: 'transaction_completed_requested',
               data: {
@@ -724,30 +691,16 @@ class DispatchRequestService {
               },
               senderId: dispatchRequest.managerId,
               senderType: 'manager',
+              smsParams: {
+                message: '상조팀장님이 거래완료를 하였습니다. 거래 확정을 해주세요.',
+              },
             });
 
-            // 장례식장 직원들에게 문자 전송
-            const funeral = await funeralListDao.getFuneralById(counterpartId);
-            const staffPhoneNumbers =
-              await funeralListDao.getStaffPhoneNumbersByFuneralId(counterpartId);
-
-            await client.sendOne({
-              to: funeral.funeralPhoneNumber,
-              from: process.env.COOLSMS_SENDER_NUMBER,
-              text: '상조팀장님이 거래완료를 하였습니다. 거래 확정을 해주세요.',
-            });
-
-            for (const staff of staffPhoneNumbers) {
-              await client.sendOne({
-                to: staff.dataValues.funeralStaffPhoneNumber,
-                from: process.env.COOLSMS_SENDER_NUMBER,
-                text: '상조팀장님이 거래완료를 하였습니다. 거래 확정을 해주세요.',
-              });
-            }
-
-            logger.info(`거래완료 문자 전송 성공: 장례식장 ${dispatchRequest.funeralId}`);
+            logger.info(`거래완료 알림 전송 성공: ${counterpartType} ${counterpartId}`);
           } else {
-            await fcmService.sendNotificationToUser({
+            const manager = await funeralListDao.getManagerPhoneNumber(counterpartId);
+
+            await sendNotificationBasedOnSettings({
               receiverId: counterpartId,
               receiverType: counterpartType,
               notificationType: 'transaction_completed_requested',
@@ -758,23 +711,17 @@ class DispatchRequestService {
               },
               senderId: dispatchRequest.funeralId,
               senderType: 'funeral',
+              smsParams: {
+                phoneNumber: manager.dataValues.managerPhoneNumber,
+                message: '장례식장님이 거래완료를 하였습니다. 거래 확정을 해주세요.',
+              },
             });
-
-            // 상조팀장에게 문자 전송
-            const manager = await funeralListDao.getManagerPhoneNumber(counterpartId);
-            await client.sendOne({
-              to: manager.dataValues.managerPhoneNumber,
-              from: process.env.COOLSMS_SENDER_NUMBER,
-              text: '장례식장님이 거래완료를 하였습니다. 거래 확정을 해주세요.',
-            });
-
-            logger.info(`거래완료 요청 문자 전송 성공: 상조팀장 ${counterpartId}`);
           }
 
-          logger.info(`거래완료 요청 알림 전송 성공: ${counterpartType} ${counterpartId}`);
+          logger.info(`거래완료 알림 전송 성공: ${counterpartType} ${counterpartId}`);
         } catch (notificationError) {
           logger.error(
-            `거래완료 요청 알림 전송 실패: ${counterpartType} ${counterpartId}`,
+            `거래완료 알림 전송 실패: ${counterpartType} ${counterpartId}`,
             notificationError,
           );
         }
@@ -952,8 +899,10 @@ class DispatchRequestService {
       try {
         const totalAmount = parseInt(process.env.TOTAL_AMOUNT);
 
+        const manager = await funeralListDao.getManagerPhoneNumber(dispatchRequest.managerId);
+
         // 상조팀장에게 거래 완료 알림
-        await fcmService.sendNotificationToUser({
+        await sendNotificationBasedOnSettings({
           receiverId: dispatchRequest.managerId,
           receiverType: 'manager',
           notificationType: 'transaction_completed',
@@ -963,21 +912,16 @@ class DispatchRequestService {
             transactionId: transactionId,
           },
           senderType: 'system',
+          smsParams: {
+            phoneNumber: manager.dataValues.managerPhoneNumber,
+            message: '거래가 완료되었습니다.',
+          },
         });
 
         logger.info(`거래 완료 알림 전송 성공: 상조팀장 ${dispatchRequest.managerId}`);
 
-        // 상조팀장에게 문자 전송
-        const manager = await funeralListDao.getManagerPhoneNumber(dispatchRequest.managerId);
-
-        await client.sendOne({
-          to: manager.managerPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '거래가 완료되었습니다.',
-        });
-
         // 장례식장에게 거래 완료 알림
-        await fcmService.sendNotificationToFuneralGroup({
+        await sendNotificationToFuneralGroupBasedOnSettings({
           funeralId: dispatchRequest.funeralId,
           notificationType: 'transaction_completed',
           data: {
@@ -986,31 +930,12 @@ class DispatchRequestService {
             transactionId: transactionId,
           },
           senderType: 'system',
+          smsParams: {
+            message: '거래가 완료되었습니다.',
+          },
         });
 
         logger.info(`거래 완료 알림 전송 성공: 장례식장 ${dispatchRequest.funeralId}`);
-
-        // 장례식장 직원들에게 문자 전송
-        const funeral = await funeralListDao.getFuneralById(dispatchRequest.funeralId);
-        const staffPhoneNumbers = await funeralListDao.getStaffPhoneNumbersByFuneralId(
-          dispatchRequest.funeralId,
-        );
-
-        await client.sendOne({
-          to: funeral.funeralPhoneNumber,
-          from: process.env.COOLSMS_SENDER_NUMBER,
-          text: '거래가 완료되었습니다.',
-        });
-
-        for (const staff of staffPhoneNumbers) {
-          await client.sendOne({
-            to: staff.dataValues.funeralStaffPhoneNumber,
-            from: process.env.COOLSMS_SENDER_NUMBER,
-            text: '거래가 완료되었습니다.',
-          });
-        }
-
-        logger.info(`거래 완료 문자 전송 성공: 장례식장 ${dispatchRequest.funeralId}`);
       } catch (notificationError) {
         logger.error('거래 완료 알림 전송 실패', notificationError);
       }

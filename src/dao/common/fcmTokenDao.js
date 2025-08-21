@@ -498,13 +498,21 @@ const fcmTokenDao = {
       const users = [];
 
       // 1. 장례식장 대표 정보 추가
-      const funeral = await db.Funeral.findByPk(funeralId);
+      const funeral = await db.Funeral.findByPk(funeralId, {
+        attributes: ['funeralId', 'funeralName', 'funeralPhoneNumber'],
+      });
+
       if (funeral) {
         users.push({
           userId: funeralId,
           userType: 'funeral',
           name: funeral.funeralName || '장례식장 대표',
+          phoneNumber: funeral.funeralPhoneNumber,
         });
+
+        logger.info(
+          `장례식장 대표 정보 조회 완료: ${funeral.funeralName}, ${funeral.funeralPhoneNumber}`,
+        );
       }
 
       // 2. 해당 장례식장의 모든 직원 정보 추가
@@ -512,7 +520,7 @@ const fcmTokenDao = {
         where: {
           funeralId: funeralId,
         },
-        attributes: ['funeralStaffId', 'funeralStaffName'],
+        attributes: ['funeralStaffId', 'funeralStaffName', 'funeralStaffPhoneNumber'],
       });
 
       staffList.forEach((staff) => {
@@ -520,13 +528,41 @@ const fcmTokenDao = {
           userId: staff.funeralStaffId,
           userType: 'funeralStaff',
           name: staff.funeralStaffName,
+          phoneNumber: staff.funeralStaffPhoneNumber,
         });
+
+        logger.info(
+          `장례식장 직원 정보 조회 완료: ${staff.funeralStaffName}, ${staff.funeralStaffPhoneNumber}`,
+        );
       });
 
       logger.info(`장례식장 그룹 사용자 조회 완료: 총 ${users.length}명`);
       return users;
     } catch (error) {
       logger.error('장례식장 그룹 사용자 조회 DAO 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 알림 설정 업데이트
+   *
+   * 사용자의 모든 활성 FCM 토큰에 대해 알림 설정을 업데이트 합니다.
+   *
+   * @param {Object} whereCondition - 조건 객체 (userId, userType)
+   * @param {Object} updateData - 업데이트할 데이터 객체
+   */
+  async updateNotificationSettings(whereCondition, updateData, options = {}) {
+    try {
+      return await db.FcmToken.update(updateData, {
+        where: {
+          ...whereCondition,
+          isActive: true,
+        },
+        ...options,
+      });
+    } catch (error) {
+      logger.error('알림 설정 업데이트 DAO 오류: ', error);
       throw error;
     }
   },

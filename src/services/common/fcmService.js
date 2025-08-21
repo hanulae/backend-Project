@@ -66,7 +66,7 @@ const fcmService = {
   },
 
   /**
-   * 단일 사용자에게 푸시 알림 전송
+   * 단일 사용자에게 (상조팀장) 푸시 알림 전송
    *
    * 처리과정:
    * 1. 알림 권한 확인
@@ -528,6 +528,87 @@ const fcmService = {
    */
   async deactivateDeviceToken({ userId, userType, deviceId }) {
     return await this.deactivateUserTokens({ userId, userType, deviceId });
+  },
+
+  /**
+   * 알림 설정 업데이트
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {string} params.userType
+   * @param {boolean} params.notificationEnabled
+   * @param {boolean} params.smsNotificationEnabled
+   *
+   * @returns {Promise<Object>}
+   */
+  async updateNotificationSettings({
+    userId,
+    userType,
+    notificationEnabled,
+    smsNotificationEnabled,
+  }) {
+    try {
+      const updateData = {};
+
+      // 앱 알림 설정이 있으면 추가
+      if (typeof notificationEnabled === 'boolean') {
+        updateData.notificationEnabled = notificationEnabled;
+      }
+
+      // SMS 알림 설정이 있으면 추가
+      if (typeof smsNotificationEnabled === 'boolean') {
+        updateData.smsNotificationEnabled = smsNotificationEnabled;
+      }
+
+      // 업데이트 내용 있으면 진행
+      if (Object.keys(updateData).length > 0) {
+        await fcmTokenDao.updateNotificationSettings({ userId, userType }, updateData);
+      }
+
+      return {
+        success: true,
+        ...updateData,
+        message: '알림 설정이 성공적으로 업데이트 되었습니다.',
+      };
+    } catch (error) {
+      logger.error('알림 설정 업데이트 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 알림 설정 조회
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {UserType} params.userType
+   *
+   * @returns {Promise<Object>}
+   */
+  async getNotificationSettings(userId, userType) {
+    try {
+      // 사용자의 가장 최근 활성 토큰 조회
+      const tokens = await fcmTokenDao.findActiveTokensByUser(userId, userType);
+
+      // 토큰이 없으면 기본값 반환
+      if (!tokens || tokens.length === 0) {
+        return {
+          success: true,
+          notificationEnabled: false, // 기본값은 비허용
+          smsNotificationEnabled: false, // 기본값은 비허용
+        };
+      }
+
+      // 가장 최근 토큰의 설정 반환
+      return {
+        success: true,
+        notificationEnabled: tokens[0].notificationEnabled,
+        smsNotificationEnabled: tokens[0].smsNotificationEnabled,
+      };
+    } catch (error) {
+      logger.error('알림 설정 조회 실패:', error);
+      throw error;
+    }
   },
 };
 
