@@ -7,14 +7,14 @@ module.exports = {
       allowNull: true,
       references: {
         model: 'funeral_payments',
-        key: 'funeral_payment_id'
+        key: 'funeral_payment_id',
       },
       onUpdate: 'CASCADE',
-      onDelete: 'SET NULL'
+      onDelete: 'SET NULL',
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.removeColumn('funeral_cash_histories', 'funeral_payment_id');
-  }
-}; 
+  },
+};

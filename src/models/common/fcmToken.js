@@ -48,6 +48,18 @@ class FcmToken extends Sequelize.Model {
           allowNull: false,
           comment: '마지막 사용 시간',
         },
+        notificationEnabled: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: true,
+          allowNull: false,
+          comment: '앱 알림 수신 여부',
+        },
+        smsNotificationEnabled: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: true,
+          allowNull: false,
+          comment: 'SMS 알림 수신 여부',
+        },
       },
       {
         sequelize,
